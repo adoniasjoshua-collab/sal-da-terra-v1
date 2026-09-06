@@ -15,6 +15,8 @@ const actionLabels: Record<string, string> = {
   insert_students: "Adolescente cadastrado",
   update_students: "Cadastro de adolescente atualizado",
   update_attendance: "Presença corrigida",
+  insert_event_headcounts: "Contagem de evento registrada",
+  update_event_headcounts: "Contagem de evento atualizada",
 };
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {

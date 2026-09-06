@@ -2,7 +2,7 @@
 
 ## Leader
 
-Login → dashboard summary → EBD trend / last EBD composition / pastoral radar → care queue → student profile or follow-up. Students → search/filter → create/edit/archive. Events → choose event type and participation mode → one-handed roster → save one upsert batch. EBD uses a full roll call; optional events default to neutral non-participation.
+Login → dashboard summary → EBD trend / last EBD composition / pastoral radar → care queue → event participation summary and operational agenda. Students → search/filter → create/edit/archive. Events → choose event type and one of three data-minimized modes → save a full roster, identified participation, or aggregate headcount. EBD always uses a full roster.
 
 The student profile keeps EBD metrics separate and shows actual participation in other event categories on a chronological timeline.
 

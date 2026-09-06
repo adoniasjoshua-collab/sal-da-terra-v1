@@ -3,7 +3,7 @@ import { PageHeading } from "@/components/page-heading";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
+import { ATTENDANCE_MODE_LABELS, EVENT_TYPE_LABELS, type AttendanceMode, type EventType } from "@/services/events";
 
 export default async function EventsPage() {
   const actor = await requireStaff();
@@ -35,6 +35,7 @@ export default async function EventsPage() {
                 <p className="mt-1 text-sm text-[#647268]">
                   {EVENT_TYPE_LABELS[event.type as EventType]} · {formatDate(event.event_date)} {event.start_time && `· ${event.start_time.slice(0, 5)}`}
                 </p>
+                <p className="mt-1 text-xs text-[#7a877f]">{ATTENDANCE_MODE_LABELS[event.attendance_mode as AttendanceMode]}</p>
               </div>
               <span className="badge bg-[#edf7f1] text-[#176b49]">{event.status === "completed" ? "Registro salvo" : "Registrar"}</span>
             </Link>

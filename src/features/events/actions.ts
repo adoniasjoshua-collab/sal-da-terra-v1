@@ -11,7 +11,7 @@ export type EventState = { error?: string } | undefined;
 const eventSchema = z.object({
   title: z.string().trim().min(2).max(160),
   type: z.enum(EVENT_TYPE_VALUES),
-  attendance_mode: z.enum(["full_roster", "participation_only"]),
+  attendance_mode: z.enum(["full_roster", "participation_only", "headcount_only"]),
   event_date: z.iso.date(),
   start_time: z.string().optional(),
   description: z.string().trim().max(1000).optional(),
@@ -100,4 +100,61 @@ export async function saveAttendance(eventId: string, formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/adolescentes");
   redirect(`/eventos/${eventId}?salvo=1`);
+}
+
+export type HeadcountState = { error?: string; success?: string } | undefined;
+const headcountSchema = z.object({
+  adolescent_count: z.coerce.number().int().min(0).max(100000),
+  visitor_count: z.coerce.number().int().min(0).max(100000),
+  is_estimated: z.enum(["on"]).optional(),
+  notes: z.string().trim().max(500).optional(),
+}).refine((data) => data.visitor_count <= data.adolescent_count, {
+  message: "Visitantes não podem superar o total de adolescentes.",
+  path: ["visitor_count"],
+});
+
+export async function saveHeadcount(
+  eventId: string,
+  _: HeadcountState,
+  formData: FormData,
+): Promise<HeadcountState> {
+  const actor = await requireStaff();
+  if (!z.uuid().safeParse(eventId).success) return { error: "Evento inválido." };
+  const parsed = headcountSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise a contagem." };
+
+  const supabase = await createClient();
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("id,attendance_mode")
+    .eq("id", eventId)
+    .eq("ministry_id", actor.ministryId)
+    .maybeSingle();
+  if (eventError || !event) return { error: "Evento não encontrado ou acesso negado." };
+  if (event.attendance_mode !== "headcount_only") return { error: "Este evento exige registro individual." };
+
+  const { error: countError } = await supabase.from("event_headcounts").upsert({
+    ministry_id: actor.ministryId,
+    event_id: eventId,
+    adolescent_count: parsed.data.adolescent_count,
+    visitor_count: parsed.data.visitor_count,
+    is_estimated: parsed.data.is_estimated === "on",
+    notes: parsed.data.notes || null,
+    registered_by: actor.userId,
+  }, { onConflict: "event_id" });
+  if (countError) return { error: "Não foi possível salvar a contagem." };
+
+  const { data: completed, error: completionError } = await supabase
+    .from("events")
+    .update({ status: "completed" })
+    .eq("id", eventId)
+    .eq("ministry_id", actor.ministryId)
+    .select("id")
+    .maybeSingle();
+  if (completionError || !completed) return { error: "Contagem salva, mas o evento não pôde ser concluído." };
+
+  revalidatePath(`/eventos/${eventId}`);
+  revalidatePath("/eventos");
+  revalidatePath("/dashboard");
+  return { success: "Contagem salva com segurança." };
 }

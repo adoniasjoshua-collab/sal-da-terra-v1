@@ -19,3 +19,7 @@ All application queries use the caller's publishable-key session. Privileged lif
 ## ADR-005 — Event participation is not one universal frequency
 
 EBD uses a full roster and remains the sole input for EBD frequency and the V1 pastoral radar. Optional events record observable participation with a neutral `not_participated` state. Other event categories appear as timeline context and are never converted into a spiritual or global engagement score.
+
+## ADR-006 — Data-minimized event counting
+
+Events support three exclusive collection modes: full roster, identified participants without absences, and aggregate headcount without names. Aggregate counting is the privacy-preserving default for worship services, evangelism and open congresses. Participation volume can use either source, but unique people are reported only when identities were legitimately collected. Existing event modes are never rewritten after records exist.

@@ -2,12 +2,17 @@
 
 import { useActionState, useState } from "react";
 import { createEvent } from "./actions";
-import { defaultAttendanceMode, EVENT_TYPE_OPTIONS, type AttendanceMode, type EventType } from "@/services/events";
+import { defaultAttendanceMode, EVENT_TYPE_LABELS, EVENT_TYPE_OPTIONS, type AttendanceMode, type EventType } from "@/services/events";
+
+function suggestedTitle(type: EventType) {
+  return type === "EBD" ? "EBD" : EVENT_TYPE_LABELS[type];
+}
 
 export function EventForm() {
   const [state, action, pending] = useActionState(createEvent, undefined);
   const [type, setType] = useState<EventType>("EBD");
   const [mode, setMode] = useState<AttendanceMode>("full_roster");
+  const [title, setTitle] = useState("EBD");
 
   return (
     <form action={action} className="card grid gap-5 p-5 sm:grid-cols-2 sm:p-7">
@@ -20,6 +25,7 @@ export function EventForm() {
           value={type}
           onChange={(event) => {
             const nextType = event.target.value as EventType;
+            setTitle((current) => current === suggestedTitle(type) ? suggestedTitle(nextType) : current);
             setType(nextType);
             setMode(defaultAttendanceMode(nextType));
           }}
@@ -36,15 +42,18 @@ export function EventForm() {
           </>
         ) : (
           <select className="input" id="attendance_mode" name="attendance_mode" value={mode} onChange={(event) => setMode(event.target.value as AttendanceMode)}>
-            <option value="full_roster">Chamada completa</option>
-            <option value="participation_only">Somente participação</option>
+            <option value="headcount_only">Somente quantidade — sem nomes</option>
+            <option value="participation_only">Participantes identificados — sem faltas</option>
+            <option value="full_roster">Chamada completa — com faltas</option>
           </select>
         )}
-        <p id="attendance-mode-help" className="mt-2 text-xs text-[#647268]">Chamada completa registra faltas; participação opcional não gera ausência.</p>
+        <p id="attendance-mode-help" className="mt-2 text-xs text-[#647268]">
+          {mode === "headcount_only" ? "Mais privacidade: registra apenas o total e os visitantes." : mode === "participation_only" ? "Registra quem participou, sem gerar ausência." : "Registra presença, ausência e justificativa por nome."}
+        </p>
       </div>
       <div>
         <label className="label" htmlFor="title">Título</label>
-        <input className="input" id="title" name="title" defaultValue="EBD" required />
+        <input className="input" id="title" name="title" value={title} onChange={(event) => setTitle(event.target.value)} required />
       </div>
       <div>
         <label className="label" htmlFor="event_date">Data</label>

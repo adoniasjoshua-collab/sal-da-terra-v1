@@ -1,6 +1,8 @@
 import { formatDate } from "@/lib/format";
 import type { EbdSummary } from "@/services/dashboard-metrics";
 import { RADAR_LABELS, type RadarStatus } from "@/services/pastoral-radar";
+import { EVENT_TYPE_LABELS } from "@/services/events";
+import type { EventCategoryMetric } from "@/services/event-dashboard";
 
 const attendancePalette = {
   present: { label: "Presentes", color: "#2f855a" },
@@ -102,6 +104,26 @@ export function RadarDistribution({ counts }: { counts: Record<RadarStatus, numb
         <div key={status}>
           <div className="mb-1.5 flex items-center justify-between gap-3 text-sm"><span className="font-semibold">{RADAR_LABELS[status]}</span><span className="font-black tabular-nums">{counts[status]}</span></div>
           <div className="h-3 overflow-hidden rounded-full bg-[#edf1ed]" role="img" aria-label={`${RADAR_LABELS[status]}: ${counts[status]} adolescentes`}><div className="h-full rounded-full" style={{ backgroundColor: radarPalette[status], width: `${(counts[status] / max) * 100}%` }} /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function EventParticipationChart({ categories }: { categories: EventCategoryMetric[] }) {
+  if (categories.length === 0) return <p className="py-10 text-center text-sm text-[#647268]">Conclua eventos não EBD para visualizar a participação por categoria.</p>;
+  const max = Math.max(...categories.map((item) => item.participations), 1);
+
+  return (
+    <div className="mt-5 space-y-5">
+      {categories.map((item) => (
+        <div key={item.type}>
+          <div className="mb-1.5 flex flex-wrap items-end justify-between gap-2">
+            <div><p className="text-sm font-bold">{EVENT_TYPE_LABELS[item.type]}</p><p className="text-xs text-[#647268]">{item.eventCount} {item.eventCount === 1 ? "evento" : "eventos"} · média {(item.participations / item.eventCount).toFixed(1).replace(".", ",")}</p></div>
+            <p className="text-sm font-black tabular-nums">{item.participations} participações</p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#edf1ed]" role="img" aria-label={`${EVENT_TYPE_LABELS[item.type]}: ${item.participations} participações em ${item.eventCount} eventos`}><div className="h-full rounded-full bg-[#3f7cac]" style={{ width: `${(item.participations / max) * 100}%` }} /></div>
+          <p className="mt-1.5 text-[11px] text-[#647268]">{item.identifiedEventCount > 0 ? `${item.identifiedUnique} pessoas únicas em ${item.identifiedEventCount} eventos identificados` : "Sem identificação nominal"}{item.aggregateEventCount > 0 ? ` · ${item.aggregateEventCount} por quantidade` : ""}</p>
         </div>
       ))}
     </div>

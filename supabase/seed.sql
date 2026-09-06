@@ -54,7 +54,11 @@ insert into public.events (id, ministry_id, title, type, event_date, start_time,
   ('40000000-0000-0000-0000-000000000006','20000000-0000-0000-0000-000000000001','EBD — 06/09/2026','EBD','2026-09-06','09:00','planned');
 
 insert into public.events (id, ministry_id, title, type, event_date, start_time, status, attendance_mode) values
-  ('40000000-0000-0000-0000-000000000007','20000000-0000-0000-0000-000000000001','Ação voluntária DEMO','volunteer_action','2026-09-05','14:00','completed','participation_only');
+  ('40000000-0000-0000-0000-000000000007','20000000-0000-0000-0000-000000000001','Ação voluntária DEMO','volunteer_action','2026-09-05','14:00','completed','participation_only'),
+  ('40000000-0000-0000-0000-000000000008','20000000-0000-0000-0000-000000000001','Culto de adolescentes DEMO','worship','2026-09-04','19:00','completed','headcount_only');
+
+insert into public.event_headcounts (ministry_id, event_id, adolescent_count, visitor_count, is_estimated, registered_by) values
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000008',18,4,false,'50000000-0000-0000-0000-000000000002');
 
 insert into public.attendance (ministry_id, event_id, student_id, attendance_status) values
   ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','present'),

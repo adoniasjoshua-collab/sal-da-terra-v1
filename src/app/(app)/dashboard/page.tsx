@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
-import { EbdTrendChart, LastEbdDonut, RadarDistribution } from "@/features/dashboard/dashboard-charts";
+import { EbdTrendChart, EventParticipationChart, LastEbdDonut, RadarDistribution } from "@/features/dashboard/dashboard-charts";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAttendanceMetrics, type AttendanceStatus } from "@/services/attendance";
 import { combinedOperationalRate, rateDelta, summarizeEbd, type DashboardAttendance } from "@/services/dashboard-metrics";
+import { buildEventDashboard, type EventDashboardHeadcount } from "@/services/event-dashboard";
+import { EVENT_TYPE_LABELS } from "@/services/events";
 import { getRadarStatus, type RadarStatus } from "@/services/pastoral-radar";
+import type { AttendanceMode, EventStatus, EventType } from "@/types/database";
 
 type Student = { id: string; full_name: string; preferred_name: string | null; status: string; is_active: boolean };
-type Event = { id: string; event_date: string; title: string };
+type Event = { id: string; event_date: string; title: string; type: EventType; status: EventStatus; attendance_mode: AttendanceMode };
 type Attendance = DashboardAttendance & { student_id: string };
 
 function formatRate(value: number | null) {
@@ -28,22 +31,28 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const [studentsResult, eventsResult, followupsResult] = await Promise.all([
     supabase.from("students").select("id,full_name,preferred_name,status,is_active").eq("ministry_id", actor.ministryId).neq("status", "archived"),
-    supabase.from("events").select("id,event_date,title").eq("ministry_id", actor.ministryId).eq("type", "EBD").eq("status", "completed").order("event_date", { ascending: false }),
+    supabase.from("events").select("id,event_date,title,type,status,attendance_mode").eq("ministry_id", actor.ministryId).order("event_date", { ascending: false }),
     supabase.from("pastoral_followups").select("id", { count: "exact", head: true }).eq("ministry_id", actor.ministryId).eq("status", "open"),
   ]);
 
   if (studentsResult.error || eventsResult.error) throw new Error("Não foi possível carregar os indicadores do ministério.");
 
   const students = (studentsResult.data ?? []) as Student[];
-  const events = (eventsResult.data ?? []) as Event[];
-  const attendanceResult = events.length
-    ? await supabase.from("attendance").select("student_id,event_id,attendance_status").in("event_id", events.map((event) => event.id))
-    : { data: [], error: null };
+  const allEvents = (eventsResult.data ?? []) as Event[];
+  const events = allEvents.filter((event) => event.type === "EBD" && event.status === "completed");
+  const [attendanceResult, headcountsResult] = allEvents.length
+    ? await Promise.all([
+        supabase.from("attendance").select("student_id,event_id,attendance_status").in("event_id", allEvents.map((event) => event.id)),
+        supabase.from("event_headcounts").select("event_id,adolescent_count,visitor_count,is_estimated").in("event_id", allEvents.map((event) => event.id)),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }];
 
-  if (attendanceResult.error) throw new Error("Não foi possível carregar a frequência da EBD.");
+  if (attendanceResult.error || headcountsResult.error) throw new Error("Não foi possível carregar os indicadores de participação.");
 
   const attendance = (attendanceResult.data ?? []) as Attendance[];
+  const headcounts = (headcountsResult.data ?? []) as EventDashboardHeadcount[];
   const eventDates = new Map(events.map((event) => [event.id, event.event_date]));
+  const ebdEventIds = new Set(events.map((event) => event.id));
   const summaries = events.slice(0, 12).map((event) => summarizeEbd(event, attendance));
   const last = summaries[0];
   const recentRate = combinedOperationalRate(summaries.slice(0, 4));
@@ -53,7 +62,7 @@ export default async function DashboardPage() {
   const enriched = students.map((student) => {
     const metrics = calculateAttendanceMetrics(
       attendance
-        .filter((row) => row.student_id === student.id)
+        .filter((row) => row.student_id === student.id && ebdEventIds.has(row.event_id))
         .map((row) => ({ eventDate: eventDates.get(row.event_id)!, status: row.attendance_status as AttendanceStatus })),
     );
     const participates = student.is_active && student.status !== "inactive";
@@ -67,6 +76,12 @@ export default async function DashboardPage() {
     .sort((a, b) => b.metrics.consecutiveAbsences - a.metrics.consecutiveAbsences);
   const attentionTotal = radarCounts.attention + radarCounts.follow_up + radarCounts.priority;
   const lastConsidered = last ? last.present + last.absent : 0;
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const eventDashboard = buildEventDashboard(allEvents, attendance, headcounts, today);
+  const eventAgenda = [
+    ...eventDashboard.pending.map((event) => ({ ...event, operationalStatus: "Registro pendente" })),
+    ...eventDashboard.upcoming.map((event) => ({ ...event, operationalStatus: "Próximo evento" })),
+  ].slice(0, 6);
 
   const cards = [
     { label: "Adolescentes", value: students.length, detail: "Cadastros não arquivados" },
@@ -110,6 +125,23 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
+
+      <section className="mt-10" aria-labelledby="events-overview-title">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="mb-1 text-xs font-black uppercase tracking-[.16em] text-[#3f7cac]">Outros eventos</p><h2 id="events-overview-title" className="text-2xl font-black">Eventos e participação</h2><p className="mt-1 text-sm text-[#647268]">Volume dos últimos 90 dias, separado da frequência EBD.</p></div><Link href="/eventos" className="button-secondary">Gerenciar eventos</Link></div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Eventos realizados</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.completed.length}</p><p className="mt-2 text-xs text-[#647268]">Concluídos nos últimos 90 dias</p></article>
+          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Participações</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.participationTotal}</p><p className="mt-2 text-xs text-[#647268]">Soma das presenças e contagens</p></article>
+          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Pessoas identificadas</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.identifiedUnique}</p><p className="mt-2 text-xs text-[#647268]">Únicas, somente em eventos por nome</p></article>
+          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Próximos 30 dias</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.upcoming.length}</p><p className="mt-2 text-xs text-[#647268]">Planejados ou abertos</p></article>
+          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Registros pendentes</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.pending.length}</p><p className="mt-2 text-xs text-[#647268]">Eventos passados ainda não concluídos</p></article>
+          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Contagens estimadas</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.estimatedCount}</p><p className="mt-2 text-xs text-[#647268]">Sinalizadas com transparência</p></article>
+        </div>
+
+        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,.75fr)]">
+          <section className="card p-5 sm:p-6" aria-labelledby="event-category-title"><h3 id="event-category-title" className="text-xl font-black">Participação por categoria</h3><p className="mt-1 text-sm text-[#647268]">Participações, não pessoas únicas · últimos 90 dias</p><EventParticipationChart categories={eventDashboard.categories} /></section>
+          <section className="card p-5 sm:p-6" aria-labelledby="event-agenda-title"><h3 id="event-agenda-title" className="text-xl font-black">Agenda operacional</h3><p className="mt-1 text-sm text-[#647268]">Prioriza registros atrasados e próximos eventos.</p>{eventAgenda.length === 0 ? <p className="py-10 text-center text-sm text-[#647268]">Nenhuma pendência ou evento nos próximos 30 dias.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{eventAgenda.map((event) => <article className="py-4" key={event.id}><div className="flex items-start justify-between gap-3"><div><Link className="font-bold hover:text-[#176b49]" href={`/eventos/${event.id}`}>{event.title}</Link><p className="mt-1 text-xs text-[#647268]">{EVENT_TYPE_LABELS[event.type]} · {formatDate(event.event_date)}</p></div><span className={`badge ${event.operationalStatus === "Registro pendente" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{event.operationalStatus}</span></div></article>)}</div>}</section>
+        </div>
+      </section>
 
       <p className="mt-5 text-xs leading-5 text-[#647268]">Comparecimento operacional: presentes ÷ (presentes + ausentes). Justificativas e visitantes são exibidos separadamente e não reduzem esse percentual.</p>
     </>
