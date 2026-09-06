@@ -1,0 +1,74 @@
+-- Entirely fictitious development data. Never replace with real minor data.
+insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, confirmation_token, recovery_token, email_change, email_change_token_new, created_at, updated_at) values
+  ('00000000-0000-0000-0000-000000000000','50000000-0000-0000-0000-000000000001','authenticated','authenticated','lider.demo@saldaterra.invalid',extensions.crypt('SalDaTerra-DEMO-2026!',extensions.gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{"full_name":"Líder Débora DEMO"}','','','','',now(),now()),
+  ('00000000-0000-0000-0000-000000000000','50000000-0000-0000-0000-000000000002','authenticated','authenticated','admin.demo@saldaterra.invalid',extensions.crypt('SalDaTerra-DEMO-2026!',extensions.gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{"full_name":"Administrador Samuel DEMO"}','','','','',now(),now()),
+  ('00000000-0000-0000-0000-000000000000','50000000-0000-0000-0000-000000000003','authenticated','authenticated','aluno.demo@saldaterra.invalid',extensions.crypt('SalDaTerra-DEMO-2026!',extensions.gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{"full_name":"Gabriel Oliveira DEMO"}','','','','',now(),now());
+
+insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select
+  u.id::text,
+  u.id,
+  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true, 'phone_verified', false),
+  'email',
+  now(),
+  now(),
+  now()
+from auth.users u
+where u.email in (
+  'lider.demo@saldaterra.invalid',
+  'admin.demo@saldaterra.invalid',
+  'aluno.demo@saldaterra.invalid'
+)
+on conflict (provider_id, provider) do nothing;
+
+insert into public.profiles (id, full_name) values
+  ('50000000-0000-0000-0000-000000000001','Líder Débora DEMO'),
+  ('50000000-0000-0000-0000-000000000002','Administrador Samuel DEMO'),
+  ('50000000-0000-0000-0000-000000000003','Gabriel Oliveira DEMO');
+
+insert into public.churches (id, name, slug) values
+  ('10000000-0000-0000-0000-000000000001', 'Igreja Pioneira DEMO', 'igreja-pioneira-demo');
+insert into public.ministries (id, church_id, name) values
+  ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Sal da Terra DEMO');
+
+insert into public.ministry_members (ministry_id, profile_id, role) values
+  ('20000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001','leader'),
+  ('20000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000002','admin'),
+  ('20000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000003','student');
+
+insert into public.students (id, ministry_id, full_name, preferred_name, birth_date, guardian_name, guardian_phone, guardian_relationship, joined_at, status, is_active) values
+  ('30000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','Gabriel Oliveira DEMO','Gabriel','2011-03-14','Marina Oliveira DEMO','(00) 90000-0001','Mãe','2026-01-18','active',true),
+  ('30000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','Ana Souza DEMO','Ana','2010-07-22','Paulo Souza DEMO','(00) 90000-0002','Pai','2026-02-01','active',true),
+  ('30000000-0000-0000-0000-000000000003','20000000-0000-0000-0000-000000000001','Lucas Santos DEMO','Lucas','2012-01-09','Renata Santos DEMO','(00) 90000-0003','Mãe','2026-01-25','active',true),
+  ('30000000-0000-0000-0000-000000000004','20000000-0000-0000-0000-000000000001','Pedro Lima DEMO','Pedro','2009-11-30','Carlos Lima DEMO','(00) 90000-0004','Pai','2026-03-08','active',true),
+  ('30000000-0000-0000-0000-000000000005','20000000-0000-0000-0000-000000000001','Beatriz Rocha DEMO','Bia','2011-05-18','Juliana Rocha DEMO','(00) 90000-0005','Mãe','2026-08-23','visitor',true);
+
+update public.students set auth_user_id = '50000000-0000-0000-0000-000000000003' where id = '30000000-0000-0000-0000-000000000001';
+
+insert into public.events (id, ministry_id, title, type, event_date, start_time, status) values
+  ('40000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','EBD — 02/08/2026','EBD','2026-08-02','09:00','completed'),
+  ('40000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','EBD — 09/08/2026','EBD','2026-08-09','09:00','completed'),
+  ('40000000-0000-0000-0000-000000000003','20000000-0000-0000-0000-000000000001','EBD — 16/08/2026','EBD','2026-08-16','09:00','completed'),
+  ('40000000-0000-0000-0000-000000000004','20000000-0000-0000-0000-000000000001','EBD — 23/08/2026','EBD','2026-08-23','09:00','completed'),
+  ('40000000-0000-0000-0000-000000000005','20000000-0000-0000-0000-000000000001','EBD — 30/08/2026','EBD','2026-08-30','09:00','completed'),
+  ('40000000-0000-0000-0000-000000000006','20000000-0000-0000-0000-000000000001','EBD — 06/09/2026','EBD','2026-09-06','09:00','planned');
+
+insert into public.attendance (ministry_id, event_id, student_id, attendance_status) values
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000002','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000003','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000001','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000002','justified'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000003','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000001','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000002','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000003','absent'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000001','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000002','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000003','absent'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000004','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000001','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000002','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000003','absent'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000004','present'),
+  ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000005','visitor');

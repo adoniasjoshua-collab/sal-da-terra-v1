@@ -1,0 +1,2 @@
+"use client";
+export default function ErrorState({ reset }: { reset: () => void }) { return <section className="card p-8 text-center" role="alert"><h2 className="text-xl font-black">Não foi possível carregar</h2><p className="mt-2 text-[#647268]">Tente novamente. Se o problema continuar, fale com a administração.</p><button className="button-secondary mt-5" onClick={reset}>Tentar novamente</button></section>; }

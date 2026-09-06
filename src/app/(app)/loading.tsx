@@ -1,0 +1,1 @@
+export default function Loading() { return <div aria-live="polite" className="grid gap-4"><div className="h-9 w-56 animate-pulse rounded bg-[#dfe6df]"/><div className="h-40 animate-pulse rounded-2xl bg-white"/></div>; }

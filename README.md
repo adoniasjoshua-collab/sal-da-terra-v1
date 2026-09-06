@@ -1,36 +1,15 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SAL DA TERRA V1
 
-## Getting Started
+Plataforma segura de gestão, presença EBD e acompanhamento pastoral de adolescentes.
 
-First, run the development server:
+## Executar
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Copie `.env.example` para `.env.local` e preencha URL e publishable key do Supabase.
+2. Execute `supabase start`, depois `supabase db reset` para migration e seed locais.
+3. Execute `npm install` e `npm run dev`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Somente no banco local gerado pelo seed: `lider.demo@saldaterra.invalid`, `admin.demo@saldaterra.invalid` e `aluno.demo@saldaterra.invalid` usam a senha fictícia `SalDaTerra-DEMO-2026!`. Nunca replique essas credenciais em produção.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Validação: `npm run check`. A aplicação usa dados fictícios no seed; nunca adicione dados reais de menores ao repositório.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Consulte [AGENTS.md](./AGENTS.md) e `docs/` para arquitetura, segurança e operação.

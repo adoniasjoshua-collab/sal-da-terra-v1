@@ -1,0 +1,3 @@
+export function formatDate(value: string | null | undefined) { if (!value) return "—"; return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${value.slice(0,10)}T12:00:00Z`)); }
+export function ageFromBirthDate(value: string) { const birth = new Date(`${value}T12:00:00Z`); const now = new Date(); let age = now.getUTCFullYear() - birth.getUTCFullYear(); if (now.getUTCMonth() < birth.getUTCMonth() || (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() < birth.getUTCDate())) age--; return age; }
+export function initials(name: string) { return name.split(/\s+/).slice(0,2).map((part) => part[0]).join("").toUpperCase(); }

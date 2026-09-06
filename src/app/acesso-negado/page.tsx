@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function AccessDenied() { return <main className="grid min-h-screen place-items-center p-5"><section className="card max-w-lg p-8 text-center"><h1 className="text-2xl font-black">Acesso ainda não configurado</h1><p className="mt-3 text-[#647268]">Sua conta existe, mas não possui vínculo ativo com um ministério.</p><Link href="/login" className="button-secondary mt-6">Voltar</Link></section></main>; }
