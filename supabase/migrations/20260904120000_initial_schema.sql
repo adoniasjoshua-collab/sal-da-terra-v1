@@ -4,9 +4,9 @@ create extension if not exists pgcrypto with schema extensions;
 
 create type public.member_role as enum ('student', 'leader', 'admin');
 create type public.student_status as enum ('active', 'inactive', 'visitor', 'archived');
-create type public.event_type as enum ('EBD', 'worship', 'evangelism', 'rehearsal', 'outing', 'congress', 'meeting');
+create type public.event_type as enum ('EBD', 'worship', 'evangelism', 'volunteer_action', 'rehearsal', 'outing', 'congress', 'retreat', 'meeting');
 create type public.event_status as enum ('planned', 'open', 'completed', 'cancelled');
-create type public.attendance_status as enum ('present', 'absent', 'justified', 'visitor');
+create type public.attendance_status as enum ('present', 'absent', 'justified', 'visitor', 'not_participated');
 create type public.followup_type as enum ('conversation', 'phone_call', 'whatsapp', 'family_contact', 'visit', 'prayer', 'other');
 create type public.followup_status as enum ('open', 'completed', 'cancelled');
 
@@ -54,6 +54,7 @@ create table public.events (
   id uuid primary key default gen_random_uuid(), ministry_id uuid not null references public.ministries(id) on delete restrict,
   title text not null check (char_length(title) between 2 and 160), type public.event_type not null default 'EBD',
   event_date date not null, start_time time, description text, status public.event_status not null default 'planned',
+  attendance_mode text not null default 'full_roster' check (attendance_mode in ('full_roster', 'participation_only')),
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
@@ -226,6 +227,7 @@ language sql stable security definer set search_path = '' as $$
   where s.auth_user_id = auth.uid()
     and s.is_active
     and a.ministry_id = s.ministry_id
+    and e.type = 'EBD'
     and exists (
       select 1
       from public.ministry_members mm

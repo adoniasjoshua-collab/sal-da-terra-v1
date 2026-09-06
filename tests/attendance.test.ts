@@ -21,4 +21,12 @@ describe("attendance metrics", () => {
   it("returns safe zero values for no events", () => {
     expect(calculateAttendanceMetrics([])).toMatchObject({ total: 0, presenceRate: 0, lastPresence: null });
   });
+
+  it("excludes optional non-participation from attendance metrics", () => {
+    const result = calculateAttendanceMetrics([
+      { eventDate: "2026-09-06", status: "not_participated" },
+      { eventDate: "2026-08-30", status: "present" },
+    ]);
+    expect(result).toMatchObject({ total: 1, present: 1, absent: 0, presenceRate: 100 });
+  });
 });

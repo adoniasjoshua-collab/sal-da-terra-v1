@@ -1,6 +1,6 @@
 export type AttendanceStatus = "present" | "absent" | "justified" | "visitor";
 
-export type AttendanceRecord = { eventDate: string; status: AttendanceStatus };
+export type AttendanceRecord = { eventDate: string; status: AttendanceStatus | "not_participated" };
 
 export type AttendanceMetrics = {
   total: number; present: number; absent: number; justified: number; visitor: number;
@@ -9,7 +9,7 @@ export type AttendanceMetrics = {
 };
 
 export function calculateAttendanceMetrics(records: AttendanceRecord[]): AttendanceMetrics {
-  const ordered = [...records].sort((a, b) => b.eventDate.localeCompare(a.eventDate));
+  const ordered = records.filter((item) => item.status !== "not_participated").sort((a, b) => b.eventDate.localeCompare(a.eventDate));
   const count = (status: AttendanceStatus) => ordered.filter((item) => item.status === status).length;
   const present = count("present");
   let consecutiveAbsences = 0;

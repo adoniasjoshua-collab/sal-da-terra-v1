@@ -15,3 +15,7 @@ Radar is derived from consecutive ordinary EBD absences: 0–1 active, 2 attenti
 ## ADR-004 — No service role in web runtime
 
 All application queries use the caller's publishable-key session. Privileged lifecycle operations belong in separately reviewed admin infrastructure.
+
+## ADR-005 — Event participation is not one universal frequency
+
+EBD uses a full roster and remains the sole input for EBD frequency and the V1 pastoral radar. Optional events record observable participation with a neutral `not_participated` state. Other event categories appear as timeline context and are never converted into a spiritual or global engagement score.

@@ -3,4 +3,44 @@ import { PageHeading } from "@/components/page-heading";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-export default async function EventsPage(){const actor=await requireStaff();const supabase=await createClient();const {data:events}=await supabase.from("events").select("id,title,event_date,start_time,status,type").eq("ministry_id",actor.ministryId).order("event_date",{ascending:false});return <><PageHeading eyebrow="Agenda" title="Eventos e EBD" description="Crie o domingo e faça a chamada de toda a turma em uma tela." action={<Link className="button-primary" href="/eventos/novo">Nova EBD</Link>}/>{!events?.length?<section className="card p-10 text-center"><h2 className="font-bold">Nenhum evento criado</h2><p className="mt-2 text-sm text-[#647268]">Crie a primeira EBD para iniciar a chamada.</p></section>:<section className="grid gap-3">{events.map((event)=><Link className="card flex items-center justify-between gap-4 p-5 hover:border-[#86ad96]" href={`/eventos/${event.id}`} key={event.id}><div><p className="font-bold">{event.title}</p><p className="mt-1 text-sm text-[#647268]">{formatDate(event.event_date)} {event.start_time&&`· ${event.start_time.slice(0,5)}`}</p></div><span className="badge bg-[#edf7f1] text-[#176b49]">{event.status==="completed"?"Chamada salva":"Abrir chamada"}</span></Link>)}</section>}</>}
+import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
+
+export default async function EventsPage() {
+  const actor = await requireStaff();
+  const supabase = await createClient();
+  const { data: events, error } = await supabase
+    .from("events")
+    .select("id,title,event_date,start_time,status,type,attendance_mode")
+    .eq("ministry_id", actor.ministryId)
+    .order("event_date", { ascending: false });
+
+  return (
+    <>
+      <PageHeading
+        eyebrow="Agenda"
+        title="Eventos e participação"
+        description="Registre EBD, cultos, missão, serviço e convivência sem misturar seus indicadores."
+        action={<Link className="button-primary" href="/eventos/novo">Novo evento</Link>}
+      />
+      {error ? (
+        <section className="card p-10 text-center" role="alert"><h2 className="font-bold">Não foi possível carregar os eventos</h2></section>
+      ) : !events?.length ? (
+        <section className="card p-10 text-center"><h2 className="font-bold">Nenhum evento criado</h2><p className="mt-2 text-sm text-[#647268]">Crie o primeiro evento para registrar participação.</p></section>
+      ) : (
+        <section className="grid gap-3">
+          {events.map((event) => (
+            <Link className="card flex items-center justify-between gap-4 p-5 hover:border-[#86ad96]" href={`/eventos/${event.id}`} key={event.id}>
+              <div>
+                <p className="font-bold">{event.title}</p>
+                <p className="mt-1 text-sm text-[#647268]">
+                  {EVENT_TYPE_LABELS[event.type as EventType]} · {formatDate(event.event_date)} {event.start_time && `· ${event.start_time.slice(0, 5)}`}
+                </p>
+              </div>
+              <span className="badge bg-[#edf7f1] text-[#176b49]">{event.status === "completed" ? "Registro salvo" : "Registrar"}</span>
+            </Link>
+          ))}
+        </section>
+      )}
+    </>
+  );
+}

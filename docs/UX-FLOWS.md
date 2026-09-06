@@ -2,7 +2,9 @@
 
 ## Leader
 
-Login → dashboard → attention queue / last EBD → student profile or follow-up. Students → search/filter → create/edit/archive. Events → create EBD → open Sunday → one-handed attendance list → save one upsert batch.
+Login → dashboard → attention queue / last EBD → student profile or follow-up. Students → search/filter → create/edit/archive. Events → choose event type and participation mode → one-handed roster → save one upsert batch. EBD uses a full roll call; optional events default to neutral non-participation.
+
+The student profile keeps EBD metrics separate and shows actual participation in other event categories on a chronological timeline.
 
 ## Student
 

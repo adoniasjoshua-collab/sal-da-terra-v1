@@ -8,6 +8,7 @@ import { requireStaff } from "@/lib/auth";
 import { ageFromBirthDate, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAttendanceMetrics, type AttendanceStatus } from "@/services/attendance";
+import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
 import { getRadarStatus } from "@/services/pastoral-radar";
 
 type Props = { params: Promise<{ id: string }> };
@@ -28,9 +29,8 @@ export default async function StudentProfilePage({ params }: Props) {
   const [{ data: events }, { data: followups }] = await Promise.all([
     supabase
       .from("events")
-      .select("id,event_date,title")
+      .select("id,event_date,title,type")
       .eq("ministry_id", actor.ministryId)
-      .eq("type", "EBD")
       .eq("status", "completed")
       .order("event_date", { ascending: false }),
     supabase
@@ -49,15 +49,21 @@ export default async function StudentProfilePage({ params }: Props) {
     : { data: [] };
 
   const eventMap = new Map((events ?? []).map((event) => [event.id, event]));
-  const records = (attendance ?? []).map((item) => ({
-    eventDate: eventMap.get(item.event_id)!.event_date,
-    status: item.attendance_status as AttendanceStatus,
-  }));
+  const records = (attendance ?? [])
+    .filter((item) => eventMap.get(item.event_id)?.type === "EBD")
+    .map((item) => ({
+      eventDate: eventMap.get(item.event_id)!.event_date,
+      status: item.attendance_status as AttendanceStatus,
+    }));
   const metrics = calculateAttendanceMetrics(records);
   const radar = getRadarStatus(metrics.consecutiveAbsences, student.is_active);
   const history = (attendance ?? [])
     .map((row) => ({ ...row, event: eventMap.get(row.event_id) }))
     .sort((a, b) => b.event!.event_date.localeCompare(a.event!.event_date));
+  const ebdHistory = history.filter((row) => row.event?.type === "EBD");
+  const participationTimeline = history.filter((row) =>
+    row.event?.type !== "EBD" && ["present", "visitor"].includes(row.attendance_status),
+  );
 
   const metricCards = [
     ["Frequência", `${metrics.presenceRate}%`],
@@ -104,11 +110,11 @@ export default async function StudentProfilePage({ params }: Props) {
 
         <section className="card p-5 sm:p-6">
           <h2 className="text-xl font-black">Últimos domingos</h2>
-          {history.length === 0 ? (
+          {ebdHistory.length === 0 ? (
             <p className="mt-4 text-sm text-[#647268]">Nenhuma chamada registrada.</p>
           ) : (
             <div className="mt-3 divide-y divide-[#e7ece8]">
-              {history.slice(0, 8).map((row) => (
+              {ebdHistory.slice(0, 8).map((row) => (
                 <div className="flex justify-between py-3 text-sm" key={row.event_id}>
                   <span>{formatDate(row.event?.event_date)}</span>
                   <span className="font-bold capitalize">
@@ -120,6 +126,26 @@ export default async function StudentProfilePage({ params }: Props) {
           )}
         </section>
       </div>
+
+      <section className="card mt-7 p-5 sm:p-6">
+        <h2 className="text-xl font-black">Timeline de participação</h2>
+        <p className="mt-1 text-sm text-[#647268]">Cultos, missão, serviço e convivência registrados pela liderança.</p>
+        {participationTimeline.length === 0 ? (
+          <p className="mt-5 text-sm text-[#647268]">Nenhuma participação adicional registrada.</p>
+        ) : (
+          <div className="mt-4 divide-y divide-[#e7ece8]">
+            {participationTimeline.map((row) => (
+              <article className="flex flex-wrap items-center justify-between gap-3 py-4" key={row.event_id}>
+                <div>
+                  <p className="font-bold">{row.event?.title}</p>
+                  <p className="mt-1 text-sm text-[#647268]">{EVENT_TYPE_LABELS[row.event?.type as EventType]}</p>
+                </div>
+                <time className="text-sm font-semibold">{formatDate(row.event?.event_date)}</time>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="card mt-7 p-5 sm:p-6">
         <h2 className="text-xl font-black">Acompanhamentos pastorais</h2>
