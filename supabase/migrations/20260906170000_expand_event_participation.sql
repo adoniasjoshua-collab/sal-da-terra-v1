@@ -5,7 +5,7 @@ alter type public.event_type add value if not exists 'retreat';
 alter type public.attendance_status add value if not exists 'not_participated';
 
 alter table public.events
-  add column attendance_mode text not null default 'full_roster'
+  add column if not exists attendance_mode text not null default 'full_roster'
   check (attendance_mode in ('full_roster', 'participation_only'));
 
 -- The existing student RPC powers EBD-specific metrics. Other observable

@@ -4,7 +4,7 @@ create extension if not exists pgcrypto with schema extensions;
 
 create type public.member_role as enum ('student', 'leader', 'admin');
 create type public.student_status as enum ('active', 'inactive', 'visitor', 'archived');
-create type public.event_type as enum ('EBD', 'worship', 'evangelism', 'volunteer_action', 'rehearsal', 'outing', 'congress', 'retreat', 'meeting');
+create type public.event_type as enum ('EBD', 'worship', 'evangelism', 'rehearsal', 'outing', 'congress', 'meeting', 'volunteer_action', 'retreat');
 create type public.event_status as enum ('planned', 'open', 'completed', 'cancelled');
 create type public.attendance_status as enum ('present', 'absent', 'justified', 'visitor', 'not_participated');
 create type public.followup_type as enum ('conversation', 'phone_call', 'whatsapp', 'family_contact', 'visit', 'prayer', 'other');
@@ -55,6 +55,7 @@ create table public.events (
   title text not null check (char_length(title) between 2 and 160), type public.event_type not null default 'EBD',
   event_date date not null, start_time time, description text, status public.event_status not null default 'planned',
   attendance_mode text not null default 'full_roster' check (attendance_mode in ('full_roster', 'participation_only')),
+  constraint events_ebd_full_roster_check check (type <> 'EBD' or attendance_mode = 'full_roster'),
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
@@ -124,11 +125,18 @@ begin
   return new;
 end; $$;
 create function public.validate_attendance_scope() returns trigger language plpgsql set search_path = '' as $$
+declare event_mode text;
 begin
-  if (
-    not exists (select 1 from public.events e where e.id = new.event_id and e.ministry_id = new.ministry_id) or
-    not exists (select 1 from public.students s where s.id = new.student_id and s.ministry_id = new.ministry_id)
+  select e.attendance_mode into event_mode
+  from public.events e
+  where e.id = new.event_id and e.ministry_id = new.ministry_id;
+  if event_mode is null or not exists (
+    select 1 from public.students s where s.id = new.student_id and s.ministry_id = new.ministry_id
   ) then raise exception 'attendance relationships must share ministry'; end if;
+  if event_mode = 'full_roster' and new.attendance_status = 'not_participated'
+  then raise exception 'full roster events require an attendance outcome'; end if;
+  if event_mode = 'participation_only' and new.attendance_status in ('absent', 'justified')
+  then raise exception 'optional events do not record absence outcomes'; end if;
   return new;
 end; $$;
 create function public.validate_followup_scope() returns trigger language plpgsql set search_path = '' as $$

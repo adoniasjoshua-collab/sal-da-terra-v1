@@ -29,11 +29,18 @@ export function EventForm() {
       </div>
       <div>
         <label className="label" htmlFor="attendance_mode">Registro de participação</label>
-        <select className="input" id="attendance_mode" name="attendance_mode" value={mode} onChange={(event) => setMode(event.target.value as AttendanceMode)}>
-          <option value="full_roster">Chamada completa</option>
-          <option value="participation_only">Somente participação</option>
-        </select>
-        <p className="mt-2 text-xs text-[#647268]">Chamada completa registra faltas; participação opcional não gera ausência.</p>
+        {type === "EBD" ? (
+          <>
+            <input type="hidden" name="attendance_mode" value="full_roster" />
+            <input className="input bg-[#f5f7f3] text-[#526158]" id="attendance_mode" value="Chamada completa" readOnly aria-describedby="attendance-mode-help" />
+          </>
+        ) : (
+          <select className="input" id="attendance_mode" name="attendance_mode" value={mode} onChange={(event) => setMode(event.target.value as AttendanceMode)}>
+            <option value="full_roster">Chamada completa</option>
+            <option value="participation_only">Somente participação</option>
+          </select>
+        )}
+        <p id="attendance-mode-help" className="mt-2 text-xs text-[#647268]">Chamada completa registra faltas; participação opcional não gera ausência.</p>
       </div>
       <div>
         <label className="label" htmlFor="title">Título</label>

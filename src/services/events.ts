@@ -12,6 +12,7 @@ export const EVENT_TYPE_OPTIONS = [
 
 export type EventType = (typeof EVENT_TYPE_OPTIONS)[number]["value"];
 export type AttendanceMode = "full_roster" | "participation_only";
+export type ParticipationStatus = "present" | "absent" | "justified" | "visitor" | "not_participated";
 
 export const EVENT_TYPE_VALUES = EVENT_TYPE_OPTIONS.map((option) => option.value) as [EventType, ...EventType[]];
 export const EVENT_TYPE_LABELS = Object.fromEntries(
@@ -20,4 +21,9 @@ export const EVENT_TYPE_LABELS = Object.fromEntries(
 
 export function defaultAttendanceMode(type: EventType): AttendanceMode {
   return EVENT_TYPE_OPTIONS.find((option) => option.value === type)?.mode ?? "participation_only";
+}
+
+export function isAttendanceStatusAllowed(mode: AttendanceMode, status: ParticipationStatus): boolean {
+  if (mode === "full_roster") return status !== "not_participated";
+  return status !== "absent" && status !== "justified";
 }

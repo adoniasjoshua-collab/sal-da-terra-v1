@@ -1,5 +1,5 @@
 begin;
-select plan(6);
+select plan(8);
 set local role authenticated;
 select set_config('request.jwt.claim.sub','50000000-0000-0000-0000-000000000001',true);
 
@@ -23,6 +23,17 @@ values ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-00000000
 on conflict(event_id,student_id) do update set attendance_status=excluded.attendance_status,registered_by=excluded.registered_by;
 select is((select attendance_status::text from public.attendance where event_id='40000000-0000-0000-0000-000000000006' and student_id='94000000-0000-0000-0000-000000000001'),'present','attendance upsert updates status');
 select is((select count(*)::integer from public.attendance where event_id='40000000-0000-0000-0000-000000000006' and student_id='94000000-0000-0000-0000-000000000001'),1,'attendance unique pair prevents duplication');
+
+select throws_ok(
+  $$update public.attendance set attendance_status='not_participated' where event_id='40000000-0000-0000-0000-000000000006' and student_id='94000000-0000-0000-0000-000000000001'$$,
+  'P0001', 'full roster events require an attendance outcome',
+  'full roster rejects neutral non-participation'
+);
+select throws_ok(
+  $$insert into public.attendance(ministry_id,event_id,student_id,attendance_status,registered_by) values ('20000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000007','94000000-0000-0000-0000-000000000001','absent','50000000-0000-0000-0000-000000000001')$$,
+  'P0001', 'optional events do not record absence outcomes',
+  'optional participation rejects absence outcomes'
+);
 
 select * from finish();
 rollback;

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { EVENT_TYPE_VALUES } from "@/services/events";
+import { EVENT_TYPE_VALUES, isAttendanceStatusAllowed, type AttendanceMode } from "@/services/events";
 
 export type EventState = { error?: string } | undefined;
 const eventSchema = z.object({
@@ -15,6 +15,9 @@ const eventSchema = z.object({
   event_date: z.iso.date(),
   start_time: z.string().optional(),
   description: z.string().trim().max(1000).optional(),
+}).refine((event) => event.type !== "EBD" || event.attendance_mode === "full_roster", {
+  message: "A EBD exige chamada completa.",
+  path: ["attendance_mode"],
 });
 
 export async function createEvent(_: EventState, formData: FormData): Promise<EventState> {
@@ -53,7 +56,7 @@ export async function saveAttendance(eventId: string, formData: FormData) {
   const supabase = await createClient();
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id,ministry_id")
+    .select("id,ministry_id,attendance_mode")
     .eq("id", eventId)
     .eq("ministry_id", actor.ministryId)
     .maybeSingle();
@@ -63,6 +66,9 @@ export async function saveAttendance(eventId: string, formData: FormData) {
     .filter(([key]) => key.startsWith("attendance:"))
     .map(([key, value]) => attendanceSchema.safeParse({ studentId: key.slice(11), status: value }));
   if (parsedRows.some((item) => !item.success)) throw new Error("A chamada contém dados inválidos.");
+  if (parsedRows.some((item) => item.success && !isAttendanceStatusAllowed(event.attendance_mode as AttendanceMode, item.data.status))) {
+    throw new Error("Um estado de participação não corresponde ao tipo de chamada.");
+  }
 
   const rows = parsedRows
     .filter((item) => item.success)
