@@ -10,6 +10,8 @@ The `authenticated` role receives only the table privileges required by the V1 A
 | Leader | rows in memberships where role is leader/admin | students, events, attendance and follow-ups in same ministry |
 | Admin | rows in admin memberships | same scope plus memberships and audit reads |
 
+Administrative membership changes are audited by a database trigger. A separate database guard prevents demotion or deactivation of the last active administrator in a ministry, including mutations attempted outside the application UI.
+
 Insert/update policies require both `USING` and `WITH CHECK`. Cross-ministry attendance/follow-up references are rejected by database triggers. Students have no direct policy on `students`, `attendance`, `pastoral_followups`, or `audit_logs`; the two safe RPCs return only approved columns and require an active `student` membership in the same ministry.
 
 RLS tests in `supabase/tests/rls.sql` impersonate users and verify positive and negative access. They require the local Supabase stack; TypeScript unit tests are not a substitute.
