@@ -18,6 +18,10 @@ port = 54323
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["http://localhost:3000/**"]
+site_url = "https://sal-da-terra-v1.vercel.app"
+additional_redirect_urls = ["https://sal-da-terra-v1.vercel.app/**", "http://127.0.0.1:3000/**", "http://localhost:3000/**"]
 enable_signup = false
+
+[auth.email.template.invite]
+subject = "Seu convite para o SAL DA TERRA"
+content_path = "./supabase/templates/invite.html"

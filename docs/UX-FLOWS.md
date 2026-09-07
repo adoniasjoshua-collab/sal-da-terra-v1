@@ -15,3 +15,11 @@ Login → “Olá, nome” → own EBD participation, recent Sundays, upcoming e
 Administration → search/filter ministry memberships → change role or access state → confirm access-removing changes → receive an explicit result. The page also exposes a ministry-scoped recent audit trail. The last active administrator cannot be demoted or deactivated.
 
 Every collection provides loading, empty and error states. Mobile uses stacked cards and minimum 44px controls; desktop progressively adds columns.
+
+## Help guide
+
+Every authenticated role can open **Ajuda** from the main navigation. The guide identifies the current access level and explains, in plain Portuguese with examples, the permitted workflows, event counting modes, EBD attendance, indicators, archiving, access deactivation, controlled invitations, privacy, and common access problems. It does not expose pastoral data or broaden any permission.
+
+## Invitation acceptance
+
+Authorized invitation → server-side token verification → authenticated password form → role-appropriate landing page. Passwords require at least 12 characters with upper- and lower-case letters and a number. Public sign-up remains disabled.

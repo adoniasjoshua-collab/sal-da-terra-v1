@@ -1,5 +1,57 @@
 import Link from "next/link";
 import { logout } from "@/features/auth/actions";
 import type { AuthContext } from "@/lib/auth";
-const links = [{ href: "/dashboard", label: "Visão geral" }, { href: "/adolescentes", label: "Adolescentes" }, { href: "/eventos", label: "Eventos e EBD" }];
-export function AppShell({ context, children }: { context: AuthContext; children: React.ReactNode }) { const nav = context.role === "student" ? [{ href: "/minha-participacao", label: "Minha participação" }] : context.role === "admin" ? [...links, { href: "/administracao", label: "Administração" }] : links; return <div className="min-h-screen lg:grid lg:grid-cols-[250px_1fr]"><aside className="border-b border-[#dfe6df] bg-[#143d2c] px-5 py-5 text-white lg:min-h-screen lg:border-b-0 lg:px-6 lg:py-8"><div className="flex items-center justify-between lg:block"><Link href={nav[0].href} className="font-black tracking-[.16em]">SAL DA TERRA</Link><span className="text-xs text-white/60 lg:mt-2 lg:block">{context.ministryName}</span></div><nav aria-label="Principal" className="mt-5 flex gap-2 overflow-x-auto lg:mt-10 lg:flex-col">{nav.map((link) => <Link className="whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/10 hover:text-white" key={link.href} href={link.href}>{link.label}</Link>)}</nav></aside><div><header className="flex min-h-16 items-center justify-between border-b border-[#dfe6df] bg-white px-5 sm:px-8"><div><p className="text-sm font-bold">{context.name}</p><p className="text-xs capitalize text-[#647268]">{context.role}</p></div><form action={logout}><button className="text-sm font-bold text-[#526158] hover:text-[#176b49]">Sair</button></form></header><main className="mx-auto max-w-7xl p-5 sm:p-8">{children}</main></div></div>; }
+
+const staffLinks = [
+  { href: "/dashboard", label: "Visão geral" },
+  { href: "/adolescentes", label: "Adolescentes" },
+  { href: "/eventos", label: "Eventos e EBD" },
+];
+
+const helpLink = { href: "/ajuda", label: "Ajuda" };
+
+const roleLabels = {
+  student: "Adolescente",
+  leader: "Líder",
+  admin: "Administrador",
+} as const;
+
+export function AppShell({ context, children }: { context: AuthContext; children: React.ReactNode }) {
+  const nav = context.role === "student"
+    ? [{ href: "/minha-participacao", label: "Minha participação" }, helpLink]
+    : context.role === "admin"
+      ? [...staffLinks, { href: "/administracao", label: "Administração" }, helpLink]
+      : [...staffLinks, helpLink];
+
+  return (
+    <div className="min-h-screen lg:grid lg:grid-cols-[250px_1fr]">
+      <aside className="border-b border-[#dfe6df] bg-[#143d2c] px-5 py-5 text-white lg:min-h-screen lg:border-b-0 lg:px-6 lg:py-8">
+        <div className="flex items-center justify-between lg:block">
+          <Link href={nav[0].href} className="font-black tracking-[.16em]">SAL DA TERRA</Link>
+          <span className="text-xs text-white/60 lg:mt-2 lg:block">{context.ministryName}</span>
+        </div>
+        <nav aria-label="Principal" className="mt-5 flex gap-2 overflow-x-auto lg:mt-10 lg:flex-col">
+          {nav.map((link) => (
+            <Link
+              className="whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/10 hover:text-white"
+              key={link.href}
+              href={link.href}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </aside>
+      <div>
+        <header className="flex min-h-16 items-center justify-between border-b border-[#dfe6df] bg-white px-5 sm:px-8">
+          <div>
+            <p className="text-sm font-bold">{context.name}</p>
+            <p className="text-xs text-[#647268]">{roleLabels[context.role]}</p>
+          </div>
+          <form action={logout}><button className="text-sm font-bold text-[#526158] hover:text-[#176b49]">Sair</button></form>
+        </header>
+        <main className="mx-auto max-w-7xl p-5 sm:p-8">{children}</main>
+      </div>
+    </div>
+  );
+}
