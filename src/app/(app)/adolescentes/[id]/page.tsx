@@ -5,11 +5,12 @@ import { FollowupForm } from "@/features/followups/followup-form";
 import { StudentForm } from "@/features/students/student-form";
 import { StudentLifecycleForm } from "@/features/students/student-lifecycle-form";
 import { requireStaff } from "@/lib/auth";
-import { ageFromBirthDate, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAttendanceMetrics, type AttendanceStatus } from "@/services/attendance";
 import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
 import { getRadarStatus } from "@/services/pastoral-radar";
+import { ageOnDate, getStudentLifecycle } from "@/services/student-lifecycle";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -57,6 +58,8 @@ export default async function StudentProfilePage({ params }: Props) {
     }));
   const metrics = calculateAttendanceMetrics(records);
   const radar = getRadarStatus(metrics.consecutiveAbsences, student.is_active);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const lifecycle = getStudentLifecycle(student.birth_date, today);
   const history = (attendance ?? [])
     .map((row) => ({ ...row, event: eventMap.get(row.event_id) }))
     .sort((a, b) => b.event!.event_date.localeCompare(a.event!.event_date));
@@ -81,12 +84,14 @@ export default async function StudentProfilePage({ params }: Props) {
       <PageHeading
         eyebrow="Perfil 360°"
         title={student.preferred_name || student.full_name}
-        description={`${ageFromBirthDate(student.birth_date)} anos · Desde ${formatDate(student.joined_at)}`}
+        description={`${ageOnDate(student.birth_date, today)} anos · Desde ${formatDate(student.joined_at)}`}
         action={<StatusBadge status={radar} />}
       />
       <p className="mb-6 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">
         Este radar apoia o cuidado pastoral com base em participação observável; não avalia fé ou espiritualidade.
       </p>
+      {lifecycle === "transitioning" && <p className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950"><strong>Em transição para jovens:</strong> este adolescente está no último ano da faixa de 12 a 17 anos. Organize o diálogo e o acolhimento no próximo grupo, sem alterar o cadastro automaticamente.</p>}
+      {lifecycle === "transition_due" && <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><strong>Transição pendente:</strong> a pessoa já completou 18 anos. Revise o vínculo com a liderança antes de arquivar, preservando todo o histórico.</p>}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {metricCards.map(([label, value]) => (

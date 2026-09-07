@@ -23,3 +23,7 @@ EBD uses a full roster and remains the sole input for EBD frequency and the V1 p
 ## ADR-006 — Data-minimized event counting
 
 Events support three exclusive collection modes: full roster, identified participants without absences, and aggregate headcount without names. Aggregate counting is the privacy-preserving default for worship services, evangelism and open congresses. Participation volume can use either source, but unique people are reported only when identities were legitimately collected. Existing event modes are never rewritten after records exist.
+
+## ADR-007 — Age-based alerts support, but do not automate, ministry transitions
+
+The operational adolescent range follows the Editora Betel curriculum: ages 12–17. Age 17 is labeled **transitioning** and age 18+ **transition due**. These values are derived from the authorized birth date using the ministry's São Paulo reference date; they do not mutate or archive records. The leadership decides the actual handoff date and preserves history. Birthday reminders are staff-only, have no ranking or spiritual meaning, and use no additional personal data.

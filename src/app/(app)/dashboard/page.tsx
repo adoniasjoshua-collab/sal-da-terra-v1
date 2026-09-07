@@ -10,9 +10,10 @@ import { combinedOperationalRate, rateDelta, summarizeEbd, type DashboardAttenda
 import { buildEventDashboard, type EventDashboardHeadcount } from "@/services/event-dashboard";
 import { EVENT_TYPE_LABELS } from "@/services/events";
 import { getRadarStatus, type RadarStatus } from "@/services/pastoral-radar";
+import { buildBirthdayOverview, getStudentLifecycle } from "@/services/student-lifecycle";
 import type { AttendanceMode, EventStatus, EventType } from "@/types/database";
 
-type Student = { id: string; full_name: string; preferred_name: string | null; status: string; is_active: boolean };
+type Student = { id: string; full_name: string; preferred_name: string | null; birth_date: string; status: string; is_active: boolean };
 type Event = { id: string; event_date: string; title: string; type: EventType; status: EventStatus; attendance_mode: AttendanceMode };
 type Attendance = DashboardAttendance & { student_id: string };
 
@@ -29,8 +30,9 @@ function formatDelta(value: number | null) {
 export default async function DashboardPage() {
   const actor = await requireStaff();
   const supabase = await createClient();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const [studentsResult, eventsResult, followupsResult] = await Promise.all([
-    supabase.from("students").select("id,full_name,preferred_name,status,is_active").eq("ministry_id", actor.ministryId).neq("status", "archived"),
+    supabase.from("students").select("id,full_name,preferred_name,birth_date,status,is_active").eq("ministry_id", actor.ministryId).neq("status", "archived"),
     supabase.from("events").select("id,event_date,title,type,status,attendance_mode").eq("ministry_id", actor.ministryId).order("event_date", { ascending: false }),
     supabase.from("pastoral_followups").select("id", { count: "exact", head: true }).eq("ministry_id", actor.ministryId).eq("status", "open"),
   ]);
@@ -66,7 +68,7 @@ export default async function DashboardPage() {
         .map((row) => ({ eventDate: eventDates.get(row.event_id)!, status: row.attendance_status as AttendanceStatus })),
     );
     const participates = student.is_active && student.status !== "inactive";
-    return { ...student, metrics, radar: getRadarStatus(metrics.consecutiveAbsences, participates) };
+    return { ...student, metrics, radar: getRadarStatus(metrics.consecutiveAbsences, participates), lifecycle: getStudentLifecycle(student.birth_date, today) };
   });
 
   const radarCounts: Record<RadarStatus, number> = { active: 0, attention: 0, follow_up: 0, priority: 0, inactive: 0 };
@@ -76,12 +78,17 @@ export default async function DashboardPage() {
     .sort((a, b) => b.metrics.consecutiveAbsences - a.metrics.consecutiveAbsences);
   const attentionTotal = radarCounts.attention + radarCounts.follow_up + radarCounts.priority;
   const lastConsidered = last ? last.present + last.absent : 0;
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const eventDashboard = buildEventDashboard(allEvents, attendance, headcounts, today);
   const eventAgenda = [
     ...eventDashboard.pending.map((event) => ({ ...event, operationalStatus: "Registro pendente" })),
     ...eventDashboard.upcoming.map((event) => ({ ...event, operationalStatus: "Próximo evento" })),
   ].slice(0, 6);
+  const activeStudents = students.filter((student) => student.is_active && student.status !== "inactive");
+  const birthdays = buildBirthdayOverview(activeStudents, today);
+  const transitions = enriched
+    .filter((student) => student.is_active && ["transitioning", "transition_due"].includes(student.lifecycle))
+    .sort((a, b) => a.birth_date.localeCompare(b.birth_date));
+  const transitionDue = transitions.filter((student) => student.lifecycle === "transition_due").length;
 
   const cards = [
     { label: "Adolescentes", value: students.length, detail: "Cadastros não arquivados" },
@@ -90,6 +97,7 @@ export default async function DashboardPage() {
     { label: "Média · 4 EBDs", value: formatRate(recentRate), detail: formatDelta(delta) },
     { label: "Precisam de atenção", value: attentionTotal, detail: `${radarCounts.priority} em prioridade` },
     { label: "Acompanhamentos", value: followupsResult.error ? "—" : (followupsResult.count ?? 0), detail: followupsResult.error ? "Indicador indisponível" : "Ações em aberto" },
+    { label: "Transição para jovens", value: transitions.length, detail: transitionDue ? `${transitionDue} já completaram 18 anos` : "Adolescentes no último ano" },
   ];
 
   return (
@@ -100,6 +108,21 @@ export default async function DashboardPage() {
       <section aria-label="Indicadores principais" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => <article className="card p-5" key={card.label}><p className="text-sm font-semibold text-[#647268]">{card.label}</p><p className="mt-2 text-3xl font-black tabular-nums">{card.value}</p><p className="mt-2 text-xs text-[#647268]">{card.detail}</p></article>)}
       </section>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <section className="card p-5 sm:p-6" aria-labelledby="birthdays-title">
+          <div className="flex items-start justify-between gap-3"><div><h2 id="birthdays-title" className="text-xl font-black">🎂 Aniversariantes</h2><p className="mt-1 text-sm text-[#647268]">Apoio para organizar um reconhecimento com antecedência.</p></div><span className="badge bg-pink-50 text-pink-800">{birthdays.thisMonth.length} neste mês</span></div>
+          {birthdays.thisMonth.length === 0 && birthdays.upcoming.length === 0 ? <p className="py-8 text-center text-sm text-[#647268]">Nenhum aniversário neste mês ou nos próximos 30 dias.</p> : <div className="mt-4 space-y-5">
+            {birthdays.thisMonth.length > 0 && <div><h3 className="text-xs font-black uppercase tracking-[.12em] text-[#647268]">Neste mês</h3><div className="mt-2 divide-y divide-[#e7ece8]">{birthdays.thisMonth.map((student) => <BirthdayRow key={student.id} student={student} today={today} />)}</div></div>}
+            {birthdays.upcoming.length > 0 && <div><h3 className="text-xs font-black uppercase tracking-[.12em] text-[#647268]">Próximos 30 dias</h3><div className="mt-2 divide-y divide-[#e7ece8]">{birthdays.upcoming.map((student) => <BirthdayRow key={student.id} student={student} today={today} />)}</div></div>}
+          </div>}
+          <Link href="/eventos/novo" className="button-secondary mt-5 w-full sm:w-auto">Programar confraternização</Link>
+        </section>
+        <section className="card p-5 sm:p-6" aria-labelledby="transition-title">
+          <div className="flex items-start justify-between gap-3"><div><h2 id="transition-title" className="text-xl font-black">🌱 Transição para jovens</h2><p className="mt-1 text-sm text-[#647268]">Organização do cuidado; nenhuma transferência é automática.</p></div><Link href="/adolescentes?filtro=transition" className="text-sm font-bold text-[#176b49]">Ver todos</Link></div>
+          {transitions.length === 0 ? <p className="py-8 text-center text-sm text-[#647268]">Nenhuma transição prevista neste momento.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{transitions.slice(0, 6).map((student) => <article className="flex items-center justify-between gap-3 py-3" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-xs text-[#647268]">{student.lifecycle === "transition_due" ? "18 anos ou mais · revisão pendente" : "17 anos · último ano no grupo"}</p></div><span className={`badge ${student.lifecycle === "transition_due" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{student.lifecycle === "transition_due" ? "Revisar" : "Em transição"}</span></article>)}</div>}
+        </section>
+      </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,.55fr)]">
         <section className="card p-5 sm:p-6" aria-labelledby="trend-title">
@@ -146,4 +169,16 @@ export default async function DashboardPage() {
       <p className="mt-5 text-xs leading-5 text-[#647268]">Comparecimento operacional: presentes ÷ (presentes + ausentes). Justificativas e visitantes são exibidos separadamente e não reduzem esse percentual.</p>
     </>
   );
+}
+
+type BirthdayRowProps = {
+  student: Student & { birthday: { date: string; daysUntil: number; ageTurning: number } };
+  today: string;
+};
+
+function BirthdayRow({ student, today }: BirthdayRowProps) {
+  const birthdayDay = student.birth_date.slice(8, 10);
+  const birthdayMonth = student.birth_date.slice(5, 7);
+  const isToday = student.birthday.date === today;
+  return <article className="flex items-center justify-between gap-3 py-3"><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-xs text-[#647268]">{birthdayDay}/{birthdayMonth} · completa {student.birthday.ageTurning} anos</p></div><span className="badge bg-pink-50 text-pink-800">{isToday ? "Hoje 🎉" : student.birthday.daysUntil === 1 ? "Amanhã" : student.birthday.daysUntil > 1 && student.birthday.daysUntil <= 30 ? `Em ${student.birthday.daysUntil} dias` : "Neste mês"}</span></article>;
 }

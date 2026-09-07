@@ -2,10 +2,11 @@ import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
 import { requireStaff } from "@/lib/auth";
-import { ageFromBirthDate, formatDate, initials } from "@/lib/format";
+import { formatDate, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAttendanceMetrics, type AttendanceStatus } from "@/services/attendance";
 import { getRadarStatus } from "@/services/pastoral-radar";
+import { ageOnDate, getStudentLifecycle } from "@/services/student-lifecycle";
 
 type Row = {
   id: string;
@@ -27,6 +28,7 @@ export default async function StudentsPage({ searchParams }: Props) {
   const filter = typeof params.filtro === "string" ? params.filtro : "all";
   const order = typeof params.ordem === "string" ? params.ordem : "name";
   const supabase = await createClient();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
 
   let query = supabase
     .from("students")
@@ -65,10 +67,12 @@ export default async function StudentsPage({ searchParams }: Props) {
       ...student,
       metrics,
       radar: getRadarStatus(metrics.consecutiveAbsences, student.is_active),
+      lifecycle: getStudentLifecycle(student.birth_date, today),
     };
   });
 
   if (radarFilters.includes(filter)) items = items.filter((item) => item.radar === filter);
+  if (filter === "transition") items = items.filter((item) => ["transitioning", "transition_due"].includes(item.lifecycle));
   items.sort((a, b) =>
     order === "frequency"
       ? b.metrics.presenceRate - a.metrics.presenceRate
@@ -100,6 +104,7 @@ export default async function StudentsPage({ searchParams }: Props) {
           <option value="attention">Atenção</option>
           <option value="follow_up">Acompanhamento</option>
           <option value="priority">Prioridade</option>
+          <option value="transition">Transição para jovens</option>
           <option value="inactive">Inativos</option>
           <option value="archived">Arquivados</option>
         </select>
@@ -134,7 +139,9 @@ export default async function StudentsPage({ searchParams }: Props) {
                 <Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>
                   {student.preferred_name || student.full_name}
                 </Link>
-                <p className="text-sm text-[#647268]">{ageFromBirthDate(student.birth_date)} anos</p>
+                <p className="text-sm text-[#647268]">{ageOnDate(student.birth_date, today)} anos</p>
+                {student.lifecycle === "transitioning" && <span className="badge mt-2 bg-blue-50 text-blue-800">Em transição</span>}
+                {student.lifecycle === "transition_due" && <span className="badge mt-2 bg-amber-50 text-amber-800">Revisar transição</span>}
               </div>
               <Metric label="Última presença" value={formatDate(student.metrics.lastPresence)} />
               <Metric label="Frequência" value={`${student.metrics.presenceRate}%`} />
