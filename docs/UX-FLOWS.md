@@ -23,3 +23,5 @@ Every authenticated role can open **Ajuda** from the main navigation. The guide 
 ## Invitation acceptance
 
 Authorized invitation → server-side token verification → authenticated password form → role-appropriate landing page. Passwords require at least 12 characters with upper- and lower-case letters and a number. Public sign-up remains disabled.
+
+Password recovery starts in the same browser that will open the email link so the PKCE verifier remains available: Login → Forgot password → request link → open the newest email on the same device/browser → define password. The response does not disclose whether arbitrary email addresses exist.
