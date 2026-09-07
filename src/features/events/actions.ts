@@ -44,6 +44,64 @@ export async function createEvent(_: EventState, formData: FormData): Promise<Ev
   redirect(`/eventos/${data.id}`);
 }
 
+export async function updateEvent(id: string, _: EventState, formData: FormData): Promise<EventState> {
+  const actor = await requireStaff();
+  const parsedId = z.uuid().safeParse(id);
+  const parsed = eventSchema.safeParse(Object.fromEntries(formData));
+  if (!parsedId.success || !parsed.success) return { error: "Revise os dados do evento." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .update({ ...parsed.data, start_time: parsed.data.start_time || null, description: parsed.data.description || null })
+    .eq("id", parsedId.data)
+    .eq("ministry_id", actor.ministryId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) return { error: error?.message.includes("cannot change after records exist") ? "O tipo de registro não pode mudar depois que a participação foi salva." : "Não foi possível atualizar o evento." };
+  revalidatePath(`/eventos/${parsedId.data}`);
+  revalidatePath("/eventos");
+  revalidatePath("/dashboard");
+  redirect(`/eventos/${parsedId.data}?editado=1`);
+}
+
+const completedHeadcountEventSchema = eventSchema.and(z.object({
+  adolescent_count: z.coerce.number().int().min(0).max(100000),
+  visitor_count: z.coerce.number().int().min(0).max(100000),
+  is_estimated: z.enum(["on"]).optional(),
+  notes: z.string().trim().max(500).optional(),
+})).refine((data) => data.type !== "EBD" && data.attendance_mode === "headcount_only", {
+  message: "Use a chamada completa para a EBD.",
+}).refine((data) => data.visitor_count <= data.adolescent_count, {
+  message: "Visitantes não podem superar o total de adolescentes.",
+});
+
+export async function registerCompletedHeadcountEvent(_: EventState, formData: FormData): Promise<EventState> {
+  const actor = await requireStaff();
+  const parsed = completedHeadcountEventSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os dados do evento." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("register_completed_headcount_event", {
+    target_ministry: actor.ministryId,
+    event_title: parsed.data.title,
+    event_kind: parsed.data.type,
+    occurred_on: parsed.data.event_date,
+    began_at: parsed.data.start_time || null,
+    event_description: parsed.data.description || null,
+    total_adolescents: parsed.data.adolescent_count,
+    total_visitors: parsed.data.visitor_count,
+    count_is_estimated: parsed.data.is_estimated === "on",
+    count_notes: parsed.data.notes || null,
+  });
+  if (error || !data) return { error: "Não foi possível registrar o evento realizado." };
+
+  revalidatePath("/eventos");
+  revalidatePath("/dashboard");
+  redirect(`/eventos/${data}?salvo=1`);
+}
+
 const attendanceSchema = z.object({
   studentId: z.uuid(),
   status: z.enum(["present", "absent", "justified", "visitor", "not_participated"]),

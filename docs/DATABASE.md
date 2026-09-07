@@ -12,4 +12,4 @@ Events use a controlled taxonomy (`EBD`, worship, evangelism, volunteer action, 
 
 For aggregate events, `adolescent_count` includes visitors and `visitor_count` is a subset. `is_estimated` distinguishes estimates from exact counts. Participation volume may combine named attendance with aggregate counts, but unique people are computed only from identified events and are always labeled accordingly.
 
-Database constraints require every EBD to use `full_roster`. The attendance scope trigger rejects individual rows for `headcount_only`, rejects `not_participated` in a full roster, and rejects `absent`/`justified` in participation-only events. Event mode cannot change after participation records exist.
+Database constraints require every EBD to use `full_roster`. The attendance scope trigger rejects individual rows for `headcount_only`, rejects `not_participated` in a full roster, and rejects `absent`/`justified` in participation-only events. Event type and participation mode cannot change after participation records exist. A transaction-scoped RPC registers an already-completed non-EBD event and its aggregate count atomically.

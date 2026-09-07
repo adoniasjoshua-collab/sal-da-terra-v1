@@ -4,6 +4,8 @@
 
 Login → dashboard summary → EBD trend / last EBD composition / pastoral radar → care queue → event participation summary and operational agenda. Students → search/filter → create/edit/archive. Events → choose event type and one of three data-minimized modes → save a full roster, identified participation, or aggregate headcount. EBD always uses a full roster.
 
+An unplanned event that already happened uses **Register completed event**: type + date + aggregate adolescent/visitor count are saved atomically on one screen. Existing events expose **Edit event**; once participation exists, type and participation mode are locked while title, date, time and description remain editable.
+
 The student profile keeps EBD metrics separate and shows actual participation in other event categories on a chronological timeline.
 
 ## Student

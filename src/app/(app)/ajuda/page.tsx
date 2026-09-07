@@ -125,13 +125,14 @@ export default async function HelpPage() {
         </GuideSection>
 
         <GuideSection id="eventos" icon="📅" title="Criar eventos e escolher a contagem">
-          <p>Abra <strong>Eventos e EBD → Novo evento</strong>. Escolha o tipo, a data e a forma de registro mais adequada:</p>
+          <p>Use <strong>Programar evento</strong> para preparar um evento antes de acontecer. Se ele já aconteceu, use <strong>Registrar evento realizado</strong> e informe evento e quantidade na mesma tela.</p>
           <ul className="list-disc space-y-2 pl-5">
             <li><strong>Chamada completa:</strong> registra presente, ausente ou justificado por nome. A EBD sempre usa esta opção.</li>
             <li><strong>Participação identificada:</strong> registra quem participou, sem transformar a não participação em falta.</li>
             <li><strong>Somente quantidade:</strong> guarda apenas o total, sem nomes. É indicado para cultos e eventos grandes.</li>
           </ul>
           <Example>Em um culto com 22 adolescentes, sendo 4 visitantes, registre total 22 e visitantes 4. Não é necessário guardar uma lista de nomes.</Example>
+          <p>Para corrigir título, data, horário ou descrição, abra o evento e selecione <strong>Editar evento</strong>. Depois que existe participação, o tipo e a forma de registro ficam protegidos para não comprometer o histórico.</p>
         </GuideSection>
 
         <GuideSection id="chamada" icon="✅" title="Fazer a chamada da EBD">

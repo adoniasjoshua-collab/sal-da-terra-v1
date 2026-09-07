@@ -17,6 +17,8 @@ const actionLabels: Record<string, string> = {
   update_attendance: "Presença corrigida",
   insert_event_headcounts: "Contagem de evento registrada",
   update_event_headcounts: "Contagem de evento atualizada",
+  insert_events: "Evento criado",
+  update_events: "Evento atualizado",
 };
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {

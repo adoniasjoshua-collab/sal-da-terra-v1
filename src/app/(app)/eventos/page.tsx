@@ -20,7 +20,7 @@ export default async function EventsPage() {
         eyebrow="Agenda"
         title="Eventos e participação"
         description="Registre EBD, cultos, missão, serviço e convivência sem misturar seus indicadores."
-        action={<Link className="button-primary" href="/eventos/novo">Novo evento</Link>}
+        action={<div className="flex flex-wrap gap-2"><Link className="button-secondary" href="/eventos/novo">Programar evento</Link><Link className="button-primary" href="/eventos/registrar">Registrar evento realizado</Link></div>}
       />
       {error ? (
         <section className="card p-10 text-center" role="alert"><h2 className="font-bold">Não foi possível carregar os eventos</h2></section>

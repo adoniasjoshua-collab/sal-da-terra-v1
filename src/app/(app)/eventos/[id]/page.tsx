@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/page-heading";
 import { saveAttendance } from "@/features/events/actions";
@@ -7,12 +8,14 @@ import { formatDate, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
 
-type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ salvo?: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ salvo?: string; editado?: string }> };
 
 export default async function AttendancePage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   const { id } = await params;
-  const saved = (await searchParams).salvo === "1";
+  const query = await searchParams;
+  const saved = query.salvo === "1";
+  const edited = query.editado === "1";
   const supabase = await createClient();
   const { data: event } = await supabase
     .from("events")
@@ -31,7 +34,8 @@ export default async function AttendancePage({ params, searchParams }: Props) {
 
     return (
       <>
-        <PageHeading eyebrow="Contagem de participantes" title={event.title} description={`${EVENT_TYPE_LABELS[event.type as EventType]} · ${formatDate(event.event_date)}`} />
+        <PageHeading eyebrow="Contagem de participantes" title={event.title} description={`${EVENT_TYPE_LABELS[event.type as EventType]} · ${formatDate(event.event_date)}`} action={<Link className="button-secondary" href={`/eventos/${id}/editar`}>Editar evento</Link>} />
+        {(saved || edited) && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 font-bold text-emerald-700">{edited ? "Evento atualizado com sucesso." : "Evento e contagem registrados com sucesso."}</p>}
         <p className="mb-5 rounded-xl bg-[#edf7f1] p-4 text-sm leading-6 text-[#365747]">Este evento usa contagem coletiva. Nenhum adolescente será identificado e o resultado não afeta a frequência EBD nem o Radar Pastoral.</p>
         <HeadcountForm eventId={id} existing={existing} />
       </>
@@ -51,7 +55,8 @@ export default async function AttendancePage({ params, searchParams }: Props) {
 
   return (
     <>
-      <PageHeading eyebrow={fullRoster ? "Chamada" : "Participação identificada"} title={event.title} description={`${EVENT_TYPE_LABELS[event.type as EventType]} · ${formatDate(event.event_date)}`} />
+      <PageHeading eyebrow={fullRoster ? "Chamada" : "Participação identificada"} title={event.title} description={`${EVENT_TYPE_LABELS[event.type as EventType]} · ${formatDate(event.event_date)}`} action={<Link className="button-secondary" href={`/eventos/${id}/editar`}>Editar evento</Link>} />
+      {edited && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 font-bold text-emerald-700">Evento atualizado com sucesso.</p>}
       {!fullRoster && <p className="mb-5 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">Este evento é opcional. “Não participou” não representa falta e não afeta a frequência EBD nem o Radar Pastoral.</p>}
       {saved && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 font-bold text-emerald-700">Participação salva com sucesso.</p>}
       {!students?.length ? (
