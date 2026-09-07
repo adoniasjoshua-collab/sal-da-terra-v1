@@ -1,10 +1,25 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { updatePassword } from "@/features/auth/actions";
+import { createClient } from "@/lib/supabase/client";
 
 export function PasswordForm() {
   const [state, action, pending] = useActionState(updatePassword, undefined);
+  const [sessionState, setSessionState] = useState<"checking" | "ready" | "missing">("checking");
+
+  useEffect(() => {
+    const supabase = createClient();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+      if (session) setSessionState("ready");
+    });
+    void supabase.auth.getSession().then((result: { data: { session: Session | null } }) => setSessionState(result.data.session ? "ready" : "missing"));
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  if (sessionState === "checking") return <p role="status" className="rounded-xl bg-[#f0f8f3] p-4 text-sm text-[#176b49]">Validando seu convite…</p>;
+  if (sessionState === "missing") return <p role="alert" className="rounded-xl bg-amber-50 p-4 text-sm leading-6 text-amber-950">Este convite é inválido ou expirou. Solicite um novo convite à administração.</p>;
 
   return (
     <form action={action} className="space-y-5">

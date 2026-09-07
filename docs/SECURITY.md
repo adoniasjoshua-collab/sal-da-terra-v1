@@ -11,4 +11,4 @@
 
 Production requires HTTPS, MFA for leaders/admins, restricted Supabase dashboard access, reviewed migrations, backups, retention policy, incident response, and applicable LGPD legal review/consent procedures.
 
-Invitations use a server-verified token hash and an authenticated password-setting flow. Public sign-up remains disabled; an invited identity receives application access only after an authorized ministry membership exists. Invite and secret keys are never exposed to browser code.
+Invitations use the Supabase verification link and an authenticated password-setting flow. Public sign-up remains disabled; an invited identity receives application access only after an authorized ministry membership exists. Invite and secret keys are never exposed to browser code.
