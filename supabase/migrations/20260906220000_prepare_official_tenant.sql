@@ -21,13 +21,13 @@ from auth.users;
 revoke all on all tables in schema private_transition_20260906 from public, anon, authenticated;
 
 insert into public.profiles (id, full_name)
-values ('12b04083-4c75-40f2-89fb-0be6fb28b01b', 'Adonias Joshua')
+values ('27bb211d-037b-4bff-98b0-e5b06683c0f1', 'Adonias Joshua')
 on conflict (id) do update set full_name = excluded.full_name;
 
 insert into public.ministry_members (ministry_id, profile_id, role, is_active)
 values (
   '20000000-0000-0000-0000-000000000001',
-  '12b04083-4c75-40f2-89fb-0be6fb28b01b',
+  '27bb211d-037b-4bff-98b0-e5b06683c0f1',
   'admin',
   true
 )
