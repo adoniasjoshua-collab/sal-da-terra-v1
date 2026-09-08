@@ -11,3 +11,5 @@ Invitation/admin UI, password recovery, CSV export with privacy controls, config
 ## V2
 
 Approved courses, modules, multimedia lessons, quizzes, missions, progress, XP ledger, achievements and privacy-preserving verifiable certificates.
+
+V2 starts with the governed pilot documented in `HUB-PRODUCT.md`: approve and implement **Fundamentos da Fé → Módulo 1 — Conhecendo a Bíblia**, then measure a closed cohort before expanding the catalog.

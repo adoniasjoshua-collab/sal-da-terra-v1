@@ -26,7 +26,7 @@ Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4, Supabase Aut
 
 ## Sources of truth
 
-Read `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/SECURITY.md`, `docs/RLS.md`, `docs/UX-FLOWS.md`, `docs/ROADMAP.md`, and `docs/DECISIONS.md` as relevant.
+Read `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/SECURITY.md`, `docs/RLS.md`, `docs/UX-FLOWS.md`, `docs/ROADMAP.md`, and `docs/DECISIONS.md` as relevant. Hub work must also read `docs/HUB-PRODUCT.md`, `docs/HUB-DOCTRINE.md`, `docs/HUB-LEARNING.md`, `docs/HUB-METRICS.md`, and the applicable module specification.
 
 Before modifying code: read relevant docs, inspect the implementation, avoid regressions, and preserve conventions.
 
