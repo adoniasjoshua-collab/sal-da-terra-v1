@@ -14,7 +14,9 @@ The student profile keeps EBD metrics separate and shows actual participation in
 
 ## Student
 
-Login → “Olá, nome” → own EBD participation, recent Sundays, upcoming events and basic profile. “Minha Jornada” is an explicitly future empty state.
+Login → “Olá, nome” → own EBD participation, recent Sundays, upcoming events and basic profile → **Conhecimento** for the governed learning catalog.
+
+After functional approval of the first module, every authenticated role can open **Conhecimento** and view the approved module overview. Lessons remain visibly in preparation and cannot record progress until their full text, media, questions and technical data model pass final review.
 
 ## Admin
 

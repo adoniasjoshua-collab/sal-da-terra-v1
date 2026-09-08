@@ -6,10 +6,12 @@ const staffLinks = [
   { href: "/dashboard", label: "Visão geral" },
   { href: "/adolescentes", label: "Adolescentes" },
   { href: "/eventos", label: "Eventos e EBD" },
+  { href: "/conhecimento", label: "Conhecimento" },
   { href: "/relatorios", label: "Relatórios" },
 ];
 
 const helpLink = { href: "/ajuda", label: "Ajuda" };
+const knowledgeLink = { href: "/conhecimento", label: "Conhecimento" };
 
 const roleLabels = {
   student: "Adolescente",
@@ -19,7 +21,7 @@ const roleLabels = {
 
 export function AppShell({ context, children }: { context: AuthContext; children: React.ReactNode }) {
   const nav = context.role === "student"
-    ? [{ href: "/minha-participacao", label: "Minha participação" }, helpLink]
+    ? [{ href: "/minha-participacao", label: "Minha participação" }, knowledgeLink, helpLink]
     : context.role === "admin"
       ? [...staffLinks, { href: "/administracao", label: "Administração" }, helpLink]
       : [...staffLinks, helpLink];

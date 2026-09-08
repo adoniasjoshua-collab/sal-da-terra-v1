@@ -43,7 +43,7 @@ Billy Graham pode inspirar materiais de evangelismo, discipulado e serviço. Der
 
 ## Aprovações necessárias para o Módulo 1
 
-- responsável ministerial: a definir formalmente;
+- responsável ministerial: Adonias Pereira da Silva — aprovação funcional registrada em 07/09/2026;
 - autor/editor: a definir;
 - revisor doutrinário: pastor ou pessoa formalmente autorizada;
 - revisão de proteção e linguagem para adolescentes: a definir;

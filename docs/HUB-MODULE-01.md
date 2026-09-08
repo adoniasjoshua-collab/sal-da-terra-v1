@@ -1,9 +1,15 @@
 # Módulo 1 — Conhecendo a Bíblia: A Palavra que guia
 
-**Estado:** rascunho para aprovação pastoral  
-**Trilha:** Fundamentos da Fé  
-**Público inicial:** adolescentes de 12 a 17 anos  
-**Carga horária proposta:** 2 horas  
+**Estado:** aprovado para implementação técnica; ainda não publicado
+
+**Aprovação registrada:** Adonias Pereira da Silva, liderança responsável — 07/09/2026
+
+**Trilha:** Fundamentos da Fé
+
+**Público inicial:** adolescentes de 12 a 17 anos
+
+**Carga horária proposta:** 2 horas
+
 **Certificado:** emitido após o cumprimento de todos os requisitos
 
 ## Resultado educacional
@@ -49,13 +55,11 @@ Medalha privada: **Praticante da Palavra — Módulo 1**.
 
 Título do certificado: **Certificado de Conclusão — Conhecendo a Bíblia: A Palavra que guia**. O PDF utiliza os signatários autorizados da Igreja Pioneira já previstos no módulo de relatórios, mas somente depois da aprovação editorial e implementação técnica da emissão.
 
-## Pendências antes da publicação
+## Pendências técnicas e editoriais antes da liberação das aulas
 
-- aprovar objetivos, referências e linguagem;
 - escolher tradução bíblica e verificar licença;
 - escrever e revisar os textos completos;
 - selecionar mídia com direito de incorporação;
 - aprovar banco de questões e feedback;
-- confirmar autor, revisor doutrinário e signatários;
+- registrar autor, revisor doutrinário final e signatários no fluxo técnico;
 - realizar piloto fechado antes da publicação geral.
-
