@@ -10,3 +10,12 @@ button, input, select, textarea { font: inherit; } button, a { -webkit-tap-highl
 .button-primary { border: 1px solid var(--brand); background: var(--brand); color: white; } .button-primary:hover { background: var(--brand-dark); }
 .button-secondary { border: 1px solid #cbd6cd; background: white; color: #304339; } .button-danger { border: 1px solid #fecaca; background: #fff; color: #b91c1c; }
 .button-primary:disabled, .button-secondary:disabled, .button-danger:disabled { cursor: wait; opacity: .65; } .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .25rem .6rem; font-size: .75rem; font-weight: 750; }
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: white; color: black; }
+  aside, body > div > div > header, .no-print { display: none !important; }
+  body > div, body > div > div, main { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  .report-sheet { border: 0; border-radius: 0; box-shadow: none; padding: 0 !important; }
+  .report-sheet section, .report-sheet footer, .report-sheet tr { break-inside: avoid; }
+}

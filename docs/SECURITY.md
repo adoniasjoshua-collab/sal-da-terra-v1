@@ -8,6 +8,7 @@
 - Prefer aggregate `event_headcounts` when participant identities are not required. Aggregate notes must never contain names or contact details; estimates are explicitly labeled.
 - Students never receive guardian contact details, other students' data, follow-ups, audit logs, or administrative notes.
 - Sensitive follow-up summaries are available only to authorized leaders/admins in the same ministry. Audit metadata must not copy pastoral content.
+- Operational reports are staff-only and exclude pastoral follow-ups, guardian contacts and free-text student notes. Email preparation contains aggregate metrics only; the user must review recipients and attachments in their own email client.
 
 Production requires HTTPS, MFA for leaders/admins, restricted Supabase dashboard access, reviewed migrations, backups, retention policy, incident response, and applicable LGPD legal review/consent procedures.
 

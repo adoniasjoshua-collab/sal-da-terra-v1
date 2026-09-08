@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { MembershipForm } from "@/features/admin/membership-form";
+import { ReportSignatoryForm } from "@/features/admin/report-signatory-form";
 import { PageHeading } from "@/components/page-heading";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberRole } from "@/types/database";
+import type { ReportSignatoryRow } from "@/types/database";
 
 type SearchParams = Promise<{ search?: string; role?: string; access?: string }>;
 type Member = { id: string; profile_id: string; role: MemberRole; is_active: boolean; profiles: { full_name: string } | null };
@@ -19,6 +21,8 @@ const actionLabels: Record<string, string> = {
   update_event_headcounts: "Contagem de evento atualizada",
   insert_events: "Evento criado",
   update_events: "Evento atualizado",
+  insert_report_signatories: "Assinatura de relatório cadastrada",
+  update_report_signatories: "Assinatura de relatório atualizada",
 };
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
@@ -31,13 +35,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
   const access = ["active", "inactive"].includes(filters.access ?? "") ? filters.access : "all";
   const supabase = await createClient();
 
-  const [membersResult, auditResult] = await Promise.all([
+  const [membersResult, auditResult, signatoriesResult] = await Promise.all([
     supabase.from("ministry_members").select("id,profile_id,role,is_active,profiles(full_name)").eq("ministry_id", actor.ministryId).order("created_at"),
     supabase.from("audit_logs").select("id,action,entity_type,created_at,profiles!audit_logs_actor_id_fkey(full_name)").eq("ministry_id", actor.ministryId).order("created_at", { ascending: false }).limit(20),
+    supabase.from("report_signatories").select("*").eq("ministry_id", actor.ministryId).order("display_order"),
   ]);
 
   const members = (membersResult.data ?? []) as unknown as Member[];
   const auditLogs = (auditResult.data ?? []) as unknown as AuditLog[];
+  const signatories = (signatoriesResult.data ?? []) as ReportSignatoryRow[];
   const filteredMembers = members.filter((member) => {
     const matchesSearch = !search || member.profiles?.full_name.toLocaleLowerCase("pt-BR").includes(search) || member.profile_id.includes(search);
     const matchesRole = role === "all" || member.role === role;
@@ -67,6 +73,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         {membersResult.error ? <p role="alert" className="card p-5 text-red-700">Não foi possível carregar os usuários.</p> : filteredMembers.length === 0 ? <p className="card p-7 text-center text-[#647268]">Nenhum usuário corresponde aos filtros.</p> : (
           <div className="grid gap-3">{filteredMembers.map((member) => <MembershipForm key={member.id} id={member.id} name={member.profiles?.full_name ?? "Usuário sem nome"} profileId={member.profile_id} role={member.role} isActive={member.is_active} isCurrentUser={member.profile_id === actor.userId} />)}</div>
         )}
+      </section>
+
+      <section className="mt-10" aria-labelledby="report-signers-title">
+        <div className="mb-4"><h2 id="report-signers-title" className="text-xl font-black">Assinaturas dos relatórios</h2><p className="mt-1 text-sm text-[#647268]">Cadastre somente líderes adultos autorizados. Nome, função e contatos aparecerão no rodapé impresso e no rascunho de e-mail.</p></div>
+        {signatoriesResult.error ? <p role="alert" className="card p-5 text-red-700">Não foi possível carregar as assinaturas.</p> : <div className="grid gap-3">{signatories.map((signatory) => <ReportSignatoryForm key={signatory.id} signatory={signatory} />)}<ReportSignatoryForm /></div>}
       </section>
 
       <section className="mt-10" aria-labelledby="audit-title">

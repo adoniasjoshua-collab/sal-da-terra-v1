@@ -6,6 +6,7 @@ const staffLinks = [
   { href: "/dashboard", label: "Visão geral" },
   { href: "/adolescentes", label: "Adolescentes" },
   { href: "/eventos", label: "Eventos e EBD" },
+  { href: "/relatorios", label: "Relatórios" },
 ];
 
 const helpLink = { href: "/ajuda", label: "Ajuda" };
@@ -25,7 +26,7 @@ export function AppShell({ context, children }: { context: AuthContext; children
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[250px_1fr]">
-      <aside className="border-b border-[#dfe6df] bg-[#143d2c] px-5 py-5 text-white lg:min-h-screen lg:border-b-0 lg:px-6 lg:py-8">
+      <aside className="no-print border-b border-[#dfe6df] bg-[#143d2c] px-5 py-5 text-white lg:min-h-screen lg:border-b-0 lg:px-6 lg:py-8">
         <div className="flex items-center justify-between lg:block">
           <Link href={nav[0].href} className="font-black tracking-[.16em]">SAL DA TERRA</Link>
           <span className="text-xs text-white/60 lg:mt-2 lg:block">{context.ministryName}</span>
@@ -43,7 +44,7 @@ export function AppShell({ context, children }: { context: AuthContext; children
         </nav>
       </aside>
       <div>
-        <header className="flex min-h-16 items-center justify-between border-b border-[#dfe6df] bg-white px-5 sm:px-8">
+        <header className="no-print flex min-h-16 items-center justify-between border-b border-[#dfe6df] bg-white px-5 sm:px-8">
           <div>
             <p className="text-sm font-bold">{context.name}</p>
             <p className="text-xs text-[#647268]">{roleLabels[context.role]}</p>

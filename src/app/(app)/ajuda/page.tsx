@@ -32,6 +32,7 @@ const topics = [
   ["📊", "Indicadores", "#indicadores"],
   ["🗃️", "Arquivar e desativar", "#protecao"],
   ["✉️", "Convites", "#convites"],
+  ["🖨️", "Relatórios", "#relatorios"],
   ["🛡️", "Privacidade", "#privacidade"],
   ["🆘", "Dúvidas comuns", "#duvidas"],
 ] as const;
@@ -177,6 +178,12 @@ export default async function HelpPage() {
             <li>Somente com vínculo ativo a pessoa acessa o portal.</li>
           </ol>
           <p><strong>O convite sozinho não libera dados.</strong> A função e o vínculo ativo são proteções adicionais.</p>
+        </GuideSection>
+
+        <GuideSection id="relatorios" icon="🖨️" title="Gerar, imprimir e enviar relatórios">
+          <ol className="list-decimal space-y-2 pl-5"><li>Abra <strong>Relatórios</strong> e escolha o período.</li><li>Selecione <strong>Gerar relatório</strong> e confira os indicadores.</li><li>Use <strong>Imprimir / salvar PDF</strong> para criar o arquivo.</li><li>Em <strong>Enviar por e-mail</strong>, revise o destinatário no seu aplicativo de e-mail e anexe o PDF antes de enviar.</li></ol>
+          <p>O relatório não inclui acompanhamentos pastorais, contatos dos responsáveis ou observações privadas. Somente o administrador configura as assinaturas em <strong>Administração → Assinaturas dos relatórios</strong>.</p>
+          <Example>Cadastre Adonias e Zaine como responsáveis autorizados no Admin. Depois, os dois nomes e contatos ativos aparecerão automaticamente no rodapé do relatório.</Example>
         </GuideSection>
 
         <GuideSection id="privacidade" icon="🛡️" title="Privacidade e cuidado com menores">

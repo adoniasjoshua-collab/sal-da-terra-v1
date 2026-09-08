@@ -6,6 +6,8 @@ Login → dashboard summary → EBD trend / last EBD composition / pastoral rada
 
 The staff dashboard shows birthdays in the current month and the next 30 days so leaders can prepare an appropriate acknowledgment. It also shows active adolescents aged 17 as **transitioning to youth** and those aged 18+ as **transition due**. These alerts never transfer or archive a person automatically.
 
+Reports → choose a period of at most 366 days → generate a staff-only operational report → print or save as PDF → optionally open the device's email application with a privacy-safe aggregate summary and configured leader signatures. The user reviews the recipient and manually attaches the PDF. Pastoral follow-ups, guardian contacts and general notes are excluded.
+
 An unplanned event that already happened uses **Register completed event**: type + date + aggregate adolescent/visitor count are saved atomically on one screen. Existing events expose **Edit event**; once participation exists, type and participation mode are locked while title, date, time and description remain editable.
 
 The student profile keeps EBD metrics separate and shows actual participation in other event categories on a chronological timeline.
