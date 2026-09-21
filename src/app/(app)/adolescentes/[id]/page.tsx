@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calculateAttendanceMetrics, type AttendanceStatus } from "@/services/attendance";
 import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
 import { getRadarStatus } from "@/services/pastoral-radar";
-import { ageOnDate, getStudentLifecycle } from "@/services/student-lifecycle";
+import { ADOLESCENT_MIN_AGE, ADOLESCENT_MAX_AGE, ageOnDate, getStudentLifecycle } from "@/services/student-lifecycle";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -95,8 +95,8 @@ export default async function StudentProfilePage({ params }: Props) {
       <p className="mb-6 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">
         Este radar apoia o cuidado pastoral com base em participação observável; não avalia fé ou espiritualidade.
       </p>
-      {lifecycle === "transitioning" && <p className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950"><strong>Em transição para jovens:</strong> este adolescente está no último ano da faixa de 12 a 17 anos. Organize o diálogo e o acolhimento no próximo grupo, sem alterar o cadastro automaticamente.</p>}
-      {lifecycle === "transition_due" && <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><strong>Transição pendente:</strong> a pessoa já completou 18 anos. Revise o vínculo com a liderança antes de arquivar, preservando todo o histórico.</p>}
+      {lifecycle === "transitioning" && <p className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950"><strong>Em transição para jovens:</strong> este adolescente está no último ano da faixa de {ADOLESCENT_MIN_AGE} a {ADOLESCENT_MAX_AGE} anos. Organize o diálogo e o acolhimento no próximo grupo, sem alterar o cadastro automaticamente.</p>}
+      {lifecycle === "transition_due" && <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><strong>Transição pendente:</strong> a pessoa já completou {ADOLESCENT_MAX_AGE + 1} anos. Revise o vínculo com a liderança antes de arquivar, preservando todo o histórico.</p>}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {metricCards.map(([label, value]) => (

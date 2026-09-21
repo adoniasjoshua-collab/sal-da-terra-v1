@@ -6,7 +6,7 @@
 
 **Trilha:** Fundamentos da Fé
 
-**Público inicial:** adolescentes de 12 a 17 anos
+**Público inicial:** adolescentes de 11 a 15 anos
 
 **Carga horária proposta:** 2 horas
 

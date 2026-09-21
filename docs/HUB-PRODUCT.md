@@ -8,7 +8,7 @@ O Hub mede somente ações educacionais observáveis: inscrição, leitura marca
 
 ## Públicos
 
-- adolescentes de 12 a 17 anos;
+- adolescentes de 11 a 15 anos;
 - jovens;
 - homens e mulheres, em trilhas próprias ou compartilhadas;
 - novos convertidos;

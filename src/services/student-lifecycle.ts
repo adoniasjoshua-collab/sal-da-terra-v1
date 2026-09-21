@@ -1,5 +1,5 @@
-export const ADOLESCENT_MIN_AGE = 12;
-export const ADOLESCENT_MAX_AGE = 17;
+export const ADOLESCENT_MIN_AGE = 11;
+export const ADOLESCENT_MAX_AGE = 15;
 export const BIRTHDAY_LOOKAHEAD_DAYS = 30;
 
 export type StudentLifecycleStatus = "outside_range" | "adolescent" | "transitioning" | "transition_due";

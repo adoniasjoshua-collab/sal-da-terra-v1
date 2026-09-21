@@ -7,9 +7,26 @@ describe("student lifecycle", () => {
     expect(ageOnDate("2009-09-08", "2026-09-08")).toBe(17);
   });
 
-  it("marks age 17 as transitioning and age 18 as due", () => {
-    expect(getStudentLifecycle("2009-01-10", "2026-09-07")).toBe("transitioning");
-    expect(getStudentLifecycle("2008-01-10", "2026-09-07")).toBe("transition_due");
+  it.each([
+    ["2016-09-21", "outside_range"], // 10
+    ["2015-09-21", "adolescent"], // 11, inclusive minimum
+    ["2012-09-21", "adolescent"], // 14
+    ["2011-09-21", "transitioning"], // 15, still an adolescent
+    ["2010-09-21", "transition_due"], // 16
+    ["2008-09-21", "transition_due"], // older records remain reviewable
+  ])("classifies birth date %s as %s", (birthDate, expected) => {
+    expect(getStudentLifecycle(birthDate, "2026-09-21")).toBe(expected);
+  });
+
+  it("changes classification on the exact 11th, 15th and 16th birthdays", () => {
+    for (const [birthDate, before, onBirthday] of [
+      ["2015-09-22", "outside_range", "adolescent"],
+      ["2011-09-22", "adolescent", "transitioning"],
+      ["2010-09-22", "transitioning", "transition_due"],
+    ]) {
+      expect(getStudentLifecycle(birthDate, "2026-09-21")).toBe(before);
+      expect(getStudentLifecycle(birthDate, "2026-09-22")).toBe(onBirthday);
+    }
   });
 
   it("finds birthdays across the year boundary", () => {

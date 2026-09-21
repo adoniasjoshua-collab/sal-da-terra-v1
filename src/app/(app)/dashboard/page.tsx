@@ -10,7 +10,7 @@ import { combinedOperationalRate, rateDelta, summarizeEbd, type DashboardAttenda
 import { buildEventDashboard, type EventDashboardHeadcount } from "@/services/event-dashboard";
 import { EVENT_TYPE_LABELS } from "@/services/events";
 import { getRadarStatus, type RadarStatus } from "@/services/pastoral-radar";
-import { buildBirthdayOverview, getStudentLifecycle } from "@/services/student-lifecycle";
+import { ADOLESCENT_MAX_AGE, buildBirthdayOverview, getStudentLifecycle } from "@/services/student-lifecycle";
 import type { AttendanceMode, EventStatus, EventType } from "@/types/database";
 
 type Student = { id: string; full_name: string; preferred_name: string | null; birth_date: string; status: string; is_active: boolean };
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
     { label: "Média · 4 EBDs", value: formatRate(recentRate), detail: formatDelta(delta) },
     { label: "Precisam de atenção", value: attentionTotal, detail: `${radarCounts.priority} em prioridade` },
     { label: "Acompanhamentos", value: followupsResult.error ? "—" : (followupsResult.count ?? 0), detail: followupsResult.error ? "Indicador indisponível" : "Ações em aberto" },
-    { label: "Transição para jovens", value: transitions.length, detail: transitionDue ? `${transitionDue} já completaram 18 anos` : "Adolescentes no último ano" },
+    { label: "Transição para jovens", value: transitions.length, detail: transitionDue ? `${transitionDue} já completaram ${ADOLESCENT_MAX_AGE + 1} anos` : "Adolescentes no último ano" },
   ];
 
   return (
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
         </section>
         <section className="card p-5 sm:p-6" aria-labelledby="transition-title">
           <div className="flex items-start justify-between gap-3"><div><h2 id="transition-title" className="text-xl font-black">🌱 Transição para jovens</h2><p className="mt-1 text-sm text-[#647268]">Organização do cuidado; nenhuma transferência é automática.</p></div><Link href="/adolescentes?filtro=transition" className="text-sm font-bold text-[#176b49]">Ver todos</Link></div>
-          {transitions.length === 0 ? <p className="py-8 text-center text-sm text-[#647268]">Nenhuma transição prevista neste momento.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{transitions.slice(0, 6).map((student) => <article className="flex items-center justify-between gap-3 py-3" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-xs text-[#647268]">{student.lifecycle === "transition_due" ? "18 anos ou mais · revisão pendente" : "17 anos · último ano no grupo"}</p></div><span className={`badge ${student.lifecycle === "transition_due" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{student.lifecycle === "transition_due" ? "Revisar" : "Em transição"}</span></article>)}</div>}
+          {transitions.length === 0 ? <p className="py-8 text-center text-sm text-[#647268]">Nenhuma transição prevista neste momento.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{transitions.slice(0, 6).map((student) => <article className="flex items-center justify-between gap-3 py-3" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-xs text-[#647268]">{student.lifecycle === "transition_due" ? `${ADOLESCENT_MAX_AGE + 1} anos ou mais · revisão pendente` : `${ADOLESCENT_MAX_AGE} anos · último ano no grupo`}</p></div><span className={`badge ${student.lifecycle === "transition_due" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{student.lifecycle === "transition_due" ? "Revisar" : "Em transição"}</span></article>)}</div>}
         </section>
       </div>
 

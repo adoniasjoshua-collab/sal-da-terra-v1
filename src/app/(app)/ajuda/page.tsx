@@ -1,3 +1,4 @@
+import { ADOLESCENT_MIN_AGE, ADOLESCENT_MAX_AGE } from "@/services/student-lifecycle";
 import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
 import { requireAuth, type AppRole } from "@/lib/auth";
@@ -153,7 +154,7 @@ export default async function HelpPage() {
             <li><strong>Radar Pastoral:</strong> organiza a fila de cuidado com uma regra transparente.</li>
             <li><strong>Outros eventos:</strong> mostram volume de participação sem misturar o resultado com a frequência da EBD.</li>
             <li><strong>Aniversariantes:</strong> mostra aniversários do mês e dos próximos 30 dias para ajudar a preparar um reconhecimento.</li>
-            <li><strong>Transição para jovens:</strong> sinaliza quem tem 17 anos ou já completou 18, sem transferir ou arquivar automaticamente.</li>
+            <li><strong>Transição para jovens:</strong> a faixa do ministério é de {ADOLESCENT_MIN_AGE} a {ADOLESCENT_MAX_AGE} anos. O alerta sinaliza quem tem {ADOLESCENT_MAX_AGE} anos ou já completou {ADOLESCENT_MAX_AGE + 1}, sem transferir ou arquivar automaticamente.</li>
           </ul>
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950"><strong>Essencial:</strong> nenhum gráfico representa nível de fé, santidade ou espiritualidade.</p>
         </GuideSection>
