@@ -14,6 +14,13 @@ export type EventType = (typeof EVENT_TYPE_OPTIONS)[number]["value"];
 export type AttendanceMode = "full_roster" | "participation_only" | "headcount_only";
 export type ParticipationStatus = "present" | "absent" | "justified" | "visitor" | "not_participated";
 
+export const EVENT_STATUS_LABELS = {
+  planned: "Planejado",
+  open: "Em aberto",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+} as const;
+
 export const EVENT_TYPE_VALUES = EVENT_TYPE_OPTIONS.map((option) => option.value) as [EventType, ...EventType[]];
 export const EVENT_TYPE_LABELS = Object.fromEntries(
   EVENT_TYPE_OPTIONS.map((option) => [option.value, option.label]),

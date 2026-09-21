@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MembershipForm } from "@/features/admin/membership-form";
 import { ReportSignatoryForm } from "@/features/admin/report-signatory-form";
@@ -21,6 +22,8 @@ const actionLabels: Record<string, string> = {
   update_event_headcounts: "Contagem de evento atualizada",
   insert_events: "Evento criado",
   update_events: "Evento atualizado",
+  insert_pastoral_followups: "Acompanhamento registrado",
+  update_pastoral_followups: "Acompanhamento atualizado",
   insert_report_signatories: "Assinatura de relatório cadastrada",
   update_report_signatories: "Assinatura de relatório atualizada",
 };
@@ -55,6 +58,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
   return (
     <>
       <PageHeading eyebrow="Administração" title="Usuários e acessos" description="Controle funções e acessos do ministério com proteção e rastreabilidade." />
+      <nav aria-label="Gerenciar registros" className="mb-6 flex flex-wrap gap-3"><Link className="button-primary" href="/adolescentes">Editar adolescentes e acompanhamentos</Link><Link className="button-secondary" href="/eventos">Editar eventos, chamadas e contagens</Link><a className="button-secondary" href="#access-title">Gerenciar acessos</a><a className="button-secondary" href="#report-signers-title">Editar assinaturas</a></nav>
       <section className="mb-6 grid gap-3 sm:grid-cols-3" aria-label="Resumo dos acessos">
         <article className="card p-4"><p className="text-sm text-[#647268]">Usuários vinculados</p><p className="mt-1 text-2xl font-black">{members.length}</p></article>
         <article className="card p-4"><p className="text-sm text-[#647268]">Acessos ativos</p><p className="mt-1 text-2xl font-black">{members.filter((member) => member.is_active).length}</p></article>

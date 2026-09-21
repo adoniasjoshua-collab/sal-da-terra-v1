@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateMinistry } from "@/lib/revalidate-ministry";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
@@ -27,30 +27,35 @@ export async function createStudent(_: ActionState, formData: FormData): Promise
     .single();
 
   if (error) return { error: "Não foi possível cadastrar. Tente novamente." };
-  revalidatePath("/adolescentes");
+  revalidateMinistry();
   redirect(`/adolescentes/${data.id}`);
 }
 
 export async function updateStudent(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await requireStaff();
   const parsedId = z.uuid().safeParse(id);
-  const parsed = studentFromForm(formData);
+  const parsed = studentFromForm(formData, true);
   if (!parsedId.success || !parsed.success) return { error: "Dados inválidos." };
 
   const supabase = await createClient();
+  const { data: current, error: currentError } = await supabase.from("students")
+    .select("archived_at").eq("id", parsedId.data).eq("ministry_id", actor.ministryId).maybeSingle();
+  if (currentError || !current) return { error: "Cadastro não encontrado ou acesso negado." };
   const { data, error } = await supabase
     .from("students")
-    .update({ ...parsed.data, is_active: parsed.data.status !== "inactive" })
+    .update({
+      ...parsed.data,
+      is_active: parsed.data.status === "active" || parsed.data.status === "visitor",
+      archived_at: parsed.data.status === "archived" ? current.archived_at ?? new Date().toISOString() : null,
+    })
     .eq("id", parsedId.data)
     .eq("ministry_id", actor.ministryId)
-    .neq("status", "archived")
     .select("id")
     .maybeSingle();
 
   if (error || !data) return { error: "Não foi possível salvar este cadastro." };
-  revalidatePath(`/adolescentes/${parsedId.data}`);
-  revalidatePath("/adolescentes");
-  return { success: "Cadastro atualizado." };
+  revalidateMinistry();
+  redirect(`/adolescentes/${parsedId.data}/editar?salvo=1`);
 }
 
 export async function archiveStudent(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -69,7 +74,7 @@ export async function archiveStudent(_: ActionState, formData: FormData): Promis
     .maybeSingle();
 
   if (error || !data) return { error: "Não foi possível arquivar este cadastro." };
-  revalidatePath("/adolescentes");
+  revalidateMinistry();
   redirect("/adolescentes");
 }
 
@@ -89,7 +94,6 @@ export async function reactivateStudent(_: ActionState, formData: FormData): Pro
     .maybeSingle();
 
   if (error || !data) return { error: "Não foi possível reativar este cadastro." };
-  revalidatePath(`/adolescentes/${parsed.data}`);
-  revalidatePath("/adolescentes");
+  revalidateMinistry();
   return { success: "Cadastro reativado." };
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
@@ -18,16 +19,17 @@ export default async function StudentProfilePage({ params }: Props) {
   const actor = await requireStaff();
   const { id } = await params;
   const supabase = await createClient();
-  const { data: student } = await supabase
+  const { data: student, error: studentError } = await supabase
     .from("students")
     .select("*")
     .eq("id", id)
     .eq("ministry_id", actor.ministryId)
-    .single();
+    .maybeSingle();
 
+  if (studentError) throw new Error("Não foi possível carregar o cadastro.");
   if (!student) notFound();
 
-  const [{ data: events }, { data: followups }] = await Promise.all([
+  const [{ data: events, error: eventsError }, { data: followups, error: followupsError }] = await Promise.all([
     supabase
       .from("events")
       .select("id,event_date,title,type")
@@ -36,18 +38,21 @@ export default async function StudentProfilePage({ params }: Props) {
       .order("event_date", { ascending: false }),
     supabase
       .from("pastoral_followups")
-      .select("id,followup_type,occurred_at,summary,next_action,next_action_date,status,is_sensitive")
+      .select("id,followup_type,occurred_at,summary,next_action,next_action_date,status,is_sensitive,updated_at")
       .eq("student_id", id)
+      .eq("ministry_id", actor.ministryId)
       .order("occurred_at", { ascending: false }),
   ]);
+  if (eventsError || followupsError) throw new Error("Não foi possível carregar o histórico do adolescente.");
 
-  const { data: attendance } = events?.length
+  const { data: attendance, error: attendanceError } = events?.length
     ? await supabase
         .from("attendance")
         .select("event_id,attendance_status")
         .eq("student_id", id)
         .in("event_id", events.map((event) => event.id))
-    : { data: [] };
+    : { data: [], error: null };
+  if (attendanceError) throw new Error("Não foi possível carregar a participação do adolescente.");
 
   const eventMap = new Map((events ?? []).map((event) => [event.id, event]));
   const records = (attendance ?? [])
@@ -85,7 +90,7 @@ export default async function StudentProfilePage({ params }: Props) {
         eyebrow="Perfil 360°"
         title={student.preferred_name || student.full_name}
         description={`${ageOnDate(student.birth_date, today)} anos · Desde ${formatDate(student.joined_at)}`}
-        action={<StatusBadge status={radar} />}
+        action={<div className="flex flex-wrap items-center gap-3"><StatusBadge status={radar} /><Link className="button-primary" href={`/adolescentes/${id}/editar`}>Editar cadastro e status</Link></div>}
       />
       <p className="mb-6 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">
         Este radar apoia o cuidado pastoral com base em participação observável; não avalia fé ou espiritualidade.
@@ -163,7 +168,9 @@ export default async function StudentProfilePage({ params }: Props) {
                   <p className="font-bold capitalize">{item.followup_type.replaceAll("_", " ")}</p>
                   <time className="text-sm text-[#647268]">{formatDate(item.occurred_at)}</time>
                 </div>
+                <p className="mt-2 text-xs font-bold">{{ open: "Em aberto", completed: "Concluído", cancelled: "Cancelado" }[item.status as string]}</p>
                 <p className="mt-2 whitespace-pre-wrap text-sm">{item.summary}</p>
+                <details className="mt-4"><summary className="min-h-11 cursor-pointer font-bold text-[#176b49]">Editar acompanhamento e status</summary><FollowupForm studentId={id} followup={item} /></details>
                 {item.next_action && (
                   <p className="mt-2 text-sm text-[#647268]">
                     Próxima ação: {item.next_action} {item.next_action_date && `· ${formatDate(item.next_action_date)}`}
@@ -177,9 +184,9 @@ export default async function StudentProfilePage({ params }: Props) {
         )}
       </section>
 
-      <section className="mt-7">
+      <section className="mt-7" id="editar-cadastro">
         <h2 className="mb-4 text-xl font-black">Editar cadastro</h2>
-        {student.status !== "archived" && <StudentForm student={student} />}
+        <StudentForm key={student.updated_at} student={student} />
         <StudentLifecycleForm id={id} archived={student.status === "archived"} />
       </section>
 

@@ -20,6 +20,12 @@ After functional approval of the first module, every authenticated role can open
 
 ## Admin
 
+Administration provides direct links to adolescent records, pastoral follow-ups, events, attendance, headcounts, memberships and report signatures. The adolescent list and profile expose **Edit registration and status**. Staff can correct all registration fields, including archived records, and choose active, inactive, visitor or archived; lifecycle fields are saved consistently. Archiving preserves history and can be reversed.
+
+Existing event forms allow planned, open, completed or cancelled status. Cancelling preserves participation; reopen the event before editing its participation. Historical attendance remains editable for participants who subsequently became inactive or archived. Read errors block editing instead of replacing saved attendance with default absences or zero counts.
+
+Each pastoral follow-up exposes an edit form for its content, dates, type, sensitivity and open/completed/cancelled status. Original authorship is preserved. Updates refresh operational pages and reports. Memberships and report signatories are removed from active use through deactivation; student deletion uses archival, and events/follow-ups use cancellation.
+
 Administration → search/filter ministry memberships → change role or access state → confirm access-removing changes → receive an explicit result. The page also exposes a ministry-scoped recent audit trail. The last active administrator cannot be demoted or deactivated.
 
 Every collection provides loading, empty and error states. Mobile uses stacked cards and minimum 44px controls; desktop progressively adds columns.

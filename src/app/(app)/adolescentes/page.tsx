@@ -146,7 +146,7 @@ export default async function StudentsPage({ searchParams }: Props) {
               <Metric label="Última presença" value={formatDate(student.metrics.lastPresence)} />
               <Metric label="Frequência" value={`${student.metrics.presenceRate}%`} />
               <Metric label="Ausências seguidas" value={String(student.metrics.consecutiveAbsences)} />
-              <div><StatusBadge status={student.radar} /></div>
+              <div className="flex flex-col items-start gap-2"><StatusBadge status={student.radar} /><span className="text-xs text-[#647268]">{{ active: "Ativo", inactive: "Inativo", visitor: "Visitante", archived: "Arquivado" }[student.status]}</span><Link className="button-secondary" href={`/adolescentes/${student.id}/editar`}>Editar cadastro</Link></div>
             </article>
           ))}
         </section>

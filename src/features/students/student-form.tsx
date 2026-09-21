@@ -16,7 +16,7 @@ export function StudentForm({ student = {} }: { student?: StudentDefaults }) {
     <Field label="Responsável" name="guardian_name" defaultValue={student.guardian_name} required />
     <Field label="Telefone do responsável" name="guardian_phone" type="tel" defaultValue={student.guardian_phone} required />
     <Field label="Relação com o adolescente" name="guardian_relationship" defaultValue={student.guardian_relationship} required />
-    <div><label className="label" htmlFor="status">Status cadastral</label><select className="input" id="status" name="status" defaultValue={student.status ?? "active"}><option value="active">Ativo</option><option value="visitor">Visitante</option><option value="inactive">Inativo</option></select></div>
+    <div><label className="label" htmlFor="status">Status cadastral</label><select className="input" id="status" name="status" defaultValue={student.status ?? "active"}><option value="active">Ativo</option><option value="visitor">Visitante</option><option value="inactive">Inativo</option>{student.id && <option value="archived">Arquivado</option>}</select></div>
     <div className="sm:col-span-2"><label className="label" htmlFor="notes">Observações gerais não sensíveis</label><textarea className="input min-h-28" id="notes" name="notes" defaultValue={student.notes ?? ""} maxLength={1000}/></div>
     {state?.error && <p role="alert" className="text-sm text-red-700 sm:col-span-2">{state.error}</p>}
     {state?.success && <p role="status" className="text-sm text-emerald-700 sm:col-span-2">{state.success}</p>}

@@ -9,11 +9,12 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const actor = await requireStaff();
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: event }, { count: attendanceCount }, { count: headcountCount }] = await Promise.all([
-    supabase.from("events").select("id,title,type,attendance_mode,event_date,start_time,description").eq("id", id).eq("ministry_id", actor.ministryId).maybeSingle(),
+  const [{ data: event, error: eventError }, { count: attendanceCount, error: attendanceError }, { count: headcountCount, error: headcountError }] = await Promise.all([
+    supabase.from("events").select("id,title,type,attendance_mode,event_date,start_time,description,status").eq("id", id).eq("ministry_id", actor.ministryId).maybeSingle(),
     supabase.from("attendance").select("id", { count: "exact", head: true }).eq("event_id", id),
     supabase.from("event_headcounts").select("id", { count: "exact", head: true }).eq("event_id", id),
   ]);
+  if (eventError || attendanceError || headcountError) throw new Error("Não foi possível carregar o evento para edição.");
   if (!event) notFound();
 
   return (

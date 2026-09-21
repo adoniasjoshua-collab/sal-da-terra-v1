@@ -19,3 +19,5 @@ Administrative membership changes are audited by a database trigger. A separate 
 Insert/update policies require both `USING` and `WITH CHECK`. Cross-ministry attendance/follow-up references are rejected by database triggers. Students have no direct policy on `students`, `attendance`, `pastoral_followups`, or `audit_logs`; the two safe RPCs return only approved columns and require an active `student` membership in the same ministry.
 
 RLS tests in `supabase/tests/rls.sql` impersonate users and verify positive and negative access. They require the local Supabase stack; TypeScript unit tests are not a substitute.
+
+`supabase/tests/historical_edits.sql` verifies that active administrators can edit historical records after linked users leave, while new inactive assignments and writes by inactive staff remain forbidden. The historical-link exception changes relationship validation only; it grants no additional table privileges or row access.

@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import { createEvent, updateEvent } from "./actions";
 import { defaultAttendanceMode, EVENT_TYPE_LABELS, EVENT_TYPE_OPTIONS, type AttendanceMode, type EventType } from "@/services/events";
+import { EVENT_STATUS_LABELS } from "@/services/events";
+import type { EventStatus } from "@/types/database";
 
 type EventDefaults = {
   id: string;
@@ -12,6 +14,7 @@ type EventDefaults = {
   event_date: string;
   start_time: string | null;
   description: string | null;
+  status: EventStatus;
 };
 
 function suggestedTitle(type: EventType) {
@@ -62,6 +65,7 @@ export function EventForm({ event, participationLocked = false, defaultDate }: {
       <div><label className="label" htmlFor="title">Título</label><input className="input" id="title" name="title" value={title} onChange={(change) => setTitle(change.target.value)} required /></div>
       <div><label className="label" htmlFor="event_date">Data</label><input className="input" id="event_date" name="event_date" type="date" defaultValue={event?.event_date ?? defaultDate} required /></div>
       <div><label className="label" htmlFor="start_time">Horário</label><input className="input" id="start_time" name="start_time" type="time" defaultValue={event?.start_time?.slice(0, 5) ?? "09:00"} /></div>
+      {event && <div><label className="label" htmlFor="status">Status do evento</label><select className="input" id="status" name="status" defaultValue={event.status}>{Object.entries(EVENT_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><p className="mt-2 text-xs text-[#647268]">Cancele ou reabra o evento preservando os registros. Apenas eventos concluídos entram nos relatórios.</p></div>}
       <div className="sm:col-span-2"><label className="label" htmlFor="description">Descrição (opcional)</label><textarea className="input min-h-24" id="description" name="description" maxLength={1000} defaultValue={event?.description ?? ""} /></div>
       {state?.error && <p role="alert" className="text-red-700 sm:col-span-2">{state.error}</p>}
       <div className="sm:col-span-2"><button className="button-primary" disabled={pending}>{pending ? "Salvando…" : event ? "Salvar alterações" : "Criar evento"}</button></div>

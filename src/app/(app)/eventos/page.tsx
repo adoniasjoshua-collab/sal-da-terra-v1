@@ -3,7 +3,7 @@ import { PageHeading } from "@/components/page-heading";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { ATTENDANCE_MODE_LABELS, EVENT_TYPE_LABELS, type AttendanceMode, type EventType } from "@/services/events";
+import { EVENT_STATUS_LABELS, ATTENDANCE_MODE_LABELS, EVENT_TYPE_LABELS, type AttendanceMode, type EventType } from "@/services/events";
 
 export default async function EventsPage() {
   const actor = await requireStaff();
@@ -29,16 +29,16 @@ export default async function EventsPage() {
       ) : (
         <section className="grid gap-3">
           {events.map((event) => (
-            <Link className="card flex items-center justify-between gap-4 p-5 hover:border-[#86ad96]" href={`/eventos/${event.id}`} key={event.id}>
+            <article className="card flex flex-wrap items-center justify-between gap-4 p-5" key={event.id}>
               <div>
-                <p className="font-bold">{event.title}</p>
+                <Link className="font-bold hover:text-[#176b49]" href={`/eventos/${event.id}`}>{event.title}</Link>
                 <p className="mt-1 text-sm text-[#647268]">
                   {EVENT_TYPE_LABELS[event.type as EventType]} · {formatDate(event.event_date)} {event.start_time && `· ${event.start_time.slice(0, 5)}`}
                 </p>
                 <p className="mt-1 text-xs text-[#7a877f]">{ATTENDANCE_MODE_LABELS[event.attendance_mode as AttendanceMode]}</p>
               </div>
-              <span className="badge bg-[#edf7f1] text-[#176b49]">{event.status === "completed" ? "Registro salvo" : "Registrar"}</span>
-            </Link>
+              <div className="flex flex-wrap items-center gap-2"><span className="badge bg-[#edf7f1] text-[#176b49]">{EVENT_STATUS_LABELS[event.status as keyof typeof EVENT_STATUS_LABELS]}</span><Link className="button-secondary" href={`/eventos/${event.id}/editar`}>Editar evento e status</Link><Link className="button-secondary" href={`/eventos/${event.id}`}>Ver participação</Link></div>
+            </article>
           ))}
         </section>
       )}

@@ -17,20 +17,27 @@ export default async function AttendancePage({ params, searchParams }: Props) {
   const saved = query.salvo === "1";
   const edited = query.editado === "1";
   const supabase = await createClient();
-  const { data: event } = await supabase
+  const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id,title,type,event_date,status,ministry_id,attendance_mode")
     .eq("id", id)
     .eq("ministry_id", actor.ministryId)
-    .single();
+    .maybeSingle();
+  if (eventError) throw new Error("Não foi possível carregar o evento.");
   if (!event) notFound();
+  if (event.status === "cancelled") return <>
+    <PageHeading eyebrow="Evento cancelado" title={event.title} description="Os registros de participação foram preservados. Reabra o evento para editar a chamada ou a contagem."
+      action={<Link className="button-primary" href={`/eventos/${id}/editar`}>Editar evento e status</Link>} />
+    <Link className="button-secondary" href="/eventos">Voltar aos eventos</Link>
+  </>;
 
   if (event.attendance_mode === "headcount_only") {
-    const { data: existing } = await supabase
+    const { data: existing, error: countError } = await supabase
       .from("event_headcounts")
       .select("adolescent_count,visitor_count,is_estimated,notes")
       .eq("event_id", id)
       .maybeSingle();
+    if (countError) throw new Error("Não foi possível carregar a contagem existente. Tente novamente antes de editar.");
 
     return (
       <>
@@ -42,10 +49,20 @@ export default async function AttendancePage({ params, searchParams }: Props) {
     );
   }
 
-  const [{ data: students }, { data: existing }] = await Promise.all([
+  const [{ data: activeStudents, error: studentsError }, { data: existing, error: attendanceError }] = await Promise.all([
     supabase.from("students").select("id,full_name,preferred_name,status").eq("ministry_id", actor.ministryId).eq("is_active", true).in("status", ["active", "visitor"]).order("full_name"),
     supabase.from("attendance").select("student_id,attendance_status").eq("event_id", id),
   ]);
+  if (studentsError || attendanceError) throw new Error("Não foi possível carregar a chamada existente. Tente novamente antes de editar.");
+  const missingIds = (existing ?? []).map((row) => row.student_id)
+    .filter((studentId) => !activeStudents?.some((student) => student.id === studentId));
+  const { data: historicalStudents, error: historyError } = missingIds.length
+    ? await supabase.from("students").select("id,full_name,preferred_name,status")
+      .eq("ministry_id", actor.ministryId).in("id", missingIds)
+    : { data: [], error: null };
+  if (historyError) throw new Error("Não foi possível carregar os participantes históricos.");
+  const students = [...(activeStudents ?? []), ...(historicalStudents ?? [])]
+    .sort((a, b) => a.full_name.localeCompare(b.full_name, "pt-BR"));
   const current = new Map((existing ?? []).map((row) => [row.student_id, row.attendance_status]));
   const action = saveAttendance.bind(null, id);
   const fullRoster = event.attendance_mode === "full_roster";

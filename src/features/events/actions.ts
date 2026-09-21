@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { revalidateMinistry } from "@/lib/revalidate-ministry";
 import { EVENT_TYPE_VALUES, isAttendanceStatusAllowed, type AttendanceMode } from "@/services/events";
 
 export type EventState = { error?: string } | undefined;
@@ -40,7 +40,7 @@ export async function createEvent(_: EventState, formData: FormData): Promise<Ev
     .single();
 
   if (error) return { error: "Não foi possível criar o evento." };
-  revalidatePath("/eventos");
+  revalidateMinistry();
   redirect(`/eventos/${data.id}`);
 }
 
@@ -48,21 +48,21 @@ export async function updateEvent(id: string, _: EventState, formData: FormData)
   const actor = await requireStaff();
   const parsedId = z.uuid().safeParse(id);
   const parsed = eventSchema.safeParse(Object.fromEntries(formData));
+  const status = z.enum(["planned", "open", "completed", "cancelled"]).safeParse(formData.get("status"));
+  if (!status.success) return { error: "Selecione um status válido para o evento." };
   if (!parsedId.success || !parsed.success) return { error: "Revise os dados do evento." };
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("events")
-    .update({ ...parsed.data, start_time: parsed.data.start_time || null, description: parsed.data.description || null })
+    .update({ ...parsed.data, status: status.data, start_time: parsed.data.start_time || null, description: parsed.data.description || null })
     .eq("id", parsedId.data)
     .eq("ministry_id", actor.ministryId)
     .select("id")
     .maybeSingle();
 
   if (error || !data) return { error: error?.message.includes("cannot change after records exist") ? "O tipo de registro não pode mudar depois que a participação foi salva." : "Não foi possível atualizar o evento." };
-  revalidatePath(`/eventos/${parsedId.data}`);
-  revalidatePath("/eventos");
-  revalidatePath("/dashboard");
+  revalidateMinistry();
   redirect(`/eventos/${parsedId.data}?editado=1`);
 }
 
@@ -97,8 +97,7 @@ export async function registerCompletedHeadcountEvent(_: EventState, formData: F
   });
   if (error || !data) return { error: "Não foi possível registrar o evento realizado." };
 
-  revalidatePath("/eventos");
-  revalidatePath("/dashboard");
+  revalidateMinistry();
   redirect(`/eventos/${data}?salvo=1`);
 }
 
@@ -114,11 +113,12 @@ export async function saveAttendance(eventId: string, formData: FormData) {
   const supabase = await createClient();
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id,ministry_id,attendance_mode")
+    .select("id,ministry_id,attendance_mode,status")
     .eq("id", eventId)
     .eq("ministry_id", actor.ministryId)
     .maybeSingle();
   if (eventError || !event) throw new Error("Evento não encontrado ou acesso negado.");
+  if (event.status === "cancelled") throw new Error("Reabra o evento antes de alterar a participação.");
 
   const parsedRows = [...formData.entries()]
     .filter(([key]) => key.startsWith("attendance:"))
@@ -149,14 +149,12 @@ export async function saveAttendance(eventId: string, formData: FormData) {
     .update({ status: "completed" })
     .eq("id", eventId)
     .eq("ministry_id", actor.ministryId)
+    .neq("status", "cancelled")
     .select("id")
     .maybeSingle();
   if (completionError || !completed) throw new Error("Participação salva, mas o evento não pôde ser concluído.");
 
-  revalidatePath(`/eventos/${eventId}`);
-  revalidatePath("/eventos");
-  revalidatePath("/dashboard");
-  revalidatePath("/adolescentes");
+  revalidateMinistry();
   redirect(`/eventos/${eventId}?salvo=1`);
 }
 
@@ -184,11 +182,12 @@ export async function saveHeadcount(
   const supabase = await createClient();
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id,attendance_mode")
+    .select("id,attendance_mode,status")
     .eq("id", eventId)
     .eq("ministry_id", actor.ministryId)
     .maybeSingle();
   if (eventError || !event) return { error: "Evento não encontrado ou acesso negado." };
+  if (event.status === "cancelled") return { error: "Reabra o evento antes de alterar a contagem." };
   if (event.attendance_mode !== "headcount_only") return { error: "Este evento exige registro individual." };
 
   const { error: countError } = await supabase.from("event_headcounts").upsert({
@@ -207,12 +206,11 @@ export async function saveHeadcount(
     .update({ status: "completed" })
     .eq("id", eventId)
     .eq("ministry_id", actor.ministryId)
+    .neq("status", "cancelled")
     .select("id")
     .maybeSingle();
   if (completionError || !completed) return { error: "Contagem salva, mas o evento não pôde ser concluído." };
 
-  revalidatePath(`/eventos/${eventId}`);
-  revalidatePath("/eventos");
-  revalidatePath("/dashboard");
+  revalidateMinistry();
   return { success: "Contagem salva com segurança." };
 }
