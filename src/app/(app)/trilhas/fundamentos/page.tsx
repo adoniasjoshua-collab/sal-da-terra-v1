@@ -22,7 +22,11 @@ export default async function TrackPage() {
   const progress = data?.content && data.enrollment ? learningProgress(data.enrollment, data.content) : null;
   const worldOneComplete = Boolean(data?.enrollment?.completed_at);
   const earnedXp = data?.enrollment?.xp ?? 0;
+  const activeEnrollments = data?.students?.filter((student) => student.enrollment?.is_active).length ?? 0;
   const totalXp = worlds.reduce((sum, world) => sum + world.xp, 100);
+  const progressLabel = actor.role === "student"
+    ? progress ? `${progress.done} de ${progress.total} etapas no Mundo 1` : "Aguardando liberação da primeira missão"
+    : activeEnrollments > 0 ? `${activeEnrollments} inscrição ativa em acompanhamento` : "Publique e inscreva adolescentes para medir progresso";
 
   return <>
     <PageHeading eyebrow="Temporada 01" title="Fundamentos Sal da Terra" description="Sua jornada em mundos curtos, progresso privado e conquistas educacionais." />
@@ -44,7 +48,7 @@ export default async function TrackPage() {
             <div className="mt-4 h-3 rounded-full bg-white/20">
               <div className="h-3 rounded-full bg-[#e6c861]" style={{ width: `${Math.min(100, Math.floor(earnedXp * 100 / totalXp))}%` }} />
             </div>
-            <p className="mt-3 text-sm text-[#d7eadf]">{progress ? `${progress.done} de ${progress.total} etapas no Mundo 1` : "Aguardando liberação da primeira missão"}</p>
+            <p className="mt-3 text-sm text-[#d7eadf]">{progressLabel}</p>
           </div>
         </div>
       </section>
@@ -55,11 +59,11 @@ export default async function TrackPage() {
         {worlds.map((world, index) => {
           const active = index === 0 && canRead && !worldOneComplete;
           const complete = index === 0 && worldOneComplete;
-          const locked = index > 0 || !canRead;
+          const locked = index > 0 || !canRead || (actor.role !== "student" && activeEnrollments === 0);
           return <li className={`relative rounded-2xl border p-5 shadow-sm ${complete ? "border-[#176b49] bg-[#edf7f1]" : active ? "border-[#e6c861] bg-white ring-2 ring-[#e6c861]/40" : "border-[#dfe6df] bg-white"}`} key={world.title}>
             <div className="flex items-start justify-between gap-4">
               <span className={`z-[1] grid size-14 shrink-0 place-items-center rounded-full text-xl font-black ${complete ? "bg-[#176b49] text-white" : active ? "bg-[#e6c861] text-[#19382b]" : "bg-[#eef2ee] text-[#526158]"}`}>{complete ? "✓" : index + 1}</span>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${locked ? "bg-[#f1f4f1] text-[#526158]" : "bg-[#143d2c] text-white"}`}>{complete ? "Concluído" : active ? "Missão ativa" : "Em preparação"}</span>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${locked ? "bg-[#f1f4f1] text-[#526158]" : "bg-[#143d2c] text-white"}`}>{complete ? "Concluído" : actor.role !== "student" && index === 0 ? "Pronto para liberar" : active ? "Missão ativa" : "Em preparação"}</span>
             </div>
             <p className="mt-5 text-xs font-black uppercase tracking-[.14em] text-[#176b49]">{world.theme}</p>
             <h2 className="mt-2 text-xl font-black">{world.title}</h2>

@@ -15,8 +15,33 @@ export default async function LearningManagementPage() {
   const admin = actor.role === "admin";
   const students = data.students;
   const active = students.filter((student) => student.enrollment?.is_active);
+  const readyForEnrollments = publication?.state === "published";
+  const measurable = readyForEnrollments && active.length > 0;
   return <><PageHeading eyebrow="Minha Jornada · liderança" title="Conteúdo e acompanhamento" description="Mundo 1 — Você faz parte! · versão 1. Progresso digital separado da presença EBD." />
     <Link className="button-secondary mb-5" href="/trilhas/fundamentos/voce-faz-parte">Ler conteúdo completo e gabaritos</Link>
+    <section className="mb-6 grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
+      <article className="card p-6">
+        <p className="text-sm font-black uppercase tracking-[.14em] text-[#176b49]">Liberação do teste</p>
+        <h2 className="mt-2 text-xl font-black">Como o progresso começa a ser medido</h2>
+        <ol className="mt-4 grid gap-3 text-sm leading-6">
+          <li className={publication ? "font-semibold text-[#176b49]" : ""}>1. Administrador define autor e revisor.</li>
+          <li className={publication?.state === "in_review" || publication?.state === "approved" || publication?.state === "published" ? "font-semibold text-[#176b49]" : ""}>2. Autor envia, revisor aprova e administrador publica o Mundo 1.</li>
+          <li className={readyForEnrollments ? "font-semibold text-[#176b49]" : ""}>3. Administrador autoriza inscrição de adolescentes com conta vinculada.</li>
+          <li className={measurable ? "font-semibold text-[#176b49]" : ""}>4. O adolescente entra com perfil de aluno e conclui leituras, escolha, quiz, revisão e prática.</li>
+          <li>5. XP só aparece quando o banco grava eventos educacionais únicos; a prática final exige validação adulta.</li>
+        </ol>
+      </article>
+      <article className="rounded-2xl border border-[#dfe6df] bg-[#103d2c] p-6 text-white">
+        <p className="text-sm font-black uppercase tracking-[.14em] text-[#e6c861]">Estado atual</p>
+        <h2 className="mt-2 text-2xl font-black">{measurable ? "Medição ativa" : readyForEnrollments ? "Pronto para inscrever" : "Ainda sem medição"}</h2>
+        <p className="mt-3 text-sm leading-6 text-[#d7eadf]">{measurable ? "Já existem inscrições ativas. O progresso muda quando o adolescente executa as missões." : readyForEnrollments ? "O conteúdo está publicado. Autorize pelo menos uma inscrição para testar progresso real." : "Publique o Mundo 1 antes de tentar medir progresso. Sem publicação e inscrição, não há XP nem etapas registradas."}</p>
+        <div className="mt-5 grid grid-cols-3 gap-2 text-center text-sm">
+          <div className="rounded-xl bg-white/10 p-3"><p className="text-2xl font-black">{active.length}</p><p>inscrições</p></div>
+          <div className="rounded-xl bg-white/10 p-3"><p className="text-2xl font-black">{active.filter((s) => s.enrollment?.completed_at).length}</p><p>conclusões</p></div>
+          <div className="rounded-xl bg-white/10 p-3"><p className="text-2xl font-black">{active.filter((s) => s.enrollment?.practice_state === "pending").length}</p><p>práticas</p></div>
+        </div>
+      </article>
+    </section>
     <section className="card p-6"><h2 className="text-xl font-black">Revisão e publicação</h2><p className="my-3 font-semibold">{publication ? labels[publication.state] : "Defina os responsáveis para iniciar"}</p>
       <p className="mb-4 text-sm leading-6">O administrador designa dois adultos autorizados. O autor assume a responsabilidade editorial pela versão; o revisor deve ser pessoa diferente e formalmente autorizada para a revisão doutrinária. A publicação libera somente esta versão para inscrições autorizadas.</p>
       {publication && <p className="mb-4 text-sm">Autor: {data.editors.find((editor) => editor.id === publication.author_id)?.name ?? "Vínculo indisponível"} · Revisor: {data.editors.find((editor) => editor.id === publication.reviewer_id)?.name ?? "Vínculo indisponível"}</p>}
