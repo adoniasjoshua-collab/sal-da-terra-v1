@@ -2,13 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MembershipForm } from "@/features/admin/membership-form";
 import { ReportSignatoryForm } from "@/features/admin/report-signatory-form";
+import { createTestStudent } from "@/features/student-access/actions";
 import { PageHeading } from "@/components/page-heading";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberRole } from "@/types/database";
 import type { ReportSignatoryRow } from "@/types/database";
 
-type SearchParams = Promise<{ search?: string; role?: string; access?: string }>;
+type SearchParams = Promise<{ search?: string; role?: string; access?: string; teste?: string }>;
 type Member = { id: string; profile_id: string; role: MemberRole; is_active: boolean; profiles: { full_name: string } | null };
 type AuditLog = { id: string; action: string; entity_type: string; created_at: string; profiles: { full_name: string } | null };
 
@@ -26,6 +27,8 @@ const actionLabels: Record<string, string> = {
   update_pastoral_followups: "Acompanhamento atualizado",
   insert_report_signatories: "Assinatura de relatório cadastrada",
   update_report_signatories: "Assinatura de relatório atualizada",
+  provision_student_access: "Acesso de aluno criado",
+  issue_student_access_link: "Novo link de acesso de aluno",
 };
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
@@ -65,6 +68,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         <article className="card p-4"><p className="text-sm text-[#647268]">Administradores ativos</p><p className="mt-1 text-2xl font-black">{activeAdmins}</p></article>
       </section>
       <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">A plataforma preserva históricos: desative acessos em vez de excluir usuários. O último administrador ativo é protegido. Novas contas devem ser provisionadas pelo fluxo seguro do Supabase; nenhuma chave privilegiada é enviada ao navegador.</p>
+
+      <section className="card mb-6 p-5 sm:p-6" id="aluno-teste" aria-labelledby="student-access-title">
+        <h2 id="student-access-title" className="text-xl font-black">Acesso de alunos</h2>
+        <p className="mt-2 text-sm leading-6 text-[#526158]">Para convidar um adolescente, abra a ficha dele em <Link className="font-bold text-[#176b49] underline" href="/adolescentes">Adolescentes</Link> e use <strong>Acesso do aluno ao portal</strong>. O portal gera um link pessoal para enviar pelo WhatsApp ou copiar.</p>
+        <p className="mt-2 text-sm leading-6 text-[#526158]">Para testar a experiência do aluno, crie um cadastro fictício de teste. Ele não aparece em chamadas, dashboard ou relatórios.</p>
+        {filters.teste && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{filters.teste === "limite" ? "Já existem 3 alunos de teste ativos. Arquive um antes de criar outro." : "Não foi possível criar o aluno de teste."}</p>}
+        <form action={createTestStudent} className="mt-4"><button className="button-secondary">Criar aluno de teste</button></form>
+      </section>
 
       <section aria-labelledby="access-title">
         <div className="mb-4"><h2 id="access-title" className="text-xl font-black">Controle de acesso</h2><p className="mt-1 text-sm text-[#647268]">As alterações são registradas automaticamente.</p></div>

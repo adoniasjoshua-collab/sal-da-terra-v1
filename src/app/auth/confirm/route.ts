@@ -1,25 +1,14 @@
-import type { EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 
-const allowedTypes = new Set<EmailOtpType>(["invite", "recovery"]);
-
-export async function GET(request: NextRequest) {
-  const tokenHash = request.nextUrl.searchParams.get("token_hash");
-  const type = request.nextUrl.searchParams.get("type") as EmailOtpType | null;
+// Legacy e-mail links land here. GET must not consume the one-time token (link
+// scanners and previews prefetch URLs), so forward to the confirmation page.
+export function GET(request: NextRequest) {
   const destination = request.nextUrl.clone();
+  destination.pathname = "/convite";
   destination.search = "";
-
-  if (tokenHash && type && allowedTypes.has(type)) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-    if (!error) {
-      destination.pathname = "/definir-senha";
-      return NextResponse.redirect(destination);
-    }
+  for (const key of ["token_hash", "type"]) {
+    const value = request.nextUrl.searchParams.get(key);
+    if (value) destination.searchParams.set(key, value);
   }
-
-  destination.pathname = "/login";
-  destination.searchParams.set("erro", "convite-invalido");
   return NextResponse.redirect(destination);
 }

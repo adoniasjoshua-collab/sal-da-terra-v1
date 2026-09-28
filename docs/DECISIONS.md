@@ -60,3 +60,16 @@ Events support three exclusive collection modes: full roster, identified partici
 ## ADR-007 — Age-based alerts support, but do not automate, ministry transitions
 
 The ministry defines its operational adolescent range as ages 11–15 inclusive (updated on 2026-09-21). Age 15 remains within the range and is labeled **transitioning**; age 16+ is **transition due**. Children under 11 are **outside range**. These values are derived from the authorized birth date using the ministry's São Paulo reference date; they do not mutate or archive records. The leadership decides the actual handoff date and preserves history. Birthday reminders are staff-only, have no ranking or spiritual meaning, and use no additional personal data.
+
+## ADR-010 — Admin-issued student access links (2026-09-28)
+
+Adolescents use the same login as staff; the active membership role decides
+what they see. Admins create access from the adolescent profile with an e-mail
+(adolescent or guardian) and share a personal link (copy/WhatsApp) instead of
+depending on project SMTP. The service-role key stays server-only and is used
+only for the Auth Admin API; linking and auditing run in admin-scoped RPCs.
+Links land on a side-effect-free page because messaging previews and scanners
+prefetch URLs; the token is verified on explicit confirmation. Students use a
+shorter password rule (8+, letters and number); staff keep the strong rule.
+Admins rehearse the flow with fictitious `is_test` records excluded from
+pastoral indicators.

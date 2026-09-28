@@ -5,6 +5,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { FollowupForm } from "@/features/followups/followup-form";
 import { StudentForm } from "@/features/students/student-form";
 import { StudentLifecycleForm } from "@/features/students/student-lifecycle-form";
+import { getStudentAccess } from "@/features/student-access/data";
+import { StudentAccessPanel } from "@/features/student-access/student-access-panel";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -54,6 +56,8 @@ export default async function StudentProfilePage({ params }: Props) {
     : { data: [], error: null };
   if (attendanceError) throw new Error("Não foi possível carregar a participação do adolescente.");
 
+  const access = actor.role === "admin" ? await getStudentAccess(student.auth_user_id) : null;
+
   const eventMap = new Map((events ?? []).map((event) => [event.id, event]));
   const records = (attendance ?? [])
     .filter((item) => eventMap.get(item.event_id)?.type === "EBD")
@@ -89,7 +93,7 @@ export default async function StudentProfilePage({ params }: Props) {
       <PageHeading
         eyebrow="Perfil 360°"
         title={student.preferred_name || student.full_name}
-        description={`${ageOnDate(student.birth_date, today)} anos · Desde ${formatDate(student.joined_at)}`}
+        description={`${student.is_test ? "Cadastro de teste · " : ""}${ageOnDate(student.birth_date, today)} anos · Desde ${formatDate(student.joined_at)}`}
         action={<div className="flex flex-wrap items-center gap-3"><StatusBadge status={radar} /><Link className="button-primary" href={`/adolescentes/${id}/editar`}>Editar cadastro e status</Link></div>}
       />
       <p className="mb-6 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">
@@ -190,12 +194,7 @@ export default async function StudentProfilePage({ params }: Props) {
         <StudentLifecycleForm id={id} archived={student.status === "archived"} />
       </section>
 
-      <section className="card mt-7 border-dashed p-6">
-        <p className="text-sm font-bold text-[#176b49]">Minha Jornada · futuro</p>
-        <p className="mt-1 text-sm text-[#647268]">
-          Trilhas, aulas, quizzes, missões e certificados serão adicionados em uma próxima fase.
-        </p>
-      </section>
+      {access && <StudentAccessPanel studentId={id} isTest={student.is_test} {...access} />}
     </>
   );
 }

@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const [studentsResult, eventsResult, followupsResult] = await Promise.all([
-    supabase.from("students").select("id,full_name,preferred_name,birth_date,status,is_active").eq("ministry_id", actor.ministryId).neq("status", "archived"),
+    supabase.from("students").select("id,full_name,preferred_name,birth_date,status,is_active").eq("ministry_id", actor.ministryId).eq("is_test", false).neq("status", "archived"),
     supabase.from("events").select("id,event_date,title,type,status,attendance_mode").eq("ministry_id", actor.ministryId).order("event_date", { ascending: false }),
     supabase.from("pastoral_followups").select("id", { count: "exact", head: true }).eq("ministry_id", actor.ministryId).eq("status", "open"),
   ]);

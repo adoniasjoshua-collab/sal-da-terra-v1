@@ -17,6 +17,16 @@ export async function requireAuth(): Promise<AuthContext> {
   return { userId, ministryId: membership.ministry_id, ministryName: ministry?.name ?? "Ministério", role: membership.role as AppRole, name: profile?.full_name ?? "Usuário" };
 }
 
+// Non-redirecting lookup for public pages (e.g. password setup after an invite).
+export async function getCurrentRole(): Promise<AppRole | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) return null;
+  const { data: membership } = await supabase.from("ministry_members").select("role").eq("profile_id", userId).eq("is_active", true).limit(1).maybeSingle();
+  return (membership?.role as AppRole | undefined) ?? null;
+}
+
 export async function requireStaff() {
   const context = await requireAuth();
   if (context.role === "student") redirect("/minha-participacao");

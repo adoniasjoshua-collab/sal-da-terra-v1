@@ -172,12 +172,15 @@ export default async function HelpPage() {
 
         <GuideSection id="convites" icon="✉️" title="Convites e novas contas">
           <p>O cadastro de acesso é controlado. Não existe inscrição pública em que a pessoa escolhe sua própria função.</p>
+          <p><strong>Adolescentes:</strong> o administrador abre a ficha do adolescente e usa <strong>Acesso do aluno ao portal</strong>.</p>
           <ol className="list-decimal space-y-2 pl-5">
-            <li>A administração responsável providencia a conta pelo fluxo seguro do Supabase.</li>
-            <li>A pessoa recebe o convite no e-mail e define sua senha.</li>
-            <li>Um administrador vincula a conta ao ministério e define a função correta.</li>
-            <li>Somente com vínculo ativo a pessoa acessa o portal.</li>
+            <li>Informe o e-mail do adolescente ou do responsável e toque em <strong>Criar acesso e gerar link</strong>.</li>
+            <li>Envie o link pelo WhatsApp do responsável ou copie a mensagem. O link é pessoal e vale uma vez.</li>
+            <li>O aluno abre o link, toca em <strong>Continuar</strong> e cria a senha (8 caracteres ou mais, com letras e número).</li>
+            <li>Se o link expirar ou o aluno esquecer a senha, use <strong>Gerar novo link</strong> na mesma ficha.</li>
           </ol>
+          <Example>Para ver o que o aluno vê, vá em Administração → Criar aluno de teste, gere o acesso com um e-mail seu (ex.: seunome+aluno@gmail.com) e abra o link numa janela anônima.</Example>
+          <p><strong>Liderança:</strong> a administração providencia a conta pelo fluxo seguro do Supabase e depois define a função correta em Administração. Somente com vínculo ativo a pessoa acessa o portal.</p>
           <p><strong>O convite sozinho não libera dados.</strong> A função e o vínculo ativo são proteções adicionais.</p>
         </GuideSection>
 

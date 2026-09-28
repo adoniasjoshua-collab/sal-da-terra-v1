@@ -1,5 +1,13 @@
 # Row Level Security
 
+## Student access
+
+`provision_student_access`, `issue_student_access_link` and `create_test_student`
+are `security definer` with empty `search_path`, executable only by
+`authenticated`, and require an active admin membership in the student's
+ministry. Provisioning accepts only an Auth identity with no profile, membership
+or student link. `is_test` cannot be written by API roles.
+
 ## Learning tables
 
 All six learning tables have RLS enabled with no direct API grants or policies.

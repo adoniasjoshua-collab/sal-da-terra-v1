@@ -1,5 +1,13 @@
 # Database
 
+## Student access
+
+`students.is_test` marks fictitious records created by `create_test_student`
+(admin, max 3 active per ministry); a trigger prevents API roles from setting or
+changing it. `provision_student_access` links a new Auth identity (profile,
+`student` membership, `auth_user_id`) and `issue_student_access_link` authorizes
+link reissue; both are admin-only and audited.
+
 ## Learning increment — world one
 
 `learning_versions` stores immutable versioned educational content and answer keys.

@@ -50,7 +50,7 @@ export default async function AttendancePage({ params, searchParams }: Props) {
   }
 
   const [{ data: activeStudents, error: studentsError }, { data: existing, error: attendanceError }] = await Promise.all([
-    supabase.from("students").select("id,full_name,preferred_name,status").eq("ministry_id", actor.ministryId).eq("is_active", true).in("status", ["active", "visitor"]).order("full_name"),
+    supabase.from("students").select("id,full_name,preferred_name,status").eq("ministry_id", actor.ministryId).eq("is_active", true).eq("is_test", false).in("status", ["active", "visitor"]).order("full_name"),
     supabase.from("attendance").select("student_id,attendance_status").eq("event_id", id),
   ]);
   if (studentsError || attendanceError) throw new Error("Não foi possível carregar a chamada existente. Tente novamente antes de editar.");

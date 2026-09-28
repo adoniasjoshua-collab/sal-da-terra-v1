@@ -31,7 +31,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
   const period = safePeriod(params.inicio, params.fim, today);
   const supabase = await createClient();
   const [studentsResult, eventsResult, ministryResult, signatoriesResult] = await Promise.all([
-    supabase.from("students").select("id,full_name,status,is_active").eq("ministry_id", actor.ministryId).neq("status", "archived").order("full_name"),
+    supabase.from("students").select("id,full_name,status,is_active").eq("ministry_id", actor.ministryId).eq("is_test", false).neq("status", "archived").order("full_name"),
     supabase.from("events").select("id,title,type,event_date,status,attendance_mode").eq("ministry_id", actor.ministryId).eq("status", "completed").gte("event_date", period.start).lte("event_date", period.end).order("event_date"),
     supabase.from("ministries").select("name,churches(name)").eq("id", actor.ministryId).single(),
     supabase.from("report_signatories").select("*").eq("ministry_id", actor.ministryId).eq("is_active", true).order("display_order"),

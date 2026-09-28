@@ -57,6 +57,17 @@ Every authenticated role can open **Ajuda** from the main navigation. The guide 
 
 ## Invitation acceptance
 
+Student access: Admin → adolescent profile → **Acesso do aluno ao portal** → e-mail
+(adolescent or guardian) → server creates a new Auth identity, links profile,
+`student` membership and `students.auth_user_id` → personal link shown once with
+copy / WhatsApp (guardian phone or contact picker). The link opens `/convite`,
+which has no side effects (WhatsApp previews and mail scanners prefetch URLs);
+the one-time token is verified only on **Continuar**, then `/definir-senha`.
+Students use 8+ characters with letters and a number; staff keep the strong rule.
+**Gerar novo link** issues an invite (pending) or recovery (accepted) link.
+Administração → **Criar aluno de teste** creates a fictitious `is_test` record,
+excluded from rosters, dashboard and reports, to rehearse the real flow.
+
 Authorized invitation → server-side token verification → authenticated password form → role-appropriate landing page. Passwords require at least 12 characters with upper- and lower-case letters and a number. Public sign-up remains disabled.
 
 Password recovery starts in the same browser that will open the email link so the PKCE verifier remains available: Login → Forgot password → request link → open the newest email on the same device/browser → define password. The response does not disclose whether arbitrary email addresses exist.
