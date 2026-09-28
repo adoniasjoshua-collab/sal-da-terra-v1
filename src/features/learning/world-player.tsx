@@ -1,0 +1,135 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { learningProgress, practiceLabels, type Enrollment, type LearningCommand, type LearningResult, type WorldContent } from "@/services/learning";
+import { runLearningCommand } from "./actions";
+
+// "storage" only fires in other tabs; this event keeps the current tab in sync.
+const DRAFT_EVENT = "sal-learning-draft";
+const subscribe = (callback: () => void) => {
+  window.addEventListener("storage", callback);
+  window.addEventListener(DRAFT_EVENT, callback);
+  return () => { window.removeEventListener("storage", callback); window.removeEventListener(DRAFT_EVENT, callback); };
+};
+function readDraft(key: string) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+function writeDraft(key: string, value: string | null) {
+  if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value);
+  window.dispatchEvent(new Event(DRAFT_EVENT));
+}
+function storedAnswers(raw: string | null): unknown {
+  try { return JSON.parse(raw ?? "null")?.answers ?? null; } catch { return null; }
+}
+
+export function WorldPlayer({ content, enrollment, userId, readOnly = false }: { content: WorldContent; enrollment: Enrollment; userId: string; readOnly?: boolean }) {
+  const [busy, startTransition] = useTransition();
+  const pending = busy || readOnly;
+  const [message, setMessage] = useState("");
+  const [failed, setFailed] = useState(false);
+  const [result, setResult] = useState<LearningResult | null>(enrollment.last_quiz ?? null);
+  const [exerciseAnswer, setExerciseAnswer] = useState<number | null>(null);
+  const [exerciseFeedback, setExerciseFeedback] = useState("");
+  const [answers, setAnswers] = useState<Record<string, number>>(enrollment.quiz_draft);
+  const key = `sal-learning:${userId}:${enrollment.id}:v${content.version}`;
+  const stored = useSyncExternalStore(subscribe, () => readDraft(key), () => null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revision = useRef(0);
+  const request = useRef<{ signature: string; id: string } | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const progress = learningProgress(enrollment, content);
+  const readingsDone = content.cards.every((card) => enrollment.readings.includes(card.id));
+  // Offer restoration only when this browser holds answers different from the ones on screen.
+  const localAnswers = storedAnswers(stored);
+  const canRestore = !readOnly && enrollment.exercise_done && localAnswers !== null && JSON.stringify(localAnswers) !== JSON.stringify(answers);
+
+  function send(command: LearningCommand, after?: (value: LearningResult) => void) {
+    startTransition(async () => {
+      try {
+        const response = await runLearningCommand(command);
+        setFailed(Boolean(response.error));
+        setMessage(response.error ?? "Etapa salva com segurança.");
+        if (response.result) after?.(response.result);
+      } catch {
+        setFailed(true);
+        setMessage("Não foi possível confirmar o salvamento. Verifique sua conexão e tente novamente; o progresso já confirmado está preservado.");
+      }
+    });
+  }
+
+  function saveDraft(next: Record<string, number>) {
+    setAnswers(next);
+    const current = ++revision.current;
+    try { writeDraft(key, JSON.stringify({ answers: next, expires: Date.now() + 7 * 86400000 })); }
+    catch { setMessage("Este navegador não permite guardar rascunhos locais. Use Salvar rascunho enquanto estiver conectado."); }
+    if (timer.current) clearTimeout(timer.current);
+    setMessage("Rascunho alterado; aguardando confirmação do servidor.");
+    timer.current = setTimeout(() => {
+      startTransition(async () => {
+        try {
+          const response = await runLearningCommand({ command: "save_draft", target: enrollment.id, answers: next });
+          if (revision.current === current) {
+            setFailed(Boolean(response.error));
+            setMessage(response.error ?? "Rascunho salvo no servidor.");
+          }
+        } catch {
+          if (revision.current === current) { setFailed(true); setMessage("Sem confirmação do servidor. Suas escolhas permanecem nesta tela; tente salvar novamente."); }
+        }
+      });
+    }, 800);
+  }
+
+  function restoreDraft() {
+    try {
+      const saved = JSON.parse(stored ?? "null");
+      if (!saved || saved.expires < Date.now() || !saved.answers || typeof saved.answers !== "object") throw new Error();
+      const safe: Record<string, number> = {};
+      for (const question of content.questions) {
+        const value = saved.answers[question.id];
+        if (Number.isInteger(value) && value >= 0 && value < question.options.length) safe[question.id] = value;
+      }
+      saveDraft(safe);
+    } catch { setMessage("O rascunho local expirou ou não é válido. O progresso confirmado no servidor permanece disponível."); }
+  }
+
+  return <div className="grid gap-6">
+    <nav className="flex flex-wrap gap-3" aria-label="Sua jornada"><Link className="button-secondary" href="/trilhas/fundamentos">Voltar ao mapa</Link><Link className="button-secondary" href="/meu-progresso">Meu progresso</Link></nav>
+    <section className="card p-5" aria-label="Progresso do mundo"><p className="font-bold">{progress.done} de {progress.total} etapas · {enrollment.xp} XP</p><progress className="mt-3 h-3 w-full accent-emerald-700" value={progress.done} max={progress.total} aria-label="Etapas concluídas" /><p className="mt-2 text-sm text-[#526158]">Seu percurso é privado. Pontos representam atividades educacionais, nunca sua fé.</p></section>
+    <div className="sticky top-0 z-10 rounded-xl border border-[#dfe6df] bg-white p-3 text-sm shadow-sm" role={failed ? "alert" : "status"} aria-live="polite">{readOnly ? "Esta versão foi arquivada. Você pode revisar o conteúdo, mas novas atividades não são registradas." : busy ? "Salvando…" : message || "Avance no seu ritmo. Marque cada leitura depois de realizá-la."}</div>
+    <section className="card p-5 sm:p-7"><p className="text-xl font-bold">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><p className="mt-3 text-sm text-[#526158]">{content.estimatedMinutes}</p><p className="mt-3 text-sm">{content.sourceNote}</p></section>
+    {content.cards.map((card) => <section key={card.id} className="card p-5 sm:p-7" aria-labelledby={card.id}>
+      <h2 id={card.id} className="text-xl font-black">{card.title}</h2><p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p>
+      {card.paragraphs.map((paragraph, index) => <p key={index} className="mt-4 max-w-3xl leading-8">{paragraph}</p>)}
+      <button className="button-primary mt-5" disabled={pending || enrollment.readings.includes(card.id)} onClick={() => send({ command: "reading", target: enrollment.id, reading: card.id })}>{enrollment.readings.includes(card.id) ? "Leitura concluída" : "Concluí esta leitura"}</button>
+    </section>)}
+    <section className="card p-5 sm:p-7" aria-labelledby="exercise-title"><h2 id="exercise-title" className="text-xl font-black">Uma escolha de acolhimento</h2><p className="mt-3">{content.exercise.prompt}</p>
+      {!readingsDone && <p className="mt-3 text-sm">Marque as quatro leituras para realizar esta atividade.</p>}
+      <fieldset disabled={pending || !readingsDone} className="mt-4 grid gap-2"><legend className="sr-only">Escolha uma atitude</legend>{content.exercise.options.map((option, index) => <label key={option} className="flex min-h-11 items-start gap-3 rounded-xl border border-[#dfe6df] p-3"><input className="mt-1" type="radio" name="exercise" checked={exerciseAnswer === index} onChange={() => setExerciseAnswer(index)} />{option}</label>)}</fieldset>
+      <button className="button-primary mt-4" disabled={pending || !readingsDone || exerciseAnswer === null} onClick={() => send({ command: "exercise", target: enrollment.id, answer: exerciseAnswer! }, (value) => setExerciseFeedback(`${value.correct ? "Boa escolha." : "Vamos pensar novamente."} ${value.explanation}`))}>Conferir minha escolha</button>
+      {exerciseFeedback && <p role="status" className="mt-3 leading-7">{exerciseFeedback}</p>}{enrollment.exercise_done && <p className="mt-3 text-sm font-bold text-emerald-800">Exercício concluído.</p>}
+    </section>
+    <section className="card p-5 sm:p-7" aria-labelledby="quiz-title"><h2 id="quiz-title" className="text-xl font-black">Vamos conferir o que aprendemos?</h2><p className="mt-2 text-sm">A meta é {content.rules.passingPercent}% de acertos. Você pode revisar e tentar novamente sem perder o progresso.</p>
+      {!enrollment.exercise_done && <p className="mt-3 text-sm">Conclua o exercício de acolhimento para começar.</p>}
+      {canRestore && <button className="button-secondary mt-4" disabled={pending} onClick={restoreDraft}>Retomar rascunho deste navegador</button>}
+      <form className="mt-5 grid gap-6" onSubmit={(event) => {
+        event.preventDefault();
+        if (timer.current) clearTimeout(timer.current);
+        const signature = JSON.stringify(answers);
+        if (!request.current || request.current.signature !== signature) request.current = { signature, id: crypto.randomUUID() };
+        send({ command: "quiz", target: enrollment.id, answers, requestId: request.current.id }, (value) => {
+          setResult(value);
+          try { writeDraft(key, null); } catch { /* Local storage is optional. */ }
+          request.current = null;
+        });
+      }}>
+        {content.questions.map((question, index) => <fieldset key={question.id} disabled={pending || !enrollment.exercise_done} className="grid gap-2"><legend className="mb-3 font-bold">{index + 1}. {question.prompt}</legend>{question.options.map((option, value) => <label key={option} className="flex min-h-11 items-start gap-3 rounded-xl border border-[#dfe6df] p-3"><input className="mt-1" required type="radio" name={question.id} checked={answers[question.id] === value} onChange={() => saveDraft({ ...answers, [question.id]: value })} />{option}</label>)}</fieldset>)}
+        <div className="flex flex-wrap gap-3"><button type="button" className="button-secondary" disabled={pending || !enrollment.exercise_done} onClick={() => { if (timer.current) clearTimeout(timer.current); send({ command: "save_draft", target: enrollment.id, answers }); }}>Salvar rascunho</button><button className="button-primary" disabled={pending || !enrollment.exercise_done} type="submit">Conferir respostas</button></div>
+      </form>
+      {result?.feedback && <div className="mt-5 rounded-xl bg-[#edf7f1] p-4" role="status"><h3 className="font-bold">{result.passed ? "Etapa concluída!" : "Você pode revisar e tentar de novo."} {result.correctCount}/{result.total} acertos.</h3><ol className="mt-3 grid gap-3">{result.feedback.map((item, index) => <li key={item.id}><strong>{index + 1}. {item.correct ? "Isso mesmo." : "Vamos revisar."}</strong> {item.explanation}</li>)}</ol></div>}
+    </section>
+    <section className="card p-5 sm:p-7"><h2 className="text-xl font-black">Leve esta ideia com você</h2><p className="mt-3 leading-7">{content.closing}</p><button className="button-primary mt-4" disabled={pending || !enrollment.quiz_passed || enrollment.summary_done} onClick={() => send({ command: "summary", target: enrollment.id })}>{enrollment.summary_done ? "Resumo concluído" : "Concluí a revisão deste mundo"}</button></section>
+    <section className="card p-5 sm:p-7"><h2 className="text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p><button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button></section>
+    {enrollment.completed_at && <section className="rounded-2xl bg-[#143d2c] p-7 text-white" role="status"><p className="text-sm font-bold text-[#e6c861]">CONQUISTA DESBLOQUEADA</p><h2 className="mt-2 text-2xl font-black">{content.achievement}</h2><p className="mt-3">Você concluiu este mundo. Pode voltar para revisar quando quiser.</p><Link className="button-secondary mt-5" href="/trilhas/fundamentos">Ver próximos mundos</Link></section>}
+  </div>;
+}

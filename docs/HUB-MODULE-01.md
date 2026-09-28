@@ -1,5 +1,9 @@
 # Módulo 1 — Conhecendo a Bíblia: A Palavra que guia
 
+> Histórico do piloto anterior. A implementação prioritária agora segue
+> [HUB-SEASON-01.md](HUB-SEASON-01.md). Este material pode apoiar o mundo 4 após
+> revisão; sua aprovação e carga horária não se transferem à nova temporada.
+
 **Estado:** aprovado para implementação técnica; ainda não publicado
 
 **Aprovação registrada:** Adonias Pereira da Silva, liderança responsável — 07/09/2026

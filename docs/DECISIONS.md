@@ -1,5 +1,38 @@
 # Architecture decisions
 
+## ADR-008 — Versioned season and isolated database validation (2026-09-27)
+
+The next Hub increment follows `HUB-SEASON-01.md`. Existing ministry identity,
+attendance and pastoral rules remain independent of educational progress.
+The season contract records proposed completion/XP rules separately from human
+editorial approval; no publication or production migration is implied.
+
+Local validation uses `npm run db:prepare` to copy schema migrations, fictitious
+seed and SQL tests into a new ignored workspace. Only the two historical
+DEMO-to-official data operations are excluded, explicitly recorded in a manifest.
+Original migrations remain unchanged. This validates a local schema, not remote
+migration parity; see `LOCAL-DATABASE.md`.
+
+Replay also adapts three `CREATE FUNCTION` statements to `CREATE OR REPLACE`
+in the disposable copy of the historical scope-trigger fix, because the initial
+migration already defines them. The manifest records the adaptation.
+
+## ADR-009 — World-one learning boundary
+
+Learning content is an immutable JSON version stored by an additive migration.
+Ministry publications assign distinct adult author/reviewer identities and enforce
+editorial transitions. Admins authorize student enrollment after publication.
+Completion, quiz scoring, practical review and XP are written atomically by
+`learning_command`; `learning_snapshot` returns a role-scoped projection.
+Base tables have RLS enabled and no API grants/policies. Neither answer keys nor
+adult review notes are included in the learner projection.
+
+The first adapter intentionally serves world one version 1; expanding worlds or
+versions requires extending the adapter while preserving existing enrollments.
+Rules come from the same content snapshot used for editorial review, not from
+frontend constants. Private badges derive from the persisted completion timestamp
+and versioned label. No certificate eligibility or historic attendance is inferred.
+
 ## ADR-001 — Tenant membership table
 
 Roles belong to a ministry membership, not a global JWT claim. This allows one account to have different authorized roles in different ministries.

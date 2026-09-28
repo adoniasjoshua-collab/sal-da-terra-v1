@@ -1,5 +1,9 @@
 # Hub de Conhecimento — métricas
 
+> Na [Temporada 01](HUB-SEASON-01.md), adaptar os indicadores de módulo/aula
+> para mundo/etapa e conclusão da trilha. As definições abaixo são a base anterior;
+> nenhum evento de mídia será necessário para comprovar conclusão ou conceder XP.
+
 ## Indicadores principais
 
 | Indicador | Definição | Decisão apoiada |

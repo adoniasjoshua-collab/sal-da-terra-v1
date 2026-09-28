@@ -21,7 +21,7 @@ const roleLabels = {
 
 export function AppShell({ context, children }: { context: AuthContext; children: React.ReactNode }) {
   const nav = context.role === "student"
-    ? [{ href: "/minha-participacao", label: "Minha participação" }, knowledgeLink, helpLink]
+    ? [{ href: "/minha-participacao", label: "Minha participação" }, knowledgeLink, { href: "/meu-progresso", label: "Meu progresso" }, helpLink]
     : context.role === "admin"
       ? [...staffLinks, { href: "/administracao", label: "Administração" }, helpLink]
       : [...staffLinks, helpLink];

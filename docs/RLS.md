@@ -1,5 +1,21 @@
 # Row Level Security
 
+## Learning tables
+
+All six learning tables have RLS enabled with no direct API grants or policies.
+`learning_snapshot` and `learning_command` are the only authenticated entry points;
+both are `security definer` functions with empty `search_path`, fully qualified
+relations and explicit current-actor authorization. Anonymous execution is revoked.
+Student membership, active student record, active enrollment, ministry scope and
+publication state are checked again at the database boundary. Staff access requires
+active leader/admin membership; editorial roles must also match the assigned actor.
+The learner snapshot strips answer keys and staff justifications. Direct writes to
+scores, completion and XP fail even if attempted outside the UI.
+
+`supabase/tests/learning.sql` covers the local Supabase path. Embedded PostgreSQL
+tests provide additional executable coverage with an Auth stub; they do not claim
+HTTP/Auth integration or multi-connection concurrency coverage.
+
 All application tables have RLS enabled. Small `security definer` helpers run with an empty explicit `search_path` and are executable only by authenticated users, avoiding recursive membership policies.
 
 The `authenticated` role receives only the table privileges required by the V1 API. RLS then restricts which rows each user can access. No application table grants `DELETE`, `TRUNCATE`, `TRIGGER`, or `REFERENCES`; `audit_logs` is read-only through the API, while its writes are performed only by controlled database triggers.

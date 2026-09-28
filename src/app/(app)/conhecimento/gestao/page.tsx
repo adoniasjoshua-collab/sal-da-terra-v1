@@ -1,0 +1,44 @@
+import Link from "next/link";
+import { PageHeading } from "@/components/page-heading";
+import { requireStaff } from "@/lib/auth";
+import { getLearningSnapshot } from "@/features/learning/data";
+import { LearningUnavailable } from "@/features/learning/catalog";
+import { CommandForm } from "@/features/learning/command-form";
+import { practiceLabels } from "@/services/learning";
+
+const labels = { draft: "Rascunho", in_review: "Em revisão", approved: "Aprovado", published: "Publicado", archived: "Arquivado" };
+export default async function LearningManagementPage() {
+  const actor = await requireStaff();
+  const { data, error } = await getLearningSnapshot(actor.ministryId);
+  if (error || !data) return <LearningUnavailable />;
+  const publication = data.publication;
+  const admin = actor.role === "admin";
+  const students = data.students;
+  const active = students.filter((student) => student.enrollment?.is_active);
+  return <><PageHeading eyebrow="Minha Jornada · liderança" title="Conteúdo e acompanhamento" description="Mundo 1 — Você faz parte! · versão 1. Progresso digital separado da presença EBD." />
+    <Link className="button-secondary mb-5" href="/trilhas/fundamentos/voce-faz-parte">Ler conteúdo completo e gabaritos</Link>
+    <section className="card p-6"><h2 className="text-xl font-black">Revisão e publicação</h2><p className="my-3 font-semibold">{publication ? labels[publication.state] : "Defina os responsáveis para iniciar"}</p>
+      <p className="mb-4 text-sm leading-6">O administrador designa dois adultos autorizados. O autor assume a responsabilidade editorial pela versão; o revisor deve ser pessoa diferente e formalmente autorizada para a revisão doutrinária. A publicação libera somente esta versão para inscrições autorizadas.</p>
+      {publication && <p className="mb-4 text-sm">Autor: {data.editors.find((editor) => editor.id === publication.author_id)?.name ?? "Vínculo indisponível"} · Revisor: {data.editors.find((editor) => editor.id === publication.reviewer_id)?.name ?? "Vínculo indisponível"}</p>}
+      {publication?.review_note && <p className="mb-4 rounded-xl bg-amber-50 p-3 text-sm">Última orientação editorial: {publication.review_note}</p>}
+      {admin && (!publication || publication.state === "draft") && <CommandForm command="configure" label="Salvar responsáveis"><label className="label">Autor/editor responsável<select className="input mt-2" name="author" required defaultValue={publication?.author_id ?? ""}><option value="" disabled>Selecione</option>{data.editors.map((editor) => <option key={editor.id} value={editor.id}>{editor.name}</option>)}</select></label><label className="label">Revisor autorizado<select className="input mt-2" name="reviewer" required defaultValue={publication?.reviewer_id ?? ""}><option value="" disabled>Selecione outra pessoa</option>{data.editors.map((editor) => <option key={editor.id} value={editor.id}>{editor.name}</option>)}</select></label></CommandForm>}
+      {publication?.state === "draft" && publication.author_id === actor.userId && <div className="mt-4"><CommandForm command="submit_review" label="Enviar versão para revisão" /></div>}
+      {publication?.state === "in_review" && publication.reviewer_id === actor.userId && <div className="mt-4 grid gap-5"><CommandForm command="approve" label="Aprovar conteúdo e critérios"><label className="flex gap-3 text-sm leading-6"><input type="checkbox" name="confirmed" required />Revisei os textos e contextos bíblicos, faixa etária, respostas explicadas, prática segura, inclusão e regras de conclusão/XP desta versão.</label></CommandForm><CommandForm command="reject" label="Devolver para revisão"><label className="label">Motivo editorial, sem dados pessoais<textarea name="note" required minLength={10} maxLength={300} className="input mt-2" /></label></CommandForm></div>}
+      {admin && (publication?.state === "in_review" || publication?.state === "approved") && <div className="mt-4"><CommandForm command="recall" label="Retornar para rascunho"><p className="text-sm">Use quando o revisor designado não puder concluir a revisão. A versão volta a rascunho para redefinir os responsáveis; a aprovação anterior é descartada.</p><label className="label">Motivo editorial, sem dados pessoais<textarea name="note" required minLength={10} maxLength={300} className="input mt-2" /></label></CommandForm></div>}
+      {admin && publication?.state === "approved" && <CommandForm command="publish" label="Publicar para o piloto autorizado"><label className="flex gap-3 text-sm leading-6"><input type="checkbox" name="confirmed" required />Confirmo a autorização da liderança para o piloto, a revisão independente e os critérios educacionais desta versão.</label></CommandForm>}
+      {admin && publication?.state === "published" && <CommandForm command="archive" label="Arquivar publicação e suspender novas atividades"><p className="text-sm">O arquivamento preserva o histórico. A retomada exigirá uma nova versão editorial.</p></CommandForm>}
+      {publication?.state === "archived" && <p className="text-sm">Histórico preservado. Prepare uma nova versão antes de reabrir o conteúdo.</p>}
+    </section>
+    <section className="my-6 grid gap-3 sm:grid-cols-3" aria-label="Resumo educacional"><article className="card p-5"><p>Inscrições ativas</p><p className="text-3xl font-black">{active.length}</p></article><article className="card p-5"><p>Mundo concluído</p><p className="text-3xl font-black">{active.filter((s) => s.enrollment?.completed_at).length}</p></article><article className="card p-5"><p>Práticas aguardando validação</p><p className="text-3xl font-black">{active.filter((s) => s.enrollment?.practice_state === "pending").length}</p></article></section>
+    <section><h2 className="mb-4 text-xl font-black">Inscrições e práticas</h2>{students.length === 0 ? <p className="card p-6">Nenhum adolescente ativo cadastrado.</p> : <div className="grid gap-4">{students.map((student) => {
+      const enrollment = student.enrollment;
+      return <article className="card p-5" key={student.id}><h3 className="text-lg font-bold">{student.name}</h3>
+        {enrollment?.is_active ? <><p className="mt-2 text-sm">{enrollment.readings.length} leituras · Quiz {enrollment.quiz_passed ? "concluído" : "pendente"} · {enrollment.xp} XP{enrollment.completed_at && " · Mundo concluído"}</p><p className="mt-2 text-sm">{practiceLabels[enrollment.practice_state]}</p>{enrollment.review_note && <p className="mt-2 text-sm">Última justificativa educacional: {enrollment.review_note}</p>}
+          {enrollment.practice_state === "pending" && publication?.state === "published" && <div className="mt-4"><CommandForm command="review_practice" target={enrollment.id} label="Registrar decisão"><label className="label">Forma de realização<select name="mode" className="input mt-2"><option value="supervised">Atividade supervisionada</option><option value="equivalent">Alternativa educacional equivalente</option></select></label><label className="label">Decisão<select name="decision" className="input mt-2"><option value="approved">Validar realização</option><option value="changes_requested">Combinar ajuste com o adolescente</option></select></label><label className="label">Justificativa educacional<textarea className="input mt-2" name="note" required minLength={10} maxLength={300} placeholder="Registre somente o necessário para validar a atividade, sem nomes de terceiros ou informação pastoral." /></label></CommandForm></div>}
+          {admin && <div className="mt-4"><CommandForm command="withdraw" target={enrollment.id} label="Desativar inscrição, preservando histórico" /></div>}
+          {Boolean(enrollment.reviews?.length) && <details className="mt-4 text-sm"><summary className="cursor-pointer font-bold">Histórico de validações</summary><ul className="mt-3 space-y-3">{enrollment.reviews?.map((review, index) => <li key={index}>{review.decision === "approved" ? "Validada" : "Ajuste solicitado"} · {review.mode === "equivalent" ? "Alternativa equivalente" : "Supervisionada"} · {new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(new Date(review.created_at))}<p>{review.note}</p></li>)}</ul></details>}
+        </> : admin && publication?.state === "published" && student.hasAccount ? <div className="mt-3"><CommandForm command="enroll" target={student.id} label={enrollment ? "Reativar inscrição" : "Autorizar inscrição"}><label className="flex gap-3 text-sm leading-6"><input type="checkbox" name="confirmed" required />Confirmei a autorização e a ciência dos responsáveis conforme a política de proteção adotada pelo ministério.</label></CommandForm></div> : <p className="mt-2 text-sm">{!student.hasAccount ? "Vincule uma conta de adolescente ativa antes da inscrição." : "A inscrição depende de publicação e autorização do administrador."}</p>}
+      </article>;
+    })}</div>}</section>
+  </>;
+}

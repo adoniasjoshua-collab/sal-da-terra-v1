@@ -1,5 +1,21 @@
 # Database
 
+## Learning increment — world one
+
+`learning_versions` stores immutable versioned educational content and answer keys.
+`learning_publications` binds it to a ministry with author/reviewer and publication
+state. `learning_enrollments` stores authorized student participation, explicit
+reading completion, drafts and completion evidence. `learning_quiz_attempts` has
+a unique enrollment/request key; `learning_xp_ledger` has a unique enrollment/event
+key. `learning_activity_reviews` preserves each adult decision and educational
+justification. No runtime role can write these tables directly.
+
+`learning_command` authenticates at the data boundary, locks publication and
+enrollment, checks scope/ownership/state/prerequisites, grades against the stored
+key and grants XP transactionally. `learning_snapshot` exposes minimal student
+data or ministry-scoped staff data. Content is inserted without a publication;
+production rollout never publishes or enrolls automatically. See `HUB-WORLD-01.md`.
+
 The initial schema plus versioned migrations provide: `churches`, `ministries`, `profiles`, `ministry_members`, `students`, `events`, `attendance`, `event_headcounts`, `pastoral_followups`, and `audit_logs`.
 
 UUID primary keys, foreign keys, check/enum constraints, indexes and UTC timestamps are used. Student deletion is archival (`status = archived`, `is_active = false`, `archived_at`); related history is protected by restrictive foreign keys. Attendance uniqueness is `(event_id, student_id)`, and a constraint trigger rejects cross-ministry relationships.

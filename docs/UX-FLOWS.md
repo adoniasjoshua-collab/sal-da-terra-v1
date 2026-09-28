@@ -1,5 +1,26 @@
 # UX flows
 
+## Learning increment — world one
+
+Knowledge → track map → published/enrolled world → four explicit readings →
+scenario exercise → quiz with educational draft recovery and explained results →
+summary → supervised practice or equivalent → adult validation → private badge.
+Retries preserve earned progress and never multiply XP. Unpublished content and
+unenrolled learners have explicit unavailable states, not working-looking buttons.
+
+Knowledge → management lets administrators assign independent editorial actors;
+the author submits, the assigned reviewer approves or returns with a reason, and
+an administrator publishes. If the reviewer becomes unavailable, an administrator
+can recall an in-review or approved version to draft with an audited reason,
+discarding the approval. Administrators authorize enrollment; leaders/admins
+review requested practices with a minimal educational justification. The panel
+shows progress and decision history scoped to the ministry. Archived publication
+and deactivated enrollment preserve history and block writes; learners who
+completed an archived world can still reread it (without answer keys) read-only.
+
+The old three-lesson preparation screen has been replaced by this governed catalog.
+The world-one pilot still requires human review and deployment of its migrations.
+
 ## Leader
 
 Login → dashboard summary → EBD trend / last EBD composition / pastoral radar → care queue → event participation summary and operational agenda. Students → search/filter → create/edit/archive. Events → choose event type and one of three data-minimized modes → save a full roster, identified participation, or aggregate headcount. EBD always uses a full roster.

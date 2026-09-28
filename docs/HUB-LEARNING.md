@@ -1,5 +1,9 @@
 # Hub de Conhecimento — modelo de aprendizagem
 
+> Para a Temporada 01, consultar [HUB-SEASON-01.md](HUB-SEASON-01.md): conclusão
+> por trilha, nova proposta de XP e verificação pública sem nome do menor.
+> Valores e certificado por módulo abaixo documentam o planejamento anterior.
+
 ## Estrutura
 
 `trilha → módulo → aula → atividade → conclusão → certificado`

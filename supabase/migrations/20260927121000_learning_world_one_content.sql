@@ -1,0 +1,150 @@
+-- Versioned content snapshot from content/fundamentos/voce-faz-parte.v1.json.
+-- A new editorial version requires a NEW migration, never an UPDATE here.
+begin;
+insert into public.learning_versions(world_slug,version,content) values
+('voce-faz-parte',1,$content${
+  "slug": "voce-faz-parte",
+  "version": 1,
+  "ruleVersion": "fundamentos-1",
+  "title": "Você faz parte!",
+  "objective": "Reconhecer o cuidado de Deus e escolher formas de acolher pessoas sem exposição ou pressão.",
+  "centralIdea": "Na comunidade cristã, cada pessoa merece cuidado e tem espaço para aprender e contribuir.",
+  "hook": "Já entrou em um grupo e achou que ninguém notaria sua ausência?",
+  "audience": "12–14 anos",
+  "estimatedMinutes": "6–10 minutos de leitura, além das atividades; estimativa a validar no piloto",
+  "references": [
+    "Salmo 139:1–6",
+    "Marcos 10:13–16",
+    "1 Coríntios 12:12–27"
+  ],
+  "sourceNote": "Explicações originais a partir das referências bíblicas. Consulte os trechos na Bíblia usada pela sua família ou igreja. Não reproduzimos uma tradução integral. Conteúdo preparado com auxílio de IA, sujeito à revisão humana registrada antes da publicação.",
+  "cards": [
+    {
+      "id": "conhecido",
+      "title": "1. Deus conhece pessoas, não números",
+      "reference": "Salmo 139:1–6",
+      "paragraphs": [
+        "Imagine chegar a um encontro em que todo mundo parece se conhecer. Você procura onde sentar e pensa se alguém vai perceber que você está ali. Essa sensação pode acontecer até com quem participa há muito tempo. Ser acolhido começa com gestos pequenos: uma saudação, um lugar à mesa e alguém disposto a ouvir sem fazer perguntas demais.",
+        "No início do Salmo 139, o salmista fala com Deus sobre ser profundamente conhecido. Ele descreve situações comuns, como sentar, levantar e caminhar. Sua vida não passa despercebida diante de Deus. O texto é uma oração de admiração pelo conhecimento de Deus; não é uma promessa de que nunca teremos solidão ou dificuldades.",
+        "Para nossa convivência, podemos aprender a prestar atenção nas pessoas. Ninguém deve ser tratado apenas como um número de presença ou de pontos. Conhecer alguém também exige respeito: você pode dizer como prefere ser chamado, fazer uma pergunta ou escolher não contar algo pessoal. O cuidado não depende de revelar sua intimidade.",
+        "Ao ler o trecho, observe como o salmista se dirige a Deus. Depois pense em um gesto simples que ajuda alguém a se sentir lembrado. Essa reflexão é sua; você não precisa enviá-la. Aqui, marcar a leitura significa apenas que você realizou essa etapa de estudo."
+      ]
+    },
+    {
+      "id": "acolhido",
+      "title": "2. Jesus abriu espaço para as crianças",
+      "reference": "Marcos 10:13–16",
+      "paragraphs": [
+        "Em Marcos 10, pessoas levam crianças até Jesus, mas os discípulos tentam impedir essa aproximação. Jesus reage à atitude deles, recebe as crianças e as abençoa. Preste atenção em quem estava dificultando o encontro e em como Jesus respondeu. O acolhimento das crianças faz parte da cena, não é um detalhe sem importância.",
+        "Esse texto nos convida a levar as crianças a sério. Aplicando esse cuidado à convivência do nosso grupo, podemos abrir espaço para quem chegou agora ou ainda está aprendendo. Uma pessoa não precisa conhecer todas as músicas, falar em público ou acertar todas as respostas para ser recebida com respeito.",
+        "Acolher não é colocar alguém no centro das atenções sem perguntar. Um convite gentil pode ser: você quer sentar com a gente? Se a resposta for não, ainda podemos respeitar a pessoa e deixar a porta aberta. Obrigar alguém a contar sua história pode aumentar o desconforto, mesmo quando a intenção parece boa.",
+        "Também não precisamos tirar fotos ou publicar o nome de quem chegou para provar que acolhemos. O importante é o encontro respeitoso, em uma atividade acompanhada por adultos responsáveis. Se você perceber que alguém está sendo humilhado, procure a liderança; não é sua obrigação resolver tudo sozinho."
+      ]
+    },
+    {
+      "id": "muitos-membros",
+      "title": "3. Um corpo, muitas contribuições",
+      "reference": "1 Coríntios 12:12–27",
+      "paragraphs": [
+        "Paulo escreve aos cristãos de Corinto e usa a imagem de um corpo com muitos membros. Um corpo não funciona como se todas as partes fossem iguais. Na comunidade, as diferenças não devem virar motivo de desprezo nem de competição. O texto apresenta interdependência: precisamos uns dos outros.",
+        "Pense em um encontro do grupo. Há quem converse com facilidade, quem observe antes de falar, quem ajude a organizar materiais e quem esteja aprendendo a participar. Essas diferenças não autorizam ninguém a dizer que outra pessoa não tem valor. Também não significam que podemos decidir o dom ou o futuro de alguém com um questionário.",
+        "A imagem do corpo nos ajuda a perguntar: como podemos cuidar para que todos tenham espaço? Podemos explicar uma atividade para quem não entendeu, dividir tarefas de modo justo e escutar ideias diferentes. Contribuir não exige ser o mais visto. Às vezes, uma ajuda discreta permite que outra pessoa participe com tranquilidade.",
+        "Paulo fala de cuidado entre os membros. No nosso grupo, isso inclui perceber dificuldades e buscar apoio responsável. Se alguém faltou, não sabemos automaticamente o motivo. Presença e progresso digital são informações limitadas; não mostram a fé de uma pessoa nem tudo o que ela vive."
+      ]
+    },
+    {
+      "id": "respeito",
+      "title": "4. Pertencer também inclui limites",
+      "reference": "Aplicação pedagógica de Marcos 10:13–16 e 1 Coríntios 12:12–27",
+      "paragraphs": [
+        "Fazer parte de um grupo não exige aceitar apelidos ofensivos, brincadeiras humilhantes ou pressão para contar segredos. Respeitar limites é uma maneira concreta de cuidar. Você pode pedir que parem uma brincadeira, recusar uma foto ou dizer que prefere apenas observar uma atividade naquele momento.",
+        "Quando alguém novo chega em silêncio, há várias razões possíveis. Pode estar com vergonha, cansado ou simplesmente querendo observar. Não precisamos adivinhar. Podemos nos apresentar, explicar o que vai acontecer e oferecer companhia. Perguntar se a pessoa quer ajuda é diferente de decidir tudo por ela.",
+        "Se houver insistência, ameaça ou humilhação, converse com um adulto responsável da liderança ou da sua família. Pedir ajuda não é estragar a amizade. Você também pode apoiar quem foi desrespeitado sem espalhar a história em grupos de mensagens. O objetivo é proteção, não exposição.",
+        "Nossa prática será um gesto de acolhimento em uma atividade supervisionada. Quem não puder participar presencialmente combinará uma alternativa educacional com a liderança. Ninguém precisa mostrar uma foto, informar o nome da outra pessoa ou fazer uma declaração de fé para concluir este mundo. Posso perguntar, aprender e contribuir; ninguém deve ser invisível."
+      ]
+    }
+  ],
+  "exercise": {
+    "id": "acolher-sem-expor",
+    "prompt": "Uma pessoa nova chega calada à reunião. Qual atitude oferece acolhimento e respeita sua escolha?",
+    "options": [
+      "Pedir que conte sua história para todo o grupo antes de sentar.",
+      "Apresentar-se, oferecer companhia e respeitar se ela preferir observar.",
+      "Fotografá-la e anunciar sua chegada no grupo de mensagens."
+    ],
+    "correct": 1,
+    "explanation": "Oferecer companhia sem impor exposição abre espaço para participar com segurança. A pessoa pode aceitar ou recusar o convite."
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "O que o início do Salmo 139 destaca?",
+      "options": [
+        "Que Deus conhece profundamente a vida do salmista.",
+        "Que quem crê nunca se sente sozinho.",
+        "Que precisamos contar nossa intimidade ao grupo."
+      ],
+      "correct": 0,
+      "explanation": "O salmista se admira por ser conhecido por Deus. O trecho não promete ausência de dificuldades nem exige exposição pessoal."
+    },
+    {
+      "id": "q2",
+      "prompt": "Em Marcos 10:13–16, como Jesus reage quando tentam afastar as crianças?",
+      "options": [
+        "Pede que só voltem depois de aprender tudo.",
+        "Concorda que elas não devem se aproximar.",
+        "Contesta o impedimento e recebe as crianças."
+      ],
+      "correct": 2,
+      "explanation": "Jesus acolhe e abençoa as crianças. Receber alguém não depende de seu desempenho em atividades."
+    },
+    {
+      "id": "q3",
+      "prompt": "Por que Paulo compara a comunidade a um corpo com muitos membros?",
+      "options": [
+        "Para mostrar que apenas quem aparece mais importa.",
+        "Para mostrar diversidade, interdependência e cuidado entre os membros.",
+        "Para exigir que todos contribuam exatamente do mesmo jeito."
+      ],
+      "correct": 1,
+      "explanation": "Em 1 Coríntios 12, diferentes membros pertencem ao mesmo corpo. A diversidade não justifica desprezo ou competição."
+    },
+    {
+      "id": "q4",
+      "prompt": "Um colega não gosta de um apelido que o grupo usa. Como cuidar?",
+      "options": [
+        "Dizer que ele precisa aceitar para pertencer.",
+        "Repetir o apelido para que ele se acostume.",
+        "Respeitar seu pedido e buscar um adulto responsável se a humilhação continuar."
+      ],
+      "correct": 2,
+      "explanation": "Pertencer inclui dignidade e limites. Pedir apoio responsável diante de humilhação é uma atitude de cuidado."
+    }
+  ],
+  "practice": "Em uma atividade supervisionada, apresente-se a alguém novo ou pouco conhecido, ofereça companhia e respeite sua escolha. Não envie foto, nome ou relato pessoal. Depois, peça à liderança a validação. Se não puder participar, combine uma simulação de acolhimento com um adulto responsável como alternativa equivalente.",
+  "closing": "Posso perguntar, aprender e contribuir; ninguém deve ser invisível. Acolher é oferecer espaço com respeito, sem exigir exposição.",
+  "achievement": "Comecei Minha Jornada",
+  "media": {
+    "coverAsset": null,
+    "illustrationAsset": null,
+    "alt": "Pessoas diferentes reunidas em um círculo de acolhimento",
+    "credit": "Composição geométrica original do projeto",
+    "license": "Sem mídia externa",
+    "videoUrl": null,
+    "transcript": null,
+    "captions": null,
+    "poster": null
+  },
+  "rules": {
+    "passingPercent": 70,
+    "xp": {
+      "reading": 20,
+      "exercise": 30,
+      "quiz": 40,
+      "summary": 50,
+      "practice": 80
+    }
+  }
+}$content$::jsonb)
+on conflict(world_slug,version) do nothing;
+commit;

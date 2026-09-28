@@ -1,5 +1,9 @@
 # Hub de Conhecimento — visão do produto
 
+> Atualização de 27/09/2026: a próxima entrega passa a ser a temporada de sete
+> mundos definida em [HUB-SEASON-01.md](HUB-SEASON-01.md). O piloto descrito abaixo
+> permanece como histórico; não é o escopo atual de implementação.
+
 ## Propósito
 
 O **SAL DA TERRA — Minha Jornada** prepara adolescentes e jovens para conhecer a Bíblia, seguir a Cristo e servir com sabedoria na igreja, escola, faculdade, trabalho e comunidade.
