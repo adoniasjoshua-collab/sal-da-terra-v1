@@ -5,6 +5,12 @@ import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from
 import { learningProgress, practiceLabels, type Enrollment, type LearningCommand, type LearningResult, type WorldContent } from "@/services/learning";
 import { runLearningCommand } from "./actions";
 
+const stepStyles = {
+  done: "border-[#176b49] bg-[#edf7f1] text-[#143d2c]",
+  active: "border-[#e6c861] bg-[#fff8dd] text-[#19382b]",
+  locked: "border-[#dfe6df] bg-white text-[#526158]",
+};
+
 // "storage" only fires in other tabs; this event keeps the current tab in sync.
 const DRAFT_EVENT = "sal-learning-draft";
 const subscribe = (callback: () => void) => {
@@ -40,6 +46,14 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false }: {
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const progress = learningProgress(enrollment, content);
   const readingsDone = content.cards.every((card) => enrollment.readings.includes(card.id));
+  const nextReadingIndex = content.cards.findIndex((card) => !enrollment.readings.includes(card.id));
+  const missionSteps = [
+    ...content.cards.map((card, index) => ({ label: `Leitura ${index + 1}`, done: enrollment.readings.includes(card.id), active: nextReadingIndex === index })),
+    { label: "Escolha", done: enrollment.exercise_done, active: readingsDone && !enrollment.exercise_done },
+    { label: "Quiz", done: enrollment.quiz_passed, active: enrollment.exercise_done && !enrollment.quiz_passed },
+    { label: "Revisão", done: enrollment.summary_done, active: enrollment.quiz_passed && !enrollment.summary_done },
+    { label: "Prática", done: enrollment.practice_state === "approved", active: enrollment.summary_done && enrollment.practice_state !== "approved" },
+  ];
   // Offer restoration only when this browser holds answers different from the ones on screen.
   const localAnswers = storedAnswers(stored);
   const canRestore = !readOnly && enrollment.exercise_done && localAnswers !== null && JSON.stringify(localAnswers) !== JSON.stringify(answers);
@@ -95,21 +109,47 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false }: {
 
   return <div className="grid gap-6">
     <nav className="flex flex-wrap gap-3" aria-label="Sua jornada"><Link className="button-secondary" href="/trilhas/fundamentos">Voltar ao mapa</Link><Link className="button-secondary" href="/meu-progresso">Meu progresso</Link></nav>
-    <section className="card p-5" aria-label="Progresso do mundo"><p className="font-bold">{progress.done} de {progress.total} etapas · {enrollment.xp} XP</p><progress className="mt-3 h-3 w-full accent-emerald-700" value={progress.done} max={progress.total} aria-label="Etapas concluídas" /><p className="mt-2 text-sm text-[#526158]">Seu percurso é privado. Pontos representam atividades educacionais, nunca sua fé.</p></section>
+    <section className="overflow-hidden rounded-2xl border border-[#d9e5dd] bg-white shadow-sm" aria-label="Progresso do mundo">
+      <div className="bg-[#143d2c] p-5 text-white sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[.16em] text-[#e6c861]">Missão ativa</p>
+            <h2 className="mt-2 text-2xl font-black">Acolher sem expor</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d7eadf]">Complete as etapas, receba feedback e peça a validação da prática quando terminar.</p>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-5 py-4 text-right">
+            <p className="text-3xl font-black">{enrollment.xp}<span className="text-base text-[#e6c861]"> XP</span></p>
+            <p className="text-sm text-[#d7eadf]">{progress.done} de {progress.total} etapas</p>
+          </div>
+        </div>
+        <div className="mt-5 h-3 rounded-full bg-white/20">
+          <div className="h-3 rounded-full bg-[#e6c861]" style={{ width: `${progress.percent}%` }} />
+        </div>
+      </div>
+      <ol className="grid gap-2 p-4 sm:grid-cols-3 lg:grid-cols-4">
+        {missionSteps.map((step, index) => <li className={`rounded-xl border p-3 text-sm font-bold ${step.done ? stepStyles.done : step.active ? stepStyles.active : stepStyles.locked}`} key={`${step.label}-${index}`}>
+          <span className="mr-2">{step.done ? "✓" : index + 1}</span>{step.label}
+        </li>)}
+      </ol>
+      <p className="px-5 pb-5 text-sm text-[#526158]">Seu percurso é privado. Pontos representam atividades educacionais, nunca sua fé.</p>
+    </section>
     <div className="sticky top-0 z-10 rounded-xl border border-[#dfe6df] bg-white p-3 text-sm shadow-sm" role={failed ? "alert" : "status"} aria-live="polite">{readOnly ? "Esta versão foi arquivada. Você pode revisar o conteúdo, mas novas atividades não são registradas." : busy ? "Salvando…" : message || "Avance no seu ritmo. Marque cada leitura depois de realizá-la."}</div>
-    <section className="card p-5 sm:p-7"><p className="text-xl font-bold">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><p className="mt-3 text-sm text-[#526158]">{content.estimatedMinutes}</p><p className="mt-3 text-sm">{content.sourceNote}</p></section>
+    <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7"><p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Cena de abertura</p><p className="mt-2 text-2xl font-black">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><p className="mt-3 text-sm text-[#526158]">{content.estimatedMinutes}</p><p className="mt-3 text-sm">{content.sourceNote}</p></section>
     {content.cards.map((card) => <section key={card.id} className="card p-5 sm:p-7" aria-labelledby={card.id}>
-      <h2 id={card.id} className="text-xl font-black">{card.title}</h2><p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Microetapa</p><h2 id={card.id} className="mt-1 text-xl font-black">{card.title}</h2><p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p></div>
+        <span className={`rounded-full px-3 py-1 text-xs font-bold ${enrollment.readings.includes(card.id) ? "bg-[#edf7f1] text-[#176b49]" : "bg-[#f5f7f3] text-[#526158]"}`}>{enrollment.readings.includes(card.id) ? "Concluída" : "+20 XP"}</span>
+      </div>
       {card.paragraphs.map((paragraph, index) => <p key={index} className="mt-4 max-w-3xl leading-8">{paragraph}</p>)}
       <button className="button-primary mt-5" disabled={pending || enrollment.readings.includes(card.id)} onClick={() => send({ command: "reading", target: enrollment.id, reading: card.id })}>{enrollment.readings.includes(card.id) ? "Leitura concluída" : "Concluí esta leitura"}</button>
     </section>)}
-    <section className="card p-5 sm:p-7" aria-labelledby="exercise-title"><h2 id="exercise-title" className="text-xl font-black">Uma escolha de acolhimento</h2><p className="mt-3">{content.exercise.prompt}</p>
+    <section className="card p-5 sm:p-7" aria-labelledby="exercise-title"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Desafio de cenário · +30 XP</p><h2 id="exercise-title" className="mt-1 text-xl font-black">Uma escolha de acolhimento</h2><p className="mt-3">{content.exercise.prompt}</p>
       {!readingsDone && <p className="mt-3 text-sm">Marque as quatro leituras para realizar esta atividade.</p>}
       <fieldset disabled={pending || !readingsDone} className="mt-4 grid gap-2"><legend className="sr-only">Escolha uma atitude</legend>{content.exercise.options.map((option, index) => <label key={option} className="flex min-h-11 items-start gap-3 rounded-xl border border-[#dfe6df] p-3"><input className="mt-1" type="radio" name="exercise" checked={exerciseAnswer === index} onChange={() => setExerciseAnswer(index)} />{option}</label>)}</fieldset>
       <button className="button-primary mt-4" disabled={pending || !readingsDone || exerciseAnswer === null} onClick={() => send({ command: "exercise", target: enrollment.id, answer: exerciseAnswer! }, (value) => setExerciseFeedback(`${value.correct ? "Boa escolha." : "Vamos pensar novamente."} ${value.explanation}`))}>Conferir minha escolha</button>
       {exerciseFeedback && <p role="status" className="mt-3 leading-7">{exerciseFeedback}</p>}{enrollment.exercise_done && <p className="mt-3 text-sm font-bold text-emerald-800">Exercício concluído.</p>}
     </section>
-    <section className="card p-5 sm:p-7" aria-labelledby="quiz-title"><h2 id="quiz-title" className="text-xl font-black">Vamos conferir o que aprendemos?</h2><p className="mt-2 text-sm">A meta é {content.rules.passingPercent}% de acertos. Você pode revisar e tentar novamente sem perder o progresso.</p>
+    <section className="card p-5 sm:p-7" aria-labelledby="quiz-title"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Quiz com feedback · +40 XP</p><h2 id="quiz-title" className="mt-1 text-xl font-black">Vamos conferir o que aprendemos?</h2><p className="mt-2 text-sm">A meta é {content.rules.passingPercent}% de acertos. Você pode revisar e tentar novamente sem perder o progresso.</p>
       {!enrollment.exercise_done && <p className="mt-3 text-sm">Conclua o exercício de acolhimento para começar.</p>}
       {canRestore && <button className="button-secondary mt-4" disabled={pending} onClick={restoreDraft}>Retomar rascunho deste navegador</button>}
       <form className="mt-5 grid gap-6" onSubmit={(event) => {
@@ -128,8 +168,8 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false }: {
       </form>
       {result?.feedback && <div className="mt-5 rounded-xl bg-[#edf7f1] p-4" role="status"><h3 className="font-bold">{result.passed ? "Etapa concluída!" : "Você pode revisar e tentar de novo."} {result.correctCount}/{result.total} acertos.</h3><ol className="mt-3 grid gap-3">{result.feedback.map((item, index) => <li key={item.id}><strong>{index + 1}. {item.correct ? "Isso mesmo." : "Vamos revisar."}</strong> {item.explanation}</li>)}</ol></div>}
     </section>
-    <section className="card p-5 sm:p-7"><h2 className="text-xl font-black">Leve esta ideia com você</h2><p className="mt-3 leading-7">{content.closing}</p><button className="button-primary mt-4" disabled={pending || !enrollment.quiz_passed || enrollment.summary_done} onClick={() => send({ command: "summary", target: enrollment.id })}>{enrollment.summary_done ? "Resumo concluído" : "Concluí a revisão deste mundo"}</button></section>
-    <section className="card p-5 sm:p-7"><h2 className="text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p><button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button></section>
+    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Revisão do mundo · +50 XP</p><h2 className="mt-1 text-xl font-black">Leve esta ideia com você</h2><p className="mt-3 leading-7">{content.closing}</p><button className="button-primary mt-4" disabled={pending || !enrollment.quiz_passed || enrollment.summary_done} onClick={() => send({ command: "summary", target: enrollment.id })}>{enrollment.summary_done ? "Resumo concluído" : "Concluí a revisão deste mundo"}</button></section>
+    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Prática supervisionada · +80 XP</p><h2 className="mt-1 text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p><button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button></section>
     {enrollment.completed_at && <section className="rounded-2xl bg-[#143d2c] p-7 text-white" role="status"><p className="text-sm font-bold text-[#e6c861]">CONQUISTA DESBLOQUEADA</p><h2 className="mt-2 text-2xl font-black">{content.achievement}</h2><p className="mt-3">Você concluiu este mundo. Pode voltar para revisar quando quiser.</p><Link className="button-secondary mt-5" href="/trilhas/fundamentos">Ver próximos mundos</Link></section>}
   </div>;
 }
