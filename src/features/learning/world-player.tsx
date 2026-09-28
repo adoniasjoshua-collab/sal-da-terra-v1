@@ -11,6 +11,52 @@ const stepStyles = {
   locked: "border-[#dfe6df] bg-white text-[#526158]",
 };
 
+const cardGuides: Record<string, { scene: string; idea: string; checkpoint: string; visual: "known" | "welcome" | "body" | "limits" }> = {
+  conhecido: {
+    scene: "Você chega, olha em volta e pensa: será que alguém percebeu que eu estou aqui?",
+    idea: "Deus não olha para você como número de chamada. Ele conhece, cuida e chama pelo nome.",
+    checkpoint: "Marque esta etapa quando entender: ser conhecido por Deus não exige expor sua intimidade ao grupo.",
+    visual: "known",
+  },
+  acolhido: {
+    scene: "Uma pessoa nova entra calada. O grupo pode abrir espaço sem colocar um holofote nela.",
+    idea: "Jesus acolheu quando tentaram afastar. Acolher é aproximar com respeito, não forçar alguém a falar.",
+    checkpoint: "Marque esta etapa quando conseguir diferenciar convite gentil de exposição pública.",
+    visual: "welcome",
+  },
+  "muitos-membros": {
+    scene: "No grupo tem gente que fala muito, gente que observa, gente que ajuda em silêncio e gente que está aprendendo.",
+    idea: "Paulo usa a imagem do corpo para mostrar diversidade, cuidado e cooperação.",
+    checkpoint: "Marque esta etapa quando lembrar: contribuir não é aparecer mais que os outros.",
+    visual: "body",
+  },
+  respeito: {
+    scene: "Pertencer não significa aceitar apelido ofensivo, pressão ou brincadeira que machuca.",
+    idea: "Acolhimento cristão tem amor, verdade e limite. Respeito também é cuidado.",
+    checkpoint: "Marque esta etapa quando entender que pedir ajuda a um adulto responsável pode proteger alguém.",
+    visual: "limits",
+  },
+};
+
+function StageIllustration({ type, title }: { type: "known" | "welcome" | "body" | "limits"; title: string }) {
+  const palette = {
+    known: ["#143d2c", "#e6c861", "#edf7f1"],
+    welcome: ["#416b86", "#e6c861", "#eef6fb"],
+    body: ["#176b49", "#805d72", "#edf7f1"],
+    limits: ["#ad791e", "#143d2c", "#fff8dd"],
+  }[type];
+  return <svg className="h-44 w-full rounded-2xl bg-[#f5f7f3]" viewBox="0 0 420 220" role="img" aria-labelledby={`${type}-title`}>
+    <title id={`${type}-title`}>{title}</title>
+    <rect width="420" height="220" rx="24" fill={palette[2]} />
+    <circle cx="350" cy="42" r="28" fill={palette[1]} opacity=".55" />
+    <path d="M70 165 C120 112 168 112 210 165 C252 112 300 112 350 165" fill="none" stroke={palette[0]} strokeWidth="12" strokeLinecap="round" />
+    {type === "known" && <g><circle cx="210" cy="88" r="30" fill={palette[0]} /><path d="M162 150 Q210 116 258 150" fill="none" stroke={palette[1]} strokeWidth="12" strokeLinecap="round" /><path d="M150 54 Q210 20 270 54" fill="none" stroke={palette[0]} strokeWidth="8" strokeLinecap="round" opacity=".35" /></g>}
+    {type === "welcome" && <g><circle cx="150" cy="86" r="24" fill={palette[0]} /><circle cx="245" cy="86" r="24" fill={palette[1]} /><path d="M171 113 L224 113" stroke={palette[0]} strokeWidth="10" strokeLinecap="round" /><path d="M285 78 L315 78 M300 63 L300 93" stroke={palette[0]} strokeWidth="8" strokeLinecap="round" /></g>}
+    {type === "body" && <g>{[120, 180, 240, 300].map((x, index) => <g key={x}><circle cx={x} cy={82 + (index % 2) * 12} r="21" fill={index % 2 ? palette[1] : palette[0]} /><path d={`M ${x - 28} 150 Q ${x} 118 ${x + 28} 150`} fill="none" stroke={index % 2 ? palette[1] : palette[0]} strokeWidth="10" strokeLinecap="round" /></g>)}</g>}
+    {type === "limits" && <g><circle cx="172" cy="86" r="24" fill={palette[0]} /><circle cx="255" cy="86" r="24" fill={palette[1]} /><path d="M212 58 V154" stroke={palette[0]} strokeWidth="8" strokeLinecap="round" strokeDasharray="4 14" /><path d="M132 154 H292" stroke={palette[1]} strokeWidth="10" strokeLinecap="round" /></g>}
+  </svg>;
+}
+
 // "storage" only fires in other tabs; this event keeps the current tab in sync.
 const DRAFT_EVENT = "sal-learning-draft";
 const subscribe = (callback: () => void) => {
@@ -134,15 +180,33 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false }: {
       <p className="px-5 pb-5 text-sm text-[#526158]">Seu percurso é privado. Pontos representam atividades educacionais, nunca sua fé.</p>
     </section>
     <div className="sticky top-0 z-10 rounded-xl border border-[#dfe6df] bg-white p-3 text-sm shadow-sm" role={failed ? "alert" : "status"} aria-live="polite">{readOnly ? "Esta versão foi arquivada. Você pode revisar o conteúdo, mas novas atividades não são registradas." : busy ? "Salvando…" : message || "Avance no seu ritmo. Marque cada leitura depois de realizá-la."}</div>
-    <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7"><p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Cena de abertura</p><p className="mt-2 text-2xl font-black">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><p className="mt-3 text-sm text-[#526158]">{content.estimatedMinutes}</p><p className="mt-3 text-sm">{content.sourceNote}</p></section>
-    {content.cards.map((card) => <section key={card.id} className="card p-5 sm:p-7" aria-labelledby={card.id}>
+    <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7"><p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Cena de abertura</p><p className="mt-2 text-2xl font-black">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Tempo</p><p className="mt-1 font-black">{content.estimatedMinutes}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Conquista</p><p className="mt-1 font-black">{content.achievement}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Meta</p><p className="mt-1 font-black">Acolher com respeito</p></div></div><p className="mt-4 text-sm">{content.sourceNote}</p></section>
+    {content.cards.map((card) => {
+      const guide = cardGuides[card.id] ?? { scene: card.paragraphs[0], idea: content.centralIdea, checkpoint: "Marque esta etapa quando concluir a leitura com atenção.", visual: "known" as const };
+      return <section key={card.id} className="card overflow-hidden" aria-labelledby={card.id}>
+      <div className="grid gap-5 p-5 sm:grid-cols-[.9fr_1.1fr] sm:p-7">
+        <StageIllustration type={guide.visual} title={content.media.alt} />
+        <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Microetapa</p><h2 id={card.id} className="mt-1 text-xl font-black">{card.title}</h2><p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p></div>
         <span className={`rounded-full px-3 py-1 text-xs font-bold ${enrollment.readings.includes(card.id) ? "bg-[#edf7f1] text-[#176b49]" : "bg-[#f5f7f3] text-[#526158]"}`}>{enrollment.readings.includes(card.id) ? "Concluída" : "+20 XP"}</span>
       </div>
-      {card.paragraphs.map((paragraph, index) => <p key={index} className="mt-4 max-w-3xl leading-8">{paragraph}</p>)}
+      <div className="mt-5 rounded-xl bg-[#fff8dd] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Na vida real</p><p className="mt-2 font-bold leading-7">{guide.scene}</p></div>
+      <div className="mt-4 rounded-xl bg-[#edf7f1] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Ideia-chave</p><p className="mt-2 leading-7">{guide.idea}</p></div>
+        </div>
+      </div>
+      <div className="border-t border-[#e7ece8] p-5 sm:p-7">
+      <details className="group rounded-xl border border-[#dfe6df] bg-white p-4" open={nextReadingIndex === -1 || content.cards[nextReadingIndex]?.id === card.id}>
+        <summary className="cursor-pointer font-black">Ler explicação completa</summary>
+        <div className="mt-3 grid gap-4">
+          {card.paragraphs.map((paragraph, index) => <p key={index} className="max-w-3xl leading-8">{paragraph}</p>)}
+        </div>
+      </details>
+      <p className="mt-4 rounded-xl bg-[#f5f7f3] p-4 text-sm font-semibold text-[#405048]">{guide.checkpoint}</p>
       <button className="button-primary mt-5" disabled={pending || enrollment.readings.includes(card.id)} onClick={() => send({ command: "reading", target: enrollment.id, reading: card.id })}>{enrollment.readings.includes(card.id) ? "Leitura concluída" : "Concluí esta leitura"}</button>
-    </section>)}
+      </div>
+    </section>;
+    })}
     <section className="card p-5 sm:p-7" aria-labelledby="exercise-title"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Desafio de cenário · +30 XP</p><h2 id="exercise-title" className="mt-1 text-xl font-black">Uma escolha de acolhimento</h2><p className="mt-3">{content.exercise.prompt}</p>
       {!readingsDone && <p className="mt-3 text-sm">Marque as quatro leituras para realizar esta atividade.</p>}
       <fieldset disabled={pending || !readingsDone} className="mt-4 grid gap-2"><legend className="sr-only">Escolha uma atitude</legend>{content.exercise.options.map((option, index) => <label key={option} className="flex min-h-11 items-start gap-3 rounded-xl border border-[#dfe6df] p-3"><input className="mt-1" type="radio" name="exercise" checked={exerciseAnswer === index} onChange={() => setExerciseAnswer(index)} />{option}</label>)}</fieldset>
