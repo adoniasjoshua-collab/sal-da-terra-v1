@@ -75,6 +75,44 @@ function storedAnswers(raw: string | null): unknown {
   try { return JSON.parse(raw ?? "null")?.answers ?? null; } catch { return null; }
 }
 
+export function WorldEditorialPreview({ content }: { content: WorldContent }) {
+  return <div className="grid gap-5">
+    <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7">
+      <p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Prévia da experiência do adolescente</p>
+      <p className="mt-2 text-2xl font-black">{content.hook}</p>
+      <p className="mt-3 leading-7">{content.objective}</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Tempo</p><p className="mt-1 font-black">{content.estimatedMinutes}</p></div>
+        <div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Conquista</p><p className="mt-1 font-black">{content.achievement}</p></div>
+        <div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Meta</p><p className="mt-1 font-black">Acolher com respeito</p></div>
+      </div>
+      <p className="mt-4 text-sm">{content.sourceNote}</p>
+    </section>
+    {content.cards.map((card) => {
+      const guide = cardGuides[card.id] ?? { scene: card.paragraphs[0], idea: content.centralIdea, checkpoint: "Marque esta etapa quando concluir a leitura com atenção.", visual: "known" as const };
+      return <section key={card.id} className="card overflow-hidden" aria-labelledby={`preview-${card.id}`}>
+        <div className="grid gap-5 p-5 sm:grid-cols-[.9fr_1.1fr] sm:p-7">
+          <StageIllustration type={guide.visual} title={content.media.alt} />
+          <div>
+            <p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Microetapa</p>
+            <h2 id={`preview-${card.id}`} className="mt-1 text-xl font-black">{card.title}</h2>
+            <p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p>
+            <div className="mt-5 rounded-xl bg-[#fff8dd] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Na vida real</p><p className="mt-2 font-bold leading-7">{guide.scene}</p></div>
+            <div className="mt-4 rounded-xl bg-[#edf7f1] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Ideia-chave</p><p className="mt-2 leading-7">{guide.idea}</p></div>
+          </div>
+        </div>
+        <div className="border-t border-[#e7ece8] p-5 sm:p-7">
+          <details className="rounded-xl border border-[#dfe6df] bg-white p-4">
+            <summary className="cursor-pointer font-black">Ler explicação completa</summary>
+            <div className="mt-3 grid gap-4">{card.paragraphs.map((paragraph, index) => <p key={index} className="max-w-3xl leading-8">{paragraph}</p>)}</div>
+          </details>
+          <p className="mt-4 rounded-xl bg-[#f5f7f3] p-4 text-sm font-semibold text-[#405048]">{guide.checkpoint}</p>
+        </div>
+      </section>;
+    })}
+  </div>;
+}
+
 export function WorldPlayer({ content, enrollment, userId, readOnly = false }: { content: WorldContent; enrollment: Enrollment; userId: string; readOnly?: boolean }) {
   const [busy, startTransition] = useTransition();
   const pending = busy || readOnly;
