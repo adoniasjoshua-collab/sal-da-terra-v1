@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { acceptInvite } from "@/features/auth/invite-actions";
+import { InviteSubmitButton } from "@/features/auth/invite-submit-button";
 import { getCurrentRole } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Confirmar acesso", robots: { index: false, follow: false } };
@@ -26,7 +27,7 @@ export default async function InvitePage({ searchParams }: Props) {
               <input type="hidden" name="token_hash" value={tokenHash} />
               <input type="hidden" name="type" value={type} />
               <p className="leading-7 text-[#647268]">Toque em continuar para confirmar seu acesso e criar sua senha. Este link é pessoal: não compartilhe.</p>
-              <button className="button-primary w-full">Continuar</button>
+              <InviteSubmitButton />
             </form>
           ) : (
             <p role="alert" className="mt-6 rounded-xl bg-amber-50 p-4 text-sm leading-6 text-amber-950">Este link está incompleto. Peça um novo link à liderança.</p>

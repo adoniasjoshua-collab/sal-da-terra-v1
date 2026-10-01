@@ -22,6 +22,11 @@ it("verifies the invitation on explicit submission in a separate session", async
   await expect(acceptInvite(form())).rejects.toThrow("/definir-senha");
   expect(mocks.verifyOtp).toHaveBeenCalledWith({ token_hash: "test-token-123456", type: "invite" });
 });
+it("continues to password setup when a repeated submission finds the student already signed in", async () => {
+  mocks.role.mockResolvedValueOnce(null).mockResolvedValueOnce("student");
+  mocks.verifyOtp.mockResolvedValue({ error: { message: "expired", code: "otp_expired", status: 403 } });
+  await expect(acceptInvite(form())).rejects.toThrow("/definir-senha");
+});
 it("explains an expired invitation without opening password setup", async () => {
   mocks.role.mockResolvedValue(null);
   mocks.verifyOtp.mockResolvedValue({ error: { message: "expired" } });

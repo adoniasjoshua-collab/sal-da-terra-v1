@@ -18,6 +18,11 @@ export async function acceptInvite(formData: FormData) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp(parsed.data);
     if (!error) redirect("/definir-senha");
+    // A repeated submission (double tap) fails after the first one already
+    // signed the student in; continue to password setup instead of an error.
+    if (await getCurrentRole() === "student") redirect("/definir-senha");
+    // Diagnostic only: never log the token itself.
+    console.warn("invite verification failed", { type: parsed.data.type, code: error.code, status: error.status });
   }
   redirect("/login?erro=convite-invalido");
 }
