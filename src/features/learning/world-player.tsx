@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { learningProgress, practiceLabels, type Enrollment, type LearningCommand, type LearningResult, type WorldContent } from "@/services/learning";
 import { runLearningCommand } from "./actions";
 
@@ -114,7 +114,7 @@ export function WorldEditorialPreview({ content }: { content: WorldContent }) {
 }
 
 // runCommand lets the leadership simulation reuse this exact player without persistence.
-export function WorldPlayer({ content, enrollment, userId, readOnly = false, runCommand = runLearningCommand }: { content: WorldContent; enrollment: Enrollment; userId: string; readOnly?: boolean; runCommand?: (command: LearningCommand) => ReturnType<typeof runLearningCommand> }) {
+export function WorldPlayer({ content, enrollment, userId, readOnly = false, runCommand = runLearningCommand, practiceExtra }: { content: WorldContent; enrollment: Enrollment; userId: string; readOnly?: boolean; practiceExtra?: ReactNode; runCommand?: (command: LearningCommand) => ReturnType<typeof runLearningCommand> }) {
   const [busy, startTransition] = useTransition();
   const pending = busy || readOnly;
   const [message, setMessage] = useState("");
@@ -144,6 +144,12 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
     if (!mounted.current) { mounted.current = true; return; }
     (nextReadingId ? cardRefs.current[nextReadingId] : exerciseRef.current)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [nextReadingId]);
+  // Bring the learner to the achievement the moment the world is completed.
+  const achievementRef = useRef<HTMLElement | null>(null);
+  const completedOnMount = useRef(Boolean(enrollment.completed_at));
+  useEffect(() => {
+    if (enrollment.completed_at && !completedOnMount.current) achievementRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [enrollment.completed_at]);
   function goToNextReading() {
     if (nextReadingId) cardRefs.current[nextReadingId]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -287,7 +293,7 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
       {result?.feedback && <div className="mt-5 rounded-xl bg-[#edf7f1] p-4" role="status"><h3 className="font-bold">{result.passed ? "Etapa concluída!" : "Você pode revisar e tentar de novo."} {result.correctCount}/{result.total} acertos.</h3><ol className="mt-3 grid gap-3">{result.feedback.map((item, index) => <li key={item.id}><strong>{index + 1}. {item.correct ? "Isso mesmo." : "Vamos revisar."}</strong> {item.explanation}</li>)}</ol></div>}
     </section>
     <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Revisão do mundo · +{content.rules.xp.summary} XP</p><h2 className="mt-1 text-xl font-black">Leve esta ideia com você</h2><p className="mt-3 leading-7">{content.closing}</p><button className="button-primary mt-4" disabled={pending || !enrollment.quiz_passed || enrollment.summary_done} onClick={() => send({ command: "summary", target: enrollment.id })}>{enrollment.summary_done ? "Resumo concluído" : "Concluí a revisão deste mundo"}</button></section>
-    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Prática supervisionada · +{content.rules.xp.practice} XP</p><h2 className="mt-1 text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p><button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button></section>
-    {enrollment.completed_at && <section className="rounded-2xl bg-[#143d2c] p-7 text-white" role="status"><p className="text-sm font-bold text-[#e6c861]">CONQUISTA DESBLOQUEADA</p><h2 className="mt-2 text-2xl font-black">{content.achievement}</h2><p className="mt-3">Você concluiu este mundo. Pode voltar para revisar quando quiser.</p><Link className="button-secondary mt-5" href="/trilhas/fundamentos">Ver próximos mundos</Link></section>}
+    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Prática supervisionada · +{content.rules.xp.practice} XP</p><h2 className="mt-1 text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p><button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button>{practiceExtra}</section>
+    {enrollment.completed_at && <section ref={achievementRef} className="scroll-mt-20 rounded-2xl bg-[#143d2c] p-7 text-white" role="status"><p className="text-sm font-bold text-[#e6c861]">CONQUISTA DESBLOQUEADA</p><h2 className="mt-2 text-2xl font-black">{content.achievement}</h2><p className="mt-3">Você concluiu este mundo. Pode voltar para revisar quando quiser.</p><Link className="button-secondary mt-5" href="/trilhas/fundamentos">Ver próximos mundos</Link></section>}
   </div>;
 }

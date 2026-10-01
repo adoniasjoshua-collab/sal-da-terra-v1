@@ -22,15 +22,22 @@ export function StudentSimulation({ content, userId }: { content: WorldContent; 
     return step.error ? { error: step.error } : { result: step.result ?? {} };
   }
 
+  const pendingPractice = simulation.enrollment.practice_state === "pending";
+  // In the real flow a leader validates the practice from Conhecimento → Gestão.
+  const practiceExtra = <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+    <p className="font-bold">Somente na simulação</p>
+    <p className="mt-1">{pendingPractice ? "Na vida real, a liderança valida esta prática em Conhecimento → Gestão. Aqui você pode simular essa validação para ver a conclusão do mundo." : "Peça a validação acima; depois simule a decisão da liderança aqui."}</p>
+    <button type="button" className="button-primary mt-3" disabled={!pendingPractice} onClick={() => apply(simulatePracticeApproval(content, latest.current ?? simulation))}>Simular validação da liderança</button>
+  </div>;
+
   return <div className="grid gap-5">
     <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
       <p className="font-bold">Simulação do aluno — nada é salvo</p>
-      <p className="mt-1">Esta é a mesma tela que o aluno inscrito verá, com as mesmas regras de etapas, quiz e XP. O progresso existe só nesta aba e não conta para nenhum aluno.</p>
+      <p className="mt-1">Esta é a mesma tela que o aluno inscrito verá, com as mesmas regras de etapas, quiz e XP. O progresso existe só nesta aba e não conta para nenhum aluno. Na etapa de prática, use “Simular validação da liderança” para ver a conclusão.</p>
       <div className="mt-3 flex flex-wrap gap-3">
-        {simulation.enrollment.practice_state === "pending" && <button type="button" className="button-primary" onClick={() => apply(simulatePracticeApproval(content, latest.current ?? simulation))}>Simular validação da liderança</button>}
         <button type="button" className="button-secondary" onClick={() => { apply(startSimulation()); setRound((value) => value + 1); }}>Recomeçar simulação</button>
       </div>
     </div>
-    <WorldPlayer key={round} content={content} enrollment={simulation.enrollment} userId={`simulacao-${userId}`} runCommand={runCommand} />
+    <WorldPlayer key={round} content={content} enrollment={simulation.enrollment} userId={`simulacao-${userId}`} runCommand={runCommand} practiceExtra={simulation.enrollment.practice_state === "approved" ? null : practiceExtra} />
   </div>;
 }
