@@ -4,6 +4,8 @@ import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { excludedMigrations, localMigrationSql } from "../scripts/prepare-local-db.mjs";
+import content from "../content/fundamentos/voce-faz-parte.v1.json";
+import type { LearningSnapshot } from "../src/services/learning";
 
 const ministry = "20000000-0000-0000-0000-000000000001";
 const leader = "50000000-0000-0000-0000-000000000001";
@@ -139,5 +141,43 @@ describe("student access provisioning (embedded PostgreSQL)", () => {
     await db.exec("reset role");
     const flagged = await db.query("select id from public.students where is_test");
     expect(flagged.rows).toEqual([]);
+  });
+
+  it("lets a provisioned test student study the published first world with private progress", async () => {
+    const learning = (command: string, target: string | null = null, payload: object = {}) =>
+      rpc("public.learning_command($1,$2,$3,$4::jsonb)", [ministry, command, target, JSON.stringify(payload)]);
+    const snapshot = () => rpc<LearningSnapshot>("public.learning_snapshot($1)", [ministry]);
+    await actor(admin);
+    const testStudent = await createTest();
+    await provision(testStudent, fresh);
+    await learning("configure", null, { author: admin, reviewer: leader });
+    await learning("submit_review");
+    await actor(leader);
+    await learning("approve", null, { confirmed: true });
+    await actor(admin);
+    await learning("publish", null, { confirmed: true });
+    await learning("enroll", testStudent, { confirmed: true });
+    await actor(fresh);
+    const started = await snapshot();
+    expect(started.content?.title).toBe(content.title);
+    expect(started.students).toEqual([]);
+    expect(started.content?.exercise).not.toHaveProperty("correct");
+    const enrollment = started.enrollment!.id;
+    for (const card of content.cards) await learning("reading", enrollment, { reading: card.id });
+    await learning("exercise", enrollment, { answer: content.exercise.correct });
+    await learning("quiz", enrollment, {
+      answers: Object.fromEntries(content.questions.map((q) => [q.id, q.correct])),
+      requestId: "a0000000-0000-4000-8000-000000000009",
+    });
+    await learning("summary", enrollment);
+    await learning("request_practice", enrollment);
+    expect((await snapshot()).enrollment?.completed_at).toBeNull();
+    await actor(admin);
+    await learning("review_practice", enrollment, { decision: "approved", mode: "equivalent", note: "Simulação fictícia concluída pela administração." });
+    await actor(fresh);
+    const finished = await snapshot();
+    expect(finished.enrollment?.completed_at).not.toBeNull();
+    expect(finished.enrollment?.xp).toBe(220);
+    expect((await db.query("select id from public.pastoral_followups")).rows).toEqual([]);
   });
 });

@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { passwordSchema } from "../src/services/password-policy";
-import { accessLink, createAccessSchema, whatsappNumber } from "../src/services/student-access";
+import { accessLink, createAccessSchema, inviteMessage, whatsappNumber } from "../src/services/student-access";
 
 describe("student access helpers", () => {
+  it("separates the personal first-access token from the permanent login address", () => {
+    const message = inviteMessage("Aluno Teste", accessLink("https://portal.example", "personal-token", "invite"));
+    expect(message).toContain("https://portal.example/login");
+    expect(message.match(/personal-token/g)).toHaveLength(1);
+    expect(message).toContain("Conhecimento");
+  });
   it("builds a side-effect-free confirmation link on the portal origin", () => {
     expect(accessLink("https://portal.example", "abc123_-", "invite")).toBe("https://portal.example/convite?token_hash=abc123_-&type=invite");
   });
@@ -10,6 +16,7 @@ describe("student access helpers", () => {
     expect(whatsappNumber("(21) 99876-5432")).toBe("5521998765432");
     expect(whatsappNumber("+55 21 3456-7890")).toBe("552134567890");
     expect(whatsappNumber("123")).toBeNull();
+    expect(whatsappNumber("00000000000")).toBeNull();
     expect(whatsappNumber(null)).toBeNull();
   });
   it("normalizes and validates the invitation e-mail", () => {

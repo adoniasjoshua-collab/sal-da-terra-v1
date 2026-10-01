@@ -17,5 +17,9 @@ export async function runLearningCommand(input: unknown): Promise<{ error?: stri
   });
   if (error) return { error: learningError(error.message) };
   for (const route of ["/conhecimento", "/trilhas", "/trilhas/fundamentos", "/trilhas/fundamentos/voce-faz-parte", "/meu-progresso", "/conhecimento/gestao"]) revalidatePath(route);
+  if (command === "enroll" && target) {
+    revalidatePath(`/adolescentes/${target}`);
+    revalidatePath(`/adolescentes/${target}/editar`);
+  }
   return { result: data as LearningResult };
 }

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentRole } from "@/lib/auth";
 
 const inviteSchema = z.object({
   token_hash: z.string().min(10).max(200).regex(/^[A-Za-z0-9_-]+$/),
@@ -12,6 +13,8 @@ const inviteSchema = z.object({
 export async function acceptInvite(formData: FormData) {
   const parsed = inviteSchema.safeParse({ token_hash: formData.get("token_hash"), type: formData.get("type") });
   if (parsed.success) {
+    const role = await getCurrentRole();
+    if (role === "admin" || role === "leader") redirect("/convite?erro=sessao-equipe");
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp(parsed.data);
     if (!error) redirect("/definir-senha");

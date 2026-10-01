@@ -6,6 +6,7 @@ import { FollowupForm } from "@/features/followups/followup-form";
 import { StudentForm } from "@/features/students/student-form";
 import { StudentLifecycleForm } from "@/features/students/student-lifecycle-form";
 import { getStudentAccess } from "@/features/student-access/data";
+import { StudentLearningAccess } from "@/features/student-access/student-learning-access";
 import { StudentAccessPanel } from "@/features/student-access/student-access-panel";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
@@ -56,7 +57,7 @@ export default async function StudentProfilePage({ params }: Props) {
     : { data: [], error: null };
   if (attendanceError) throw new Error("Não foi possível carregar a participação do adolescente.");
 
-  const access = actor.role === "admin" ? await getStudentAccess(student.auth_user_id) : null;
+  const access = actor.role === "admin" ? await getStudentAccess(student.auth_user_id, actor.ministryId, student.is_active && student.status !== "archived") : null;
 
   const eventMap = new Map((events ?? []).map((event) => [event.id, event]));
   const records = (attendance ?? [])
@@ -195,6 +196,7 @@ export default async function StudentProfilePage({ params }: Props) {
       </section>
 
       {access && <StudentAccessPanel studentId={id} isTest={student.is_test} {...access} />}
+    {access && <StudentLearningAccess studentId={id} ministryId={actor.ministryId} isTest={student.is_test} accessReady={access.status === "pending" || access.status === "active"} />}
     </>
   );
 }

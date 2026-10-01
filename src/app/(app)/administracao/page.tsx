@@ -41,10 +41,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
   const access = ["active", "inactive"].includes(filters.access ?? "") ? filters.access : "all";
   const supabase = await createClient();
 
-  const [membersResult, auditResult, signatoriesResult] = await Promise.all([
+  const [membersResult, auditResult, signatoriesResult, testStudentsResult] = await Promise.all([
     supabase.from("ministry_members").select("id,profile_id,role,is_active,profiles(full_name)").eq("ministry_id", actor.ministryId).order("created_at"),
     supabase.from("audit_logs").select("id,action,entity_type,created_at,profiles!audit_logs_actor_id_fkey(full_name)").eq("ministry_id", actor.ministryId).order("created_at", { ascending: false }).limit(20),
     supabase.from("report_signatories").select("*").eq("ministry_id", actor.ministryId).order("display_order"),
+    supabase.from("students").select("id,full_name,is_active,status,auth_user_id").eq("ministry_id", actor.ministryId).eq("is_test", true).order("created_at", { ascending: false }),
   ]);
 
   const members = (membersResult.data ?? []) as unknown as Member[];
@@ -67,14 +68,24 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         <article className="card p-4"><p className="text-sm text-[#647268]">Acessos ativos</p><p className="mt-1 text-2xl font-black">{members.filter((member) => member.is_active).length}</p></article>
         <article className="card p-4"><p className="text-sm text-[#647268]">Administradores ativos</p><p className="mt-1 text-2xl font-black">{activeAdmins}</p></article>
       </section>
-      <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">A plataforma preserva históricos: desative acessos em vez de excluir usuários. O último administrador ativo é protegido. Novas contas devem ser provisionadas pelo fluxo seguro do Supabase; nenhuma chave privilegiada é enviada ao navegador.</p>
+      <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">A plataforma preserva históricos: desative acessos em vez de excluir usuários. O último administrador ativo é protegido. Para criar o acesso de um aluno, use o painel de convite na ficha dele.</p>
 
       <section className="card mb-6 p-5 sm:p-6" id="aluno-teste" aria-labelledby="student-access-title">
         <h2 id="student-access-title" className="text-xl font-black">Acesso de alunos</h2>
         <p className="mt-2 text-sm leading-6 text-[#526158]">Para convidar um adolescente, abra a ficha dele em <Link className="font-bold text-[#176b49] underline" href="/adolescentes">Adolescentes</Link> e use <strong>Acesso do aluno ao portal</strong>. O portal gera um link pessoal para enviar pelo WhatsApp ou copiar.</p>
         <p className="mt-2 text-sm leading-6 text-[#526158]">Para testar a experiência do aluno, crie um cadastro fictício de teste. Ele não aparece em chamadas, dashboard ou relatórios.</p>
         {filters.teste && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{filters.teste === "limite" ? "Já existem 3 alunos de teste ativos. Arquive um antes de criar outro." : "Não foi possível criar o aluno de teste."}</p>}
-        <form action={createTestStudent} className="mt-4"><button className="button-secondary">Criar aluno de teste</button></form>
+        {testStudentsResult.error ? <p role="alert" className="mt-4 text-sm text-red-700">Não foi possível carregar os alunos de teste. Atualize a página antes de criar outro.</p> : <>
+          <div className="mt-4 grid gap-3">{testStudentsResult.data?.map((student, index) => <article className="rounded-xl border border-[#dfe6df] p-4" key={student.id}>
+            <p className="font-bold">{student.full_name} · {index + 1}</p>
+            <p className="mt-1 text-sm">{!student.is_active || student.status === "archived" ? "Cadastro inativo — reative para testar" : student.auth_user_id ? "Conta vinculada — gere um novo link na ficha" : "Falta criar o acesso com um e-mail de teste"}</p>
+            <Link className="button-secondary mt-3" href={`/adolescentes/${student.id}/editar#acesso`}>Abrir teste, convite e inscrição</Link>
+          </article>)}</div>
+          <form action={createTestStudent} className="mt-4"><button className="button-secondary" disabled={(testStudentsResult.data?.filter((student) => student.is_active).length ?? 0) >= 3}>Criar aluno de teste</button></form>
+          <p className="mt-3 text-sm text-[#526158]">Reutilize um teste existente. É possível manter até três cadastros de teste ativos.</p>
+        </>}
+        <p className="mt-4 text-sm leading-6">Depois de criar o acesso, inscreva o teste no primeiro módulo na mesma ficha. Abra o convite numa janela anônima para manter sua sessão de administrador.</p>
+        <Link className="button-secondary mt-3" href="/conhecimento/gestao">Conferir publicação do primeiro módulo</Link>
       </section>
 
       <section aria-labelledby="access-title">
