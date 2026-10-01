@@ -21,7 +21,7 @@ export async function StudentLearningAccess({ studentId, ministryId, isTest, acc
       : student ? <div className="mt-4"><CommandForm command="enroll" target={studentId} label={student.enrollment ? "Reativar inscrição no primeiro módulo" : "Inscrever no primeiro módulo"}>
         <label className="flex gap-3 text-sm leading-6"><input type="checkbox" name="confirmed" required />{isTest ? "Confirmo que esta conta é fictícia e será usada pela administração para testar a jornada." : "Confirmei a autorização e a ciência dos responsáveis conforme a política de proteção do ministério."}</label>
       </CommandForm></div> : <p className="mt-4 text-sm">Reative o cadastro do aluno antes de inscrever.</p>}
-    <div className="mt-4 flex flex-wrap gap-3"><Link className="button-secondary" href="/conhecimento/gestao">Gerenciar publicação e inscrições</Link><Link className="button-secondary" href="/trilhas/fundamentos/voce-faz-parte">Ver conteúdo como administrador</Link></div>
+    <div className="mt-4 flex flex-wrap gap-3"><Link className="button-secondary" href="/conhecimento/gestao">Gerenciar publicação e inscrições</Link><Link className="button-secondary" href="/trilhas/fundamentos/voce-faz-parte/simulacao">Ver como aluno (simulação)</Link></div>
     {isTest && <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6"><li>Gere e copie o link de acesso acima.</li><li>Com o módulo publicado, confirme a inscrição nesta ficha.</li><li>Abra uma janela anônima, cole o link e crie a senha do aluno de teste.</li><li>Na conta do aluno, abra Conhecimento → Explorar a trilha → Você faz parte!.</li><li>Mantenha sua janela de administrador aberta para acompanhar o progresso e validar a prática.</li></ol>}
   </section>;
 }

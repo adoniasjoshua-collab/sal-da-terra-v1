@@ -113,7 +113,8 @@ export function WorldEditorialPreview({ content }: { content: WorldContent }) {
   </div>;
 }
 
-export function WorldPlayer({ content, enrollment, userId, readOnly = false }: { content: WorldContent; enrollment: Enrollment; userId: string; readOnly?: boolean }) {
+// runCommand lets the leadership simulation reuse this exact player without persistence.
+export function WorldPlayer({ content, enrollment, userId, readOnly = false, runCommand = runLearningCommand }: { content: WorldContent; enrollment: Enrollment; userId: string; readOnly?: boolean; runCommand?: (command: LearningCommand) => ReturnType<typeof runLearningCommand> }) {
   const [busy, startTransition] = useTransition();
   const pending = busy || readOnly;
   const [message, setMessage] = useState("");
@@ -145,7 +146,7 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false }: {
   function send(command: LearningCommand, after?: (value: LearningResult) => void) {
     startTransition(async () => {
       try {
-        const response = await runLearningCommand(command);
+        const response = await runCommand(command);
         setFailed(Boolean(response.error));
         setMessage(response.error ?? "Etapa salva com segurança.");
         if (response.result) after?.(response.result);
@@ -166,7 +167,7 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false }: {
     timer.current = setTimeout(() => {
       startTransition(async () => {
         try {
-          const response = await runLearningCommand({ command: "save_draft", target: enrollment.id, answers: next });
+          const response = await runCommand({ command: "save_draft", target: enrollment.id, answers: next });
           if (revision.current === current) {
             setFailed(Boolean(response.error));
             setMessage(response.error ?? "Rascunho salvo no servidor.");

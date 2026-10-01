@@ -85,7 +85,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
           <p className="mt-3 text-sm text-[#526158]">Reutilize um teste existente. É possível manter até três cadastros de teste ativos.</p>
         </>}
         <p className="mt-4 text-sm leading-6">Depois de criar o acesso, inscreva o teste no primeiro módulo na mesma ficha. Abra o convite numa janela anônima para manter sua sessão de administrador.</p>
-        <Link className="button-secondary mt-3" href="/conhecimento/gestao">Conferir publicação do primeiro módulo</Link>
+        <div className="mt-3 flex flex-wrap gap-3"><Link className="button-primary" href="/trilhas/fundamentos/voce-faz-parte/simulacao">Ver o Mundo 1 como aluno (simulação)</Link><Link className="button-secondary" href="/conhecimento/gestao">Conferir publicação do primeiro módulo</Link></div>
       </section>
 
       <section aria-labelledby="access-title">
