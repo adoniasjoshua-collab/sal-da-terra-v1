@@ -33,8 +33,8 @@ it("enrolls only real learners with an account and no active enrollment", async 
 });
 
 it("requires an administrator and explicit guardian confirmation", async () => {
-  expect((await enrollAllEligible(undefined, new FormData())).error).toMatch(/Confirme/);
+  expect((await enrollAllEligible(undefined, new FormData()))?.error).toMatch(/Confirme/);
   mocks.requireAuth.mockResolvedValue({ role: "leader", ministryId: ministry });
-  expect((await enrollAllEligible(undefined, confirmed())).error).toMatch(/administradores/);
+  expect((await enrollAllEligible(undefined, confirmed()))?.error).toMatch(/administradores/);
   expect(mocks.rpc).not.toHaveBeenCalled();
 });
