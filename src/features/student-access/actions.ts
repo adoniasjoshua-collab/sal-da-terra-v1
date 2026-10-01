@@ -38,7 +38,11 @@ export async function createStudentAccess(_: AccessState, formData: FormData): P
     .select("id,full_name,preferred_name,guardian_phone,auth_user_id")
     .eq("id", parsed.data.student_id).eq("ministry_id", actor.ministryId).maybeSingle();
   if (!student) return { error: "Cadastro não encontrado neste ministério." };
-  if (student.auth_user_id) return { error: accessError("student_access_exists") };
+  if (student.auth_user_id) {
+    revalidatePath(`/adolescentes/${student.id}`);
+    revalidatePath(`/adolescentes/${student.id}/editar`);
+    return { error: accessError("student_access_exists") };
+  }
 
   // createUser fails for an existing e-mail, so the identity below is always new
   // and safe to delete if linking fails. Existing accounts are never repurposed.
@@ -51,6 +55,10 @@ export async function createStudentAccess(_: AccessState, formData: FormData): P
   const { error: provisionError } = linkError ? { error: linkError } : await supabase.rpc("provision_student_access", { target_student: student.id, target_profile: userId });
   if (linkError || provisionError || !generated?.properties?.hashed_token) {
     await auth.deleteUser(userId);
+    if (provisionError?.message.includes("student_access_exists")) {
+      revalidatePath(`/adolescentes/${student.id}`);
+      revalidatePath(`/adolescentes/${student.id}/editar`);
+    }
     return { error: accessError(provisionError?.message ?? "") };
   }
   revalidatePath(`/adolescentes/${student.id}`);
