@@ -132,6 +132,21 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
   const progress = learningProgress(enrollment, content);
   const readingsDone = content.cards.every((card) => enrollment.readings.includes(card.id));
   const nextReadingIndex = content.cards.findIndex((card) => !enrollment.readings.includes(card.id));
+  const nextReadingId = nextReadingIndex === -1 ? null : content.cards[nextReadingIndex].id;
+  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const detailRefs = useRef<Record<string, HTMLDetailsElement | null>>({});
+  const exerciseRef = useRef<HTMLElement | null>(null);
+  const mounted = useRef(false);
+  // Open the next reading without collapsing finished ones: auto-closing a long
+  // card shifted the page and stranded the learner near the locked exercise.
+  useEffect(() => {
+    if (nextReadingId && detailRefs.current[nextReadingId]) detailRefs.current[nextReadingId]!.open = true;
+    if (!mounted.current) { mounted.current = true; return; }
+    (nextReadingId ? cardRefs.current[nextReadingId] : exerciseRef.current)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [nextReadingId]);
+  function goToNextReading() {
+    if (nextReadingId) cardRefs.current[nextReadingId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   const missionSteps = [
     ...content.cards.map((card, index) => ({ label: `Leitura ${index + 1}`, done: enrollment.readings.includes(card.id), active: nextReadingIndex === index })),
     { label: "Escolha", done: enrollment.exercise_done, active: readingsDone && !enrollment.exercise_done },
@@ -222,7 +237,7 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
     <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7"><p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Cena de abertura</p><p className="mt-2 text-2xl font-black">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Tempo</p><p className="mt-1 font-black">{content.estimatedMinutes}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Conquista</p><p className="mt-1 font-black">{content.achievement}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Meta</p><p className="mt-1 font-black">Acolher com respeito</p></div></div><p className="mt-4 text-sm">{content.sourceNote}</p></section>
     {content.cards.map((card) => {
       const guide = cardGuides[card.id] ?? { scene: card.paragraphs[0], idea: content.centralIdea, checkpoint: "Marque esta etapa quando concluir a leitura com atenção.", visual: "known" as const };
-      return <section key={card.id} className="card overflow-hidden" aria-labelledby={card.id}>
+      return <section key={card.id} ref={(node) => { cardRefs.current[card.id] = node; }} className="card scroll-mt-20 overflow-hidden" aria-labelledby={card.id}>
       <div className="grid gap-5 p-5 sm:grid-cols-[.9fr_1.1fr] sm:p-7">
         <StageIllustration type={guide.visual} title={content.media.alt} />
         <div>
@@ -235,7 +250,7 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
         </div>
       </div>
       <div className="border-t border-[#e7ece8] p-5 sm:p-7">
-      <details className="group rounded-xl border border-[#dfe6df] bg-white p-4" open={nextReadingIndex === -1 || content.cards[nextReadingIndex]?.id === card.id}>
+      <details ref={(node) => { detailRefs.current[card.id] = node; }} className="group rounded-xl border border-[#dfe6df] bg-white p-4">
         <summary className="cursor-pointer font-black">Ler explicação completa</summary>
         <div className="mt-3 grid gap-4">
           {card.paragraphs.map((paragraph, index) => <p key={index} className="max-w-3xl leading-8">{paragraph}</p>)}
@@ -246,8 +261,8 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
       </div>
     </section>;
     })}
-    <section className="card p-5 sm:p-7" aria-labelledby="exercise-title"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Desafio de cenário · +{content.rules.xp.exercise} XP</p><h2 id="exercise-title" className="mt-1 text-xl font-black">Uma escolha de acolhimento</h2><p className="mt-3">{content.exercise.prompt}</p>
-      {!readingsDone && <p className="mt-3 text-sm">Marque as quatro leituras para realizar esta atividade.</p>}
+    <section ref={exerciseRef} className="card scroll-mt-20 p-5 sm:p-7" aria-labelledby="exercise-title"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Desafio de cenário · +{content.rules.xp.exercise} XP</p><h2 id="exercise-title" className="mt-1 text-xl font-black">Uma escolha de acolhimento</h2><p className="mt-3">{content.exercise.prompt}</p>
+      {!readingsDone && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-[#f5f7f3] p-3 text-sm"><span>Faltam {content.cards.length - enrollment.readings.filter((id) => content.cards.some((card) => card.id === id)).length} de {content.cards.length} leituras para liberar esta atividade.</span><button type="button" className="button-secondary" onClick={goToNextReading}>Ir para a próxima leitura</button></div>}
       <fieldset disabled={pending || !readingsDone} className="mt-4 grid gap-2"><legend className="sr-only">Escolha uma atitude</legend>{content.exercise.options.map((option, index) => <label key={option} className="flex min-h-11 items-start gap-3 rounded-xl border border-[#dfe6df] p-3"><input className="mt-1" type="radio" name="exercise" checked={exerciseAnswer === index} onChange={() => setExerciseAnswer(index)} />{option}</label>)}</fieldset>
       <button className="button-primary mt-4" disabled={pending || !readingsDone || exerciseAnswer === null} onClick={() => send({ command: "exercise", target: enrollment.id, answer: exerciseAnswer! }, (value) => setExerciseFeedback(`${value.correct ? "Boa escolha." : "Vamos pensar novamente."} ${value.explanation}`))}>Conferir minha escolha</button>
       {exerciseFeedback && <p role="status" className="mt-3 leading-7">{exerciseFeedback}</p>}{enrollment.exercise_done && <p className="mt-3 text-sm font-bold text-emerald-800">Exercício concluído.</p>}
