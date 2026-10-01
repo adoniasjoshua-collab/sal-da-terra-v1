@@ -8,6 +8,10 @@ are `security definer` with empty `search_path`, executable only by
 ministry. Provisioning accepts only an Auth identity with no profile, membership
 or student link. `is_test` cannot be written by API roles.
 
+`provision_staff_access` (new identity → `leader` only) and
+`issue_staff_access_link` (active leaders only, never admins or the caller) follow
+the same pattern and are audited.
+
 ## Learning tables
 
 All six learning tables have RLS enabled with no direct API grants or policies.

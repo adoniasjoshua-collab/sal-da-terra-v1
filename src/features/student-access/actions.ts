@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
+import { portalOrigin } from "@/lib/portal-origin";
 import { createAdminAuthClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { accessError, accessLink, createAccessSchema, inviteMessage, reissueAccessSchema, whatsappNumber } from "@/services/student-access";
@@ -11,12 +11,6 @@ import { accessError, accessLink, createAccessSchema, inviteMessage, reissueAcce
 export type AccessState = { error?: string; link?: string; message?: string; whatsapp?: string | null } | undefined;
 
 const missingKey = "Configuração pendente: defina SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para gerar convites.";
-
-// Server Actions only run when Origin matches Host, so the origin is the portal itself.
-async function portalOrigin() {
-  const h = await headers();
-  return h.get("origin") ?? `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
-}
 
 type StudentContact = { preferred_name: string | null; full_name: string; guardian_phone: string | null };
 async function linkResult(student: StudentContact, tokenHash: string, type: "invite" | "recovery"): Promise<AccessState> {

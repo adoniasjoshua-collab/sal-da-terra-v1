@@ -37,3 +37,14 @@ describe("password policy by role", () => {
     expect(check("admin", "SalDaTerra2026x")).toBe(true);
   });
 });
+
+describe("staff invitation helpers", async () => {
+  const { createStaffSchema, staffInviteMessage } = await import("../src/services/staff-access");
+  it("validates name and e-mail and separates the one-time link from the login address", () => {
+    expect(createStaffSchema.safeParse({ full_name: " ", email: "zaine@example.com" }).success).toBe(false);
+    expect(createStaffSchema.parse({ full_name: "Zaine", email: " Zaine@Example.com " }).email).toBe("zaine@example.com");
+    const message = staffInviteMessage("Zaine", "https://portal.example/convite?token_hash=abc123xyz&type=invite");
+    expect(message).toContain("https://portal.example/login");
+    expect(message.match(/abc123xyz/g)).toHaveLength(1);
+  });
+});

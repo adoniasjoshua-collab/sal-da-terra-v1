@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { MembershipForm } from "@/features/admin/membership-form";
 import { ReportSignatoryForm } from "@/features/admin/report-signatory-form";
 import { createTestStudent } from "@/features/student-access/actions";
+import { StaffInvitePanel } from "@/features/staff-access/staff-invite-panel";
+import { createAdminAuthClient } from "@/lib/supabase/admin";
 import { PageHeading } from "@/components/page-heading";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -29,6 +31,8 @@ const actionLabels: Record<string, string> = {
   update_report_signatories: "Assinatura de relatório atualizada",
   provision_student_access: "Acesso de aluno criado",
   issue_student_access_link: "Novo link de acesso de aluno",
+  provision_staff_access: "Líder convidado",
+  issue_staff_access_link: "Novo link de acesso de líder",
 };
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
@@ -87,6 +91,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         <p className="mt-4 text-sm leading-6">Depois de criar o acesso, inscreva o teste no primeiro módulo na mesma ficha. Abra o convite numa janela anônima para manter sua sessão de administrador.</p>
         <div className="mt-3 flex flex-wrap gap-3"><Link className="button-primary" href="/trilhas/fundamentos/voce-faz-parte/simulacao">Ver o Mundo 1 como aluno (simulação)</Link><Link className="button-secondary" href="/conhecimento/gestao">Conferir publicação do primeiro módulo</Link></div>
       </section>
+
+      <StaffInvitePanel configured={Boolean(createAdminAuthClient())} leaders={members.filter((member) => member.role === "leader" && member.is_active && member.profile_id !== actor.userId).map((member) => ({ memberId: member.id, name: member.profiles?.full_name ?? "Líder" }))} />
 
       <section aria-labelledby="access-title">
         <div className="mb-4"><h2 id="access-title" className="text-xl font-black">Controle de acesso</h2><p className="mt-1 text-sm text-[#647268]">As alterações são registradas automaticamente.</p></div>

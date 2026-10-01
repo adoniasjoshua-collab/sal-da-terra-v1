@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ origin: "https://portal.example" }) }));
 vi.mock("@/lib/auth", () => ({ requireAuth: mocks.requireAuth }));
+vi.mock("@/lib/portal-origin", () => ({ portalOrigin: async () => "https://portal.example" }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminAuthClient: () => ({ createUser: mocks.createUser, generateLink: mocks.generateLink, deleteUser: mocks.deleteUser }) }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => {

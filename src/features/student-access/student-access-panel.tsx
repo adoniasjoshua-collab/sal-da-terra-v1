@@ -19,14 +19,14 @@ const statusLabels = {
   unavailable: "Não foi possível confirmar a situação do acesso",
 };
 
-function LinkResult({ state }: { state: AccessState }) {
+export function LinkResult({ state, audience = "student" }: { state: AccessState; audience?: "student" | "staff" }) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   if (!state?.link) return null;
   const text = encodeURIComponent(state.message ?? state.link);
   return <div className="mt-4 grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4" role="status">
     <p className="font-bold text-emerald-900">Link de acesso gerado</p>
-    <p className="text-sm leading-6 text-emerald-950">Envie somente ao adolescente ou ao responsável. O link é pessoal, vale uma vez e expira conforme a configuração do Supabase. Se expirar, gere outro.</p>
+    <p className="text-sm leading-6 text-emerald-950">{audience === "staff" ? "Envie somente à pessoa convidada." : "Envie somente ao adolescente ou ao responsável."} O link é pessoal, vale uma vez e expira conforme a configuração do Supabase. Se expirar, gere outro.</p>
     <input className="input font-mono text-xs" readOnly value={state.link} aria-label="Link de acesso" onFocus={(event) => event.currentTarget.select()} />
     <div className="flex flex-wrap gap-3">
       <button type="button" className="button-primary" onClick={async () => {

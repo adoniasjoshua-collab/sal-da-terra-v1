@@ -180,7 +180,7 @@ export default async function HelpPage() {
             <li>Se o link expirar ou o aluno esquecer a senha, use <strong>Gerar novo link</strong> na mesma ficha.</li>
           </ol>
           <Example>Para ver o que o aluno vê, vá em Administração → Criar aluno de teste, gere o acesso com um e-mail seu (ex.: seunome+aluno@gmail.com) e abra o link numa janela anônima.</Example>
-          <p><strong>Liderança:</strong> a administração providencia a conta pelo fluxo seguro do Supabase e depois define a função correta em Administração. Somente com vínculo ativo a pessoa acessa o portal.</p>
+          <p><strong>Liderança:</strong> em Administração → <strong>Convidar líder ou revisor</strong>, informe nome e e-mail e envie o link gerado. A pessoa entra como Líder; para torná-la administradora, altere a função em Controle de acesso. Somente com vínculo ativo a pessoa acessa o portal.</p>
           <p><strong>O convite sozinho não libera dados.</strong> A função e o vínculo ativo são proteções adicionais.</p>
         </GuideSection>
 
