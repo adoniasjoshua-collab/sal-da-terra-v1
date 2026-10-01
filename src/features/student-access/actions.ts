@@ -54,6 +54,7 @@ export async function createStudentAccess(_: AccessState, formData: FormData): P
     return { error: accessError(provisionError?.message ?? "") };
   }
   revalidatePath(`/adolescentes/${student.id}`);
+  revalidatePath(`/adolescentes/${student.id}/editar`);
   revalidatePath("/administracao");
   return linkResult(student, generated.properties.hashed_token, "invite");
 }

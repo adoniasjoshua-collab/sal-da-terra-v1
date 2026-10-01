@@ -57,6 +57,10 @@ Every authenticated role can open **Ajuda** from the main navigation. The guide 
 
 ## Invitation acceptance
 
+Administrators can also manage student invitations directly at the bottom of
+**Editar cadastro e status**, using the same **Acesso do aluno ao portal** panel
+as the profile. Leaders cannot view this panel or issue invitations.
+
 Student access: Admin → adolescent profile → **Acesso do aluno ao portal** → e-mail
 (adolescent or guardian) → server creates a new Auth identity, links profile,
 `student` membership and `students.auth_user_id` → personal link shown once with
