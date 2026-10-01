@@ -38,3 +38,24 @@ describe("world one content and command boundary", () => {
     expect(learningProgress(enrollment, content)).toEqual({ done: 2, total: 8, percent: 25 });
   });
 });
+
+describe("leadership follow-up stages", async () => {
+  const { learningStage, learningNextStep } = await import("../src/services/learning");
+  const base = { id: "e", is_active: true, readings: [], exercise_done: false, quiz_passed: false, summary_done: false, quiz_draft: {}, practice_state: "not_requested", practice_mode: null, completed_at: null, xp: 0 } as Enrollment;
+  const allReadings = content.cards.map((card) => card.id);
+  it("classifies each learner by the next action the leadership may need", () => {
+    expect(learningStage(null, content)).toBe("not_enrolled");
+    expect(learningStage({ ...base, is_active: false }, content)).toBe("not_enrolled");
+    expect(learningStage(base, content)).toBe("not_started");
+    expect(learningStage({ ...base, readings: ["conhecido"] }, content)).toBe("in_progress");
+    expect(learningStage({ ...base, practice_state: "pending" }, content)).toBe("practice_pending");
+    expect(learningStage({ ...base, practice_state: "changes_requested" }, content)).toBe("changes_requested");
+    expect(learningStage({ ...base, completed_at: "2026-10-01T12:00:00Z" }, content)).toBe("completed");
+  });
+  it("names the learner's next step in order", () => {
+    expect(learningNextStep(base, content)).toBe(`Leitura 1 de ${content.cards.length}`);
+    expect(learningNextStep({ ...base, readings: allReadings }, content)).toBe("Escolha de acolhimento");
+    expect(learningNextStep({ ...base, readings: allReadings, exercise_done: true }, content)).toBe("Quiz");
+    expect(learningNextStep({ ...base, readings: allReadings, exercise_done: true, quiz_passed: true, summary_done: true }, content)).toBe("Pedir validação da prática");
+  });
+});

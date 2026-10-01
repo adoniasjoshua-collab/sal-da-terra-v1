@@ -7,6 +7,7 @@ import { StudentForm } from "@/features/students/student-form";
 import { StudentLifecycleForm } from "@/features/students/student-lifecycle-form";
 import { getStudentAccess } from "@/features/student-access/data";
 import { StudentLearningAccess } from "@/features/student-access/student-learning-access";
+import { StudentLearningProgress } from "@/features/learning/student-learning-progress";
 import { StudentAccessPanel } from "@/features/student-access/student-access-panel";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
@@ -195,6 +196,7 @@ export default async function StudentProfilePage({ params }: Props) {
         <StudentLifecycleForm id={id} archived={student.status === "archived"} />
       </section>
 
+      <StudentLearningProgress studentId={id} ministryId={actor.ministryId} />
       {access && <StudentAccessPanel studentId={id} isTest={student.is_test} {...access} />}
     {access && <StudentLearningAccess studentId={id} ministryId={actor.ministryId} isTest={student.is_test} accessReady={access.status === "pending" || access.status === "active"} />}
     </>

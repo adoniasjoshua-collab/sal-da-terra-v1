@@ -18,6 +18,16 @@ shows progress and decision history scoped to the ministry. Archived publication
 and deactivated enrollment preserve history and block writes; learners who
 completed an archived world can still reread it (without answer keys) read-only.
 
+Follow-up: Conhecimento → Gestão → **Acompanhamento dos alunos** shows one stage
+per learner (not enrolled, not started, in progress, practice pending, practice to
+agree, completed), percent, XP, next step, last activity and step chips, with
+filters (attention / in progress / completed / not enrolled). Practices awaiting
+validation sort first; test students are marked and excluded from totals. Admins
+can enroll every real learner with an account in one confirmed action (each
+enrollment still runs through `learning_command` and is audited). The staff
+dashboard shows a cue when practices await validation, and the adolescent profile
+shows read-only Mundo 1 progress to any leader.
+
 The old three-lesson preparation screen has been replaced by this governed catalog.
 The world-one pilot still requires human review and deployment of its migrations.
 

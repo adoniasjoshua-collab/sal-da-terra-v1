@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
 import { EbdTrendChart, EventParticipationChart, LastEbdDonut, RadarDistribution } from "@/features/dashboard/dashboard-charts";
+import { LearningAlert } from "@/features/learning/learning-alert";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -103,6 +104,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeading eyebrow="Painel do líder" title="Visão do ministério" description="Indicadores observáveis para acompanhar participação e organizar o cuidado." action={<div className="flex flex-wrap gap-2"><Link href="/eventos/novo" className="button-secondary">Programar evento</Link><Link href="/eventos/registrar" className="button-primary">Registrar evento de hoje</Link></div>} />
+      <LearningAlert ministryId={actor.ministryId} />
       <p className="mb-6 rounded-xl border border-[#d7e6dc] bg-[#edf7f1] p-4 text-sm text-[#365747]">Indicadores servem para apoiar o cuidado pastoral e não representam uma avaliação da fé ou espiritualidade do adolescente.</p>
 
       <section aria-label="Indicadores principais" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

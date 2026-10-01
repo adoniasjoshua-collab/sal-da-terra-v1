@@ -32,6 +32,7 @@ export type Enrollment = {
   id: string; is_active: boolean; readings: string[]; exercise_done: boolean; quiz_passed: boolean;
   summary_done: boolean; quiz_draft: Record<string, number>; practice_state: "not_requested" | "pending" | "changes_requested" | "approved";
   practice_mode: string | null; review_note?: string | null; completed_at: string | null; xp: number; last_quiz?: QuizResult | null;
+  created_at?: string; updated_at?: string;
   reviews?: { decision: string; mode: string; note: string; created_at: string }[];
 };
 export type Publication = { id?: string; state: "draft" | "in_review" | "approved" | "published" | "archived"; author_id?: string; reviewer_id?: string; review_note?: string | null };
@@ -62,4 +63,32 @@ export function learningError(message: string) {
   if (message.includes("learning_invalid_student")) return "O adolescente precisa de uma conta vinculada e acesso ativo ao ministério.";
   if (message.includes("learning_invalid_transition")) return "A etapa editorial mudou ou esta ação não está disponível para seu papel. Atualize a página.";
   return "Não foi possível salvar. Confira sua conexão e seu acesso e tente novamente. O progresso confirmado permanece salvo.";
+}
+
+// Leadership follow-up: one stage per learner, derived from the same flags the
+// database writes. Educational activity only; never a measure of faith.
+export type LearningStage = "not_enrolled" | "not_started" | "in_progress" | "practice_pending" | "changes_requested" | "completed";
+export const stageLabels: Record<LearningStage, string> = {
+  not_enrolled: "Sem inscrição", not_started: "Ainda não começou", in_progress: "Em andamento",
+  practice_pending: "Prática aguardando validação", changes_requested: "Prática a combinar", completed: "Mundo concluído",
+};
+
+export function learningStage(enrollment: Enrollment | null | undefined, content: WorldContent): LearningStage {
+  if (!enrollment?.is_active) return "not_enrolled";
+  if (enrollment.completed_at) return "completed";
+  if (enrollment.practice_state === "pending") return "practice_pending";
+  if (enrollment.practice_state === "changes_requested") return "changes_requested";
+  return learningProgress(enrollment, content).done === 0 ? "not_started" : "in_progress";
+}
+
+export function learningNextStep(enrollment: Enrollment, content: WorldContent) {
+  const read = content.cards.filter((card) => enrollment.readings.includes(card.id)).length;
+  if (enrollment.completed_at) return "Concluído";
+  if (read < content.cards.length) return `Leitura ${read + 1} de ${content.cards.length}`;
+  if (!enrollment.exercise_done) return "Escolha de acolhimento";
+  if (!enrollment.quiz_passed) return "Quiz";
+  if (!enrollment.summary_done) return "Revisão do mundo";
+  if (enrollment.practice_state === "pending") return "Validação da prática pela liderança";
+  if (enrollment.practice_state === "changes_requested") return "Combinar a prática com a liderança";
+  return "Pedir validação da prática";
 }

@@ -4,17 +4,26 @@ import { requireStaff } from "@/lib/auth";
 import { getLearningSnapshot } from "@/features/learning/data";
 import { LearningUnavailable } from "@/features/learning/catalog";
 import { CommandForm } from "@/features/learning/command-form";
-import { practiceLabels } from "@/services/learning";
+import { createClient } from "@/lib/supabase/server";
+import { followUpFilters, LearnerFollowUp, type FollowUpFilter } from "@/features/learning/learner-follow-up";
 
 const labels = { draft: "Rascunho", in_review: "Em revisão", approved: "Aprovado", published: "Publicado", archived: "Arquivado" };
-export default async function LearningManagementPage() {
+export default async function LearningManagementPage({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
   const actor = await requireStaff();
-  const { data, error } = await getLearningSnapshot(actor.ministryId);
+  const { filtro } = await searchParams;
+  const filter: FollowUpFilter = filtro && filtro in followUpFilters ? filtro as FollowUpFilter : "todos";
+  const supabase = await createClient();
+  const [{ data, error }, { data: tests }] = await Promise.all([
+    getLearningSnapshot(actor.ministryId),
+    supabase.from("students").select("id").eq("ministry_id", actor.ministryId).eq("is_test", true),
+  ]);
+  const testIds = new Set((tests ?? []).map((row) => row.id));
   if (error || !data) return <LearningUnavailable />;
   const publication = data.publication;
   const admin = actor.role === "admin";
   const students = data.students;
-  const active = students.filter((student) => student.enrollment?.is_active);
+  // Test records stay visible for rehearsal but never count in the ministry totals.
+  const active = students.filter((student) => student.enrollment?.is_active && !testIds.has(student.id));
   const readyForEnrollments = publication?.state === "published";
   const measurable = readyForEnrollments && active.length > 0;
   return <><PageHeading eyebrow="Minha Jornada · liderança" title="Conteúdo e acompanhamento" description="Mundo 1 — Você faz parte! · versão 1. Progresso digital separado da presença EBD." />
@@ -54,16 +63,6 @@ export default async function LearningManagementPage() {
       {admin && publication?.state === "published" && <CommandForm command="archive" label="Arquivar publicação e suspender novas atividades"><p className="text-sm">O arquivamento preserva o histórico. A retomada exigirá uma nova versão editorial.</p></CommandForm>}
       {publication?.state === "archived" && <p className="text-sm">Histórico preservado. Prepare uma nova versão antes de reabrir o conteúdo.</p>}
     </section>
-    <section className="my-6 grid gap-3 sm:grid-cols-3" aria-label="Resumo educacional"><article className="card p-5"><p>Inscrições ativas</p><p className="text-3xl font-black">{active.length}</p></article><article className="card p-5"><p>Mundo concluído</p><p className="text-3xl font-black">{active.filter((s) => s.enrollment?.completed_at).length}</p></article><article className="card p-5"><p>Práticas aguardando validação</p><p className="text-3xl font-black">{active.filter((s) => s.enrollment?.practice_state === "pending").length}</p></article></section>
-    <section><h2 className="mb-4 text-xl font-black">Inscrições e práticas</h2>{students.length === 0 ? <p className="card p-6">Nenhum adolescente ativo cadastrado.</p> : <div className="grid gap-4">{students.map((student) => {
-      const enrollment = student.enrollment;
-      return <article className="card p-5" key={student.id}><h3 className="text-lg font-bold">{student.name}</h3>
-        {enrollment?.is_active ? <><p className="mt-2 text-sm">{enrollment.readings.length} leituras · Quiz {enrollment.quiz_passed ? "concluído" : "pendente"} · {enrollment.xp} XP{enrollment.completed_at && " · Mundo concluído"}</p><p className="mt-2 text-sm">{practiceLabels[enrollment.practice_state]}</p>{enrollment.review_note && <p className="mt-2 text-sm">Última justificativa educacional: {enrollment.review_note}</p>}
-          {enrollment.practice_state === "pending" && publication?.state === "published" && <div className="mt-4"><CommandForm command="review_practice" target={enrollment.id} label="Registrar decisão"><label className="label">Forma de realização<select name="mode" className="input mt-2"><option value="supervised">Atividade supervisionada</option><option value="equivalent">Alternativa educacional equivalente</option></select></label><label className="label">Decisão<select name="decision" className="input mt-2"><option value="approved">Validar realização</option><option value="changes_requested">Combinar ajuste com o adolescente</option></select></label><label className="label">Justificativa educacional<textarea className="input mt-2" name="note" required minLength={10} maxLength={300} placeholder="Registre somente o necessário para validar a atividade, sem nomes de terceiros ou informação pastoral." /></label></CommandForm></div>}
-          {admin && <div className="mt-4"><CommandForm command="withdraw" target={enrollment.id} label="Desativar inscrição, preservando histórico" /></div>}
-          {Boolean(enrollment.reviews?.length) && <details className="mt-4 text-sm"><summary className="cursor-pointer font-bold">Histórico de validações</summary><ul className="mt-3 space-y-3">{enrollment.reviews?.map((review, index) => <li key={index}>{review.decision === "approved" ? "Validada" : "Ajuste solicitado"} · {review.mode === "equivalent" ? "Alternativa equivalente" : "Supervisionada"} · {new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(new Date(review.created_at))}<p>{review.note}</p></li>)}</ul></details>}
-        </> : admin && publication?.state === "published" && student.hasAccount ? <div className="mt-3"><CommandForm command="enroll" target={student.id} label={enrollment ? "Reativar inscrição" : "Autorizar inscrição"}><label className="flex gap-3 text-sm leading-6"><input type="checkbox" name="confirmed" required />Confirmei a autorização e a ciência dos responsáveis conforme a política de proteção adotada pelo ministério.</label></CommandForm></div> : <p className="mt-2 text-sm">{!student.hasAccount ? "Vincule uma conta de adolescente ativa antes da inscrição." : "A inscrição depende de publicação e autorização do administrador."}</p>}
-      </article>;
-    })}</div>}</section>
+    {data.content && <LearnerFollowUp data={data} content={data.content} testIds={testIds} filter={filter} admin={admin} />}
   </>;
 }

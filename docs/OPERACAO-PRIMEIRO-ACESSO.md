@@ -54,3 +54,15 @@ de um convite real no Supabase nem a conferência da implantação pública.
 Esta revisão de fluxo não exige nova migração. A implantação precisa das
 migrações de aprendizagem e acesso já existentes e da configuração Auth no
 servidor. Não execute o seed fictício no ambiente de produção.
+
+## Liberação para a turma e acompanhamento
+
+1. Convide a revisora em **Administração → Convidar líder ou revisor**.
+2. Em **Conhecimento → Gestão**: defina autor e revisora, envie para revisão,
+   a revisora aprova e o administrador publica.
+3. Crie o acesso de cada aluno na ficha (link pessoal pelo WhatsApp).
+4. Em **Gestão → Acompanhamento dos alunos**, use **Inscrever todos no Mundo 1**
+   para inscrever de uma vez os alunos que já têm conta (testes ficam de fora).
+5. Acompanhe pelo filtro **Precisa de atenção**: práticas a validar aparecem
+   primeiro. O painel inicial também avisa quando há práticas aguardando.
+
