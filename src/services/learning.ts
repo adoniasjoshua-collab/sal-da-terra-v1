@@ -9,7 +9,7 @@ export const learningCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.enum(["reject", "recall"]), note: z.string().trim().min(10).max(300) }),
   z.object({ command: z.literal("enroll"), target: uuid, confirmed: z.literal(true) }),
   z.object({ command: z.literal("withdraw"), target: uuid }),
-  z.object({ command: z.literal("reading"), target: uuid, reading: z.string().min(1).max(50) }),
+  z.object({ command: z.literal("reading"), target: uuid, reading: z.string().min(1).max(50), answer: z.number().int().min(0).max(9).optional() }),
   z.object({ command: z.literal("exercise"), target: uuid, answer: z.number().int().min(0).max(9) }),
   z.object({ command: z.literal("save_draft"), target: uuid, answers }),
   z.object({ command: z.literal("quiz"), target: uuid, answers, requestId: uuid }),
@@ -21,8 +21,9 @@ export type Question = { id: string; prompt: string; options: string[]; correct?
 export type WorldContent = {
   slug: string; version: number; ruleVersion: string; title: string; objective: string; centralIdea: string;
   hook: string; audience: string; estimatedMinutes: string; references: string[]; sourceNote: string;
-  cards: { id: string; title: string; reference: string; paragraphs: string[] }[];
-  exercise: Question; questions: Question[]; practice: string; closing: string; achievement: string;
+  keyVerse: { reference: string; text: string; translation: string; mission: string };
+  cards: { id: string; title: string; reference: string; visual: "known" | "welcome" | "body" | "limits"; scene: string; idea: string; paragraphs: string[]; checkpoint: Question }[];
+  exercise: Question; questions: Question[]; practice: string; closing: string; prayer: string; achievement: string;
   rules: { passingPercent: number; xp: Record<string, number> };
   media: { coverAsset: string | null; illustrationAsset: string | null; alt: string; credit: string; license: string; videoUrl: string | null; transcript: string | null; captions: string | null; poster: string | null };
 };
@@ -42,6 +43,13 @@ export type LearningSnapshot = {
   editors: { id: string; name: string }[];
 };
 
+// Editorial preview (answer keys) and the learner simulation are for the
+// administrator and the editors assigned to the version, not every leader.
+export function canReviewContent(actor: { role: string; userId: string }, publication: Publication | null) {
+  if (actor.role === "admin") return true;
+  return actor.role === "leader" && Boolean(publication) && (publication!.author_id === actor.userId || publication!.reviewer_id === actor.userId);
+}
+
 export function learningProgress(enrollment: Enrollment, content: WorldContent) {
   const total = content.cards.length + 4;
   const done = content.cards.filter((card) => enrollment.readings.includes(card.id)).length
@@ -59,7 +67,7 @@ export function learningError(message: string) {
   if (message.includes("learning_prerequisite")) return "Conclua as etapas anteriores para continuar.";
   if (message.includes("learning_incomplete_quiz")) return "Responda todas as questões antes de enviar.";
   if (message.includes("learning_rate_limit")) return "Você já enviou várias tentativas. Aguarde um minuto para tentar novamente.";
-  if (message.includes("learning_invalid_editors")) return "Escolha dois adultos com acesso ativo: autor e revisor precisam ser pessoas diferentes.";
+  if (message.includes("learning_invalid_editors")) return "Escolha adultos com acesso ativo. A mesma pessoa só pode ser autora e revisora se for administradora.";
   if (message.includes("learning_invalid_student")) return "O adolescente precisa de uma conta vinculada e acesso ativo ao ministério.";
   if (message.includes("learning_invalid_transition")) return "A etapa editorial mudou ou esta ação não está disponível para seu papel. Atualize a página.";
   return "Não foi possível salvar. Confira sua conexão e seu acesso e tente novamente. O progresso confirmado permanece salvo.";

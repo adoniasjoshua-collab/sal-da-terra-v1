@@ -4,7 +4,7 @@ import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { excludedMigrations, localMigrationSql } from "../scripts/prepare-local-db.mjs";
-import content from "../content/fundamentos/voce-faz-parte.v1.json";
+import content from "../content/fundamentos/voce-faz-parte.v2.json";
 import type { LearningSnapshot } from "../src/services/learning";
 
 const ministry = "20000000-0000-0000-0000-000000000001";
@@ -163,7 +163,7 @@ describe("student access provisioning (embedded PostgreSQL)", () => {
     expect(started.students).toEqual([]);
     expect(started.content?.exercise).not.toHaveProperty("correct");
     const enrollment = started.enrollment!.id;
-    for (const card of content.cards) await learning("reading", enrollment, { reading: card.id });
+    for (const card of content.cards) await learning("reading", enrollment, { reading: card.id, answer: card.checkpoint.correct });
     await learning("exercise", enrollment, { answer: content.exercise.correct });
     await learning("quiz", enrollment, {
       answers: Object.fromEntries(content.questions.map((q) => [q.id, q.correct])),

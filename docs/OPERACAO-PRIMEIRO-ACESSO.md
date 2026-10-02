@@ -47,7 +47,7 @@ o e-mail. Depois de criar a senha, use o endereço fixo do portal seguido de
 
 `npm run check` executa lint, tipos, testes e build. O teste integrado de banco
 em `tests/student-access-database.test.ts` cria um aluno fictício, vincula uma
-identidade Auth simulada, publica com revisão independente, inscreve o aluno e
+identidade Auth simulada, publica com revisão de outra pessoa, inscreve o aluno e
 percorre o primeiro mundo até a validação adulta. Isso não substitui a aceitação
 de um convite real no Supabase nem a conferência da implantação pública.
 
@@ -57,12 +57,12 @@ servidor. Não execute o seed fictício no ambiente de produção.
 
 ## Liberação para a turma e acompanhamento
 
-1. Convide a revisora em **Administração → Convidar líder ou revisor**.
-2. Em **Conhecimento → Gestão**: defina autor e revisora, envie para revisão,
-   a revisora aprova e o administrador publica.
-3. Crie o acesso de cada aluno na ficha (link pessoal pelo WhatsApp).
-4. Em **Gestão → Acompanhamento dos alunos**, use **Inscrever todos no Mundo 1**
+1. Em **Conhecimento → Gestão**: o administrador pode se definir como autor e
+   revisor, enviar para revisão, aprovar e publicar. (Opcional: convidar outro
+   adulto em **Administração → Convidar líder** para revisar.)
+2. Crie o acesso de cada aluno na ficha (link pessoal pelo WhatsApp).
+3. Em **Gestão → Acompanhamento dos alunos**, use **Inscrever todos no Mundo 1**
    para inscrever de uma vez os alunos que já têm conta (testes ficam de fora).
-5. Acompanhe pelo filtro **Precisa de atenção**: práticas a validar aparecem
+4. Acompanhe pelo filtro **Precisa de atenção**: práticas a validar aparecem
    primeiro. O painel inicial também avisa quando há práticas aguardando.
 

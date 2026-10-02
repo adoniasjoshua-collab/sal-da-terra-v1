@@ -20,15 +20,22 @@ migration already defines them. The manifest records the adaptation.
 ## ADR-009 — World-one learning boundary
 
 Learning content is an immutable JSON version stored by an additive migration.
-Ministry publications assign distinct adult author/reviewer identities and enforce
+Ministry publications assign adult author/reviewer identities and enforce
 editorial transitions. Admins authorize student enrollment after publication.
+Since 2026-10-02 (pilot decision) an active admin may be both author and reviewer;
+a leader author still needs a different reviewer, and leaders never self-approve.
+Self-review keeps the explicit, audited submit/approve/publish steps.
 Completion, quiz scoring, practical review and XP are written atomically by
 `learning_command`; `learning_snapshot` returns a role-scoped projection.
 Base tables have RLS enabled and no API grants/policies. Neither answer keys nor
 adult review notes are included in the learner projection.
 
-The first adapter intentionally serves world one version 1; expanding worlds or
-versions requires extending the adapter while preserving existing enrollments.
+The adapter serves the newest version of world one (version 2 since 2026-10-02,
+see `20261002130000_learning_world_one_v2.sql`). A new version starts a fresh draft
+publication, so a live version must be archived before the next one ships.
+Version 2 adds per-reading checkpoints graded by `learning_command`; their keys
+are stripped from the learner projection like quiz keys. Expanding to more worlds
+requires extending the adapter while preserving existing enrollments.
 Rules come from the same content snapshot used for editorial review, not from
 frontend constants. Private badges derive from the persisted completion timestamp
 and versioned label. No certificate eligibility or historic attendance is inferred.

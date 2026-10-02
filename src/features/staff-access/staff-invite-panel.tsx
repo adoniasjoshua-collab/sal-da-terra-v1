@@ -13,8 +13,8 @@ export function StaffInvitePanel({ leaders, configured }: { leaders: Leader[]; c
     undefined,
   );
   return <section className="card mb-6 p-5 sm:p-6" id="convidar-lider" aria-labelledby="staff-invite-title">
-    <h2 id="staff-invite-title" className="text-xl font-black">Convidar líder ou revisor</h2>
-    <p className="mt-2 text-sm leading-6 text-[#526158]">A pessoa entra como <strong>Líder</strong>: acompanha adolescentes e pode ser escolhida como revisora dos módulos em Conhecimento → Gestão. Para torná-la administradora, altere a função em Controle de acesso depois que ela entrar.</p>
+    <h2 id="staff-invite-title" className="text-xl font-black">Convidar líder</h2>
+    <p className="mt-2 text-sm leading-6 text-[#526158]">A pessoa entra como <strong>Líder</strong>: acompanha adolescentes e pode ser escolhida como revisora dos módulos em Conhecimento → Gestão (opcional: o administrador também pode revisar sozinho). Para torná-la administradora, altere a função em Controle de acesso depois que ela entrar.</p>
     {!configured && <p role="alert" className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">Configuração pendente: a variável SUPABASE_SERVICE_ROLE_KEY não está definida no servidor. Sem ela não é possível gerar convites.</p>}
     <form action={action} className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
       <input type="hidden" name="operation" value="create" />

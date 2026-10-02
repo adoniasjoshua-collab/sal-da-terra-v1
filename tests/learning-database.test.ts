@@ -3,7 +3,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import content from "../content/fundamentos/voce-faz-parte.v1.json";
+import content from "../content/fundamentos/voce-faz-parte.v2.json";
 import type { LearningSnapshot, LearningResult } from "../src/services/learning";
 import { localMigrationSql } from "../scripts/prepare-local-db.mjs";
 
@@ -49,10 +49,11 @@ async function enroll() {
   return (await snapshot()).enrollment!.id;
 }
 async function readingsAndExercise(id: string) {
-  for (const card of content.cards) await command("reading", { reading: card.id }, id);
+  for (const card of content.cards) await command("reading", { reading: card.id, answer: card.checkpoint.correct }, id);
   await command("exercise", { answer: content.exercise.correct }, id);
 }
 const correctAnswers = Object.fromEntries(content.questions.map((q) => [q.id, q.correct]));
+const firstReading = { reading: content.cards[0].id, answer: content.cards[0].checkpoint.correct };
 
 describe("learning SQL authorization and progression (embedded PostgreSQL)", () => {
   beforeAll(async () => {
@@ -88,9 +89,18 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
   afterEach(async () => { await db.exec("rollback; reset role"); });
   afterAll(async () => { await db?.close(); });
 
-  it("requires independent editorial review and explicit publication", async () => {
+  it("lets only an administrator be both author and reviewer", async () => {
     await actor(admin);
-    await expect(command("configure", { author: admin, reviewer: admin })).rejects.toThrow("learning_invalid_editors");
+    await rejectsWith(() => command("configure", { author: leader, reviewer: leader }), "learning_invalid_editors");
+    await command("configure", { author: admin, reviewer: admin });
+    await command("submit_review");
+    await command("approve", { confirmed: true });
+    await command("publish", { confirmed: true });
+    await actor(leader);
+    expect((await snapshot()).publication!.state).toBe("published");
+    await db.exec("reset role");
+    const audit = await db.query<{ action: string }>("select action from public.audit_logs where action like 'learning_%' order by created_at");
+    expect(audit.rows.map((row) => row.action)).toEqual(["learning_configure", "learning_submit_review", "learning_approve", "learning_publish"]);
   });
 
   it("does not expose unpublished content or enroll before publication", async () => {
@@ -102,7 +112,7 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
     await expect(command("enroll", { confirmed: true }, student)).rejects.toThrow("learning_access_denied");
   });
 
-  it("prevents self approval even for an administrator", async () => {
+  it("keeps approval with the assigned reviewer when the administrator is only the author", async () => {
     await actor(admin);
     await command("configure", { author: admin, reviewer: leader });
     await command("submit_review");
@@ -151,9 +161,28 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
     expect(data.content?.questions[0]).not.toHaveProperty("correct");
     expect(data.content?.questions[0]).not.toHaveProperty("explanation");
     expect(data.content?.exercise).not.toHaveProperty("correct");
+    expect(data.content?.version).toBe(2);
+    for (const card of data.content!.cards) {
+      expect(card.checkpoint.prompt).toBeTruthy();
+      expect(card.checkpoint).not.toHaveProperty("correct");
+      expect(card.checkpoint).not.toHaveProperty("explanation");
+    }
     expect(data.students).toEqual([]);
     expect(data.editors).toEqual([]);
     expect(data.enrollment).not.toHaveProperty("review_note");
+  });
+
+  it("counts a reading only after a correct checkpoint answer", async () => {
+    const id = await enroll();
+    const card = content.cards[0];
+    const wrong = (card.checkpoint.correct + 1) % card.checkpoint.options.length;
+    await rejectsWith(() => command("reading", { reading: card.id }, id), "learning_invalid_input");
+    const missed = await command("reading", { reading: card.id, answer: wrong }, id);
+    expect(missed.correct).toBe(false);
+    expect(missed.explanation).toBe(card.checkpoint.explanation);
+    expect((await snapshot()).enrollment?.readings).toEqual([]);
+    expect((await command("reading", firstReading, id)).correct).toBe(true);
+    expect((await snapshot()).enrollment?.readings).toEqual([card.id]);
   });
 
   it("denies another learner's enrollment even in the same ministry", async () => {
@@ -184,7 +213,7 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
     await readingsAndExercise(id);
     const requestId = "a0000000-0000-4000-8000-000000000005";
     await command("quiz", { answers: correctAnswers, requestId }, id);
-    await expect(command("quiz", { answers: { ...correctAnswers, q1: 1 }, requestId }, id)).rejects.toThrow("learning_request_conflict");
+    await expect(command("quiz", { answers: { ...correctAnswers, q1: 0 }, requestId }, id)).rejects.toThrow("learning_request_conflict");
   });
 
   it("rejects unrelated fields in quiz drafts", async () => {
@@ -197,14 +226,14 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
     const id = await enroll();
     await readingsAndExercise(id);
     await command("quiz", { answers: correctAnswers, requestId: "a0000000-0000-4000-8000-000000000006" }, id);
-    await command("quiz", { answers: { q1: 1, q2: 0, q3: 0, q4: 0 }, requestId: "a0000000-0000-4000-8000-000000000007" }, id);
+    await command("quiz", { answers: { q1: 0, q2: 0, q3: 1, q4: 0, q5: 0 }, requestId: "a0000000-0000-4000-8000-000000000007" }, id);
     expect((await snapshot()).enrollment?.quiz_passed).toBe(true);
-    expect((await snapshot()).enrollment?.xp).toBe(90);
+    expect((await snapshot()).enrollment?.xp).toBe(content.rules.xp.reading + content.rules.xp.exercise + content.rules.xp.quiz);
   });
 
   it("withdraws access and reactivates the same enrollment without resetting progress", async () => {
     const id = await enroll();
-    await command("reading", { reading: "conhecido" }, id);
+    await command("reading", firstReading, id);
     await actor(admin);
     await command("withdraw", {}, id);
     await actor(learner);
@@ -237,7 +266,7 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
     await command("reading", { reading: "conhecido" }, id);
     await command("save_draft", { answers: { q1: 0, q2: 2 } }, id);
     expect((await snapshot()).enrollment?.quiz_draft).toEqual({ q1: 0, q2: 2 });
-    const failing = await command("quiz", { answers: { q1: 0, q2: 2, q3: 0, q4: 0 }, requestId: "a0000000-0000-4000-8000-000000000001", passed: true, score: 100 }, id);
+    const failing = await command("quiz", { answers: { q1: 0, q2: 2, q3: 0, q4: 0, q5: 0 }, requestId: "a0000000-0000-4000-8000-000000000001", passed: true, score: 100 }, id);
     expect(failing.passed).toBe(false);
     expect(failing.correctCount).toBe(2);
     const requestId = "a0000000-0000-4000-8000-000000000002";
@@ -245,7 +274,7 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
     expect(result.passed).toBe(true);
     expect(await command("quiz", { answers: correctAnswers, requestId }, id)).toEqual(result);
     await command("quiz", { answers: correctAnswers, requestId: "a0000000-0000-4000-8000-000000000003" }, id);
-    expect((await snapshot()).enrollment?.xp).toBe(90);
+    expect((await snapshot()).enrollment?.xp).toBe(content.rules.xp.reading + content.rules.xp.exercise + content.rules.xp.quiz);
     await db.exec("reset role");
     const attempts = await db.query<{ count: number }>("select count(*)::int as count from public.learning_quiz_attempts");
     expect(attempts.rows[0].count).toBe(3);
@@ -293,7 +322,7 @@ describe("learning SQL authorization and progression (embedded PostgreSQL)", () 
 
   it("preserves progress when publication is archived but forbids further writes", async () => {
     const id = await enroll();
-    await command("reading", { reading: "conhecido" }, id);
+    await command("reading", firstReading, id);
     await actor(admin);
     await command("archive");
     await actor(learner);

@@ -79,9 +79,9 @@ which has no side effects (WhatsApp previews and mail scanners prefetch URLs);
 the one-time token is verified only on **Continuar**, then `/definir-senha`.
 Students use 8+ characters with letters and a number; staff keep the strong rule.
 **Gerar novo link** issues an invite (pending) or recovery (accepted) link.
-Leaders: Administração → **Convidar líder ou revisor** (name + e-mail) → same
+Leaders: Administração → **Convidar líder** (name + e-mail) → same
 one-time link flow; the person joins as `leader` and can be assigned as module
-reviewer. Admin promotion stays an explicit membership change. New links can be
+reviewer (optional: an admin may also review alone). Admin promotion stays an explicit membership change. New links can be
 reissued only for active leaders (never admins or oneself).
 Administração → **Criar aluno de teste** creates a fictitious `is_test` record,
 excluded from rosters, dashboard and reports, to rehearse the real flow.

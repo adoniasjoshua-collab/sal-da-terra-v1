@@ -3,7 +3,7 @@ import { PageHeading } from "@/components/page-heading";
 import { requireAuth } from "@/lib/auth";
 import { getLearningSnapshot } from "@/features/learning/data";
 import { LearningUnavailable } from "@/features/learning/catalog";
-import { learningProgress } from "@/services/learning";
+import { canReviewContent, learningProgress } from "@/services/learning";
 
 const worlds = [
   { title: "Você faz parte!", theme: "Pertencimento", xp: 220 },
@@ -18,7 +18,7 @@ const worlds = [
 export default async function TrackPage() {
   const actor = await requireAuth();
   const { data, error } = await getLearningSnapshot(actor.ministryId);
-  const canRead = Boolean(data?.content);
+  const canRead = Boolean(data?.content) && (actor.role === "student" || canReviewContent(actor, data?.publication ?? null));
   const progress = data?.content && data.enrollment ? learningProgress(data.enrollment, data.content) : null;
   const worldOneComplete = Boolean(data?.enrollment?.completed_at);
   const earnedXp = data?.enrollment?.xp ?? 0;

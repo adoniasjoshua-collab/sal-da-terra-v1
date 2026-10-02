@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import content from "../content/fundamentos/voce-faz-parte.v1.json";
+import content from "../content/fundamentos/voce-faz-parte.v2.json";
 import type { WorldContent } from "../src/services/learning";
 import { simulateCommand, simulatePracticeApproval, startSimulation, type Simulation } from "../src/services/learning-simulation";
 
@@ -11,7 +11,13 @@ describe("leadership student simulation", () => {
   it("follows the server rules through completion with unique XP", () => {
     let sim = startSimulation();
     expect(run(sim, { command: "exercise", target: "x", answer: 0 }).error).toBeDefined();
-    for (const card of [...world.cards, world.cards[0]]) sim = run(sim, { command: "reading", target: "x", reading: card.id }).simulation;
+    const first = world.cards[0];
+    const missed = run(sim, { command: "reading", target: "x", reading: first.id, answer: (first.checkpoint.correct! + 1) % first.checkpoint.options.length });
+    expect(missed.result?.correct).toBe(false);
+    expect(missed.simulation.enrollment.readings).toEqual([]);
+    expect(run(sim, { command: "reading", target: "x", reading: first.id }).error).toBeDefined();
+    for (const card of world.cards) sim = run(sim, { command: "reading", target: "x", reading: card.id, answer: card.checkpoint.correct! }).simulation;
+    sim = run(sim, { command: "reading", target: "x", reading: first.id }).simulation;
     expect(sim.enrollment.xp).toBe(world.rules.xp.reading);
     const wrong = run(sim, { command: "exercise", target: "x", answer: (world.exercise.correct! + 1) % world.exercise.options.length });
     expect(wrong.result?.correct).toBe(false);
@@ -30,7 +36,7 @@ describe("leadership student simulation", () => {
   });
   it("requires every quiz answer before grading", () => {
     let sim = startSimulation();
-    for (const card of world.cards) sim = run(sim, { command: "reading", target: "x", reading: card.id }).simulation;
+    for (const card of world.cards) sim = run(sim, { command: "reading", target: "x", reading: card.id, answer: card.checkpoint.correct! }).simulation;
     sim = run(sim, { command: "exercise", target: "x", answer: world.exercise.correct! }).simulation;
     expect(run(sim, { command: "quiz", target: "x", answers: { q1: 0 }, requestId: "a0000000-0000-4000-8000-000000000004" }).error).toMatch(/Responda todas/);
   });

@@ -1,23 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import content from "../content/fundamentos/voce-faz-parte.v1.json";
-import { learningCommandSchema, learningProgress, type Enrollment } from "../src/services/learning";
+import contentJson from "../content/fundamentos/voce-faz-parte.v2.json";
+import contentV1 from "../content/fundamentos/voce-faz-parte.v1.json";
+import { canReviewContent, learningCommandSchema, learningProgress, type Enrollment, type WorldContent } from "../src/services/learning";
+
+const content = contentJson as WorldContent;
 
 describe("world one content and command boundary", () => {
-  it("keeps the database content snapshot equal to the reviewed source artifact", () => {
-    const sql = readFileSync("supabase/migrations/20260927121000_learning_world_one_content.sql", "utf8");
-    const snapshot = sql.split("$content$")[1];
-    expect(JSON.parse(snapshot)).toEqual(content);
+  it("keeps each database content snapshot equal to its reviewed source artifact", () => {
+    for (const [file, source] of [["20260927121000_learning_world_one_content.sql", contentV1], ["20261002130000_learning_world_one_v2.sql", content]] as const) {
+      const snapshot = readFileSync(`supabase/migrations/${file}`, "utf8").split("$content$")[1];
+      expect(JSON.parse(snapshot)).toEqual(source);
+    }
   });
   it("has complete educational content with coherent answer keys and unique stable IDs", () => {
     expect(content.cards.length).toBeGreaterThanOrEqual(3);
     expect(content.cards.length).toBeLessThanOrEqual(5);
     expect(new Set(content.cards.map((card) => card.id)).size).toBe(content.cards.length);
-    for (const card of content.cards) expect(card.paragraphs.join(" ").length).toBeGreaterThan(600);
-    expect(content.questions).toHaveLength(4);
-    for (const q of [content.exercise, ...content.questions]) {
-      expect(q.options[q.correct]).toBeTruthy();
-      expect(q.explanation.length).toBeGreaterThan(30);
+    for (const card of content.cards) {
+      const length = card.paragraphs.join(" ").length;
+      expect(length).toBeGreaterThan(400);
+      expect(length).toBeLessThan(1000);
+      expect(card.scene && card.idea && card.visual).toBeTruthy();
+    }
+    expect(content.questions).toHaveLength(5);
+    expect(content.keyVerse.text).toBeTruthy();
+    expect(content.prayer).toBeTruthy();
+    const keys = [content.exercise, ...content.questions, ...content.cards.map((card) => card.checkpoint)];
+    expect(new Set(keys.map((q) => q.id)).size).toBe(keys.length);
+    for (const q of keys) {
+      expect(q.options[q.correct!]).toBeTruthy();
+      expect(q.explanation!.length).toBeGreaterThan(30);
     }
     expect(Object.values(content.rules.xp).reduce((sum, value) => sum + value, 0)).toBe(220);
   });
@@ -57,5 +70,16 @@ describe("leadership follow-up stages", async () => {
     expect(learningNextStep({ ...base, readings: allReadings }, content)).toBe("Escolha de acolhimento");
     expect(learningNextStep({ ...base, readings: allReadings, exercise_done: true }, content)).toBe("Quiz");
     expect(learningNextStep({ ...base, readings: allReadings, exercise_done: true, quiz_passed: true, summary_done: true }, content)).toBe("Pedir validação da prática");
+  });
+});
+
+describe("editorial preview access", () => {
+  const draft = { state: "draft" as const, author_id: "admin-1", reviewer_id: "leader-1" };
+  it("allows the administrator and the assigned editors only", () => {
+    expect(canReviewContent({ role: "admin", userId: "admin-1" }, null)).toBe(true);
+    expect(canReviewContent({ role: "leader", userId: "leader-1" }, draft)).toBe(true);
+    expect(canReviewContent({ role: "leader", userId: "leader-2" }, draft)).toBe(false);
+    expect(canReviewContent({ role: "leader", userId: "leader-1" }, null)).toBe(false);
+    expect(canReviewContent({ role: "student", userId: "leader-1" }, draft)).toBe(false);
   });
 });

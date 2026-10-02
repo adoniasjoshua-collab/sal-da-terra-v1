@@ -11,33 +11,6 @@ const stepStyles = {
   locked: "border-[#dfe6df] bg-white text-[#526158]",
 };
 
-const cardGuides: Record<string, { scene: string; idea: string; checkpoint: string; visual: "known" | "welcome" | "body" | "limits" }> = {
-  conhecido: {
-    scene: "Você chega, olha em volta e pensa: será que alguém percebeu que eu estou aqui?",
-    idea: "Deus não olha para você como número de chamada. Ele conhece, cuida e chama pelo nome.",
-    checkpoint: "Marque esta etapa quando entender: ser conhecido por Deus não exige expor sua intimidade ao grupo.",
-    visual: "known",
-  },
-  acolhido: {
-    scene: "Uma pessoa nova entra calada. O grupo pode abrir espaço sem colocar um holofote nela.",
-    idea: "Jesus acolheu quando tentaram afastar. Acolher é aproximar com respeito, não forçar alguém a falar.",
-    checkpoint: "Marque esta etapa quando conseguir diferenciar convite gentil de exposição pública.",
-    visual: "welcome",
-  },
-  "muitos-membros": {
-    scene: "No grupo tem gente que fala muito, gente que observa, gente que ajuda em silêncio e gente que está aprendendo.",
-    idea: "Paulo usa a imagem do corpo para mostrar diversidade, cuidado e cooperação.",
-    checkpoint: "Marque esta etapa quando lembrar: contribuir não é aparecer mais que os outros.",
-    visual: "body",
-  },
-  respeito: {
-    scene: "Pertencer não significa aceitar apelido ofensivo, pressão ou brincadeira que machuca.",
-    idea: "Acolhimento cristão tem amor, verdade e limite. Respeito também é cuidado.",
-    checkpoint: "Marque esta etapa quando entender que pedir ajuda a um adulto responsável pode proteger alguém.",
-    visual: "limits",
-  },
-};
-
 function StageIllustration({ type, title }: { type: "known" | "welcome" | "body" | "limits"; title: string }) {
   const palette = {
     known: ["#143d2c", "#e6c861", "#edf7f1"],
@@ -55,6 +28,25 @@ function StageIllustration({ type, title }: { type: "known" | "welcome" | "body"
     {type === "body" && <g>{[120, 180, 240, 300].map((x, index) => <g key={x}><circle cx={x} cy={82 + (index % 2) * 12} r="21" fill={index % 2 ? palette[1] : palette[0]} /><path d={`M ${x - 28} 150 Q ${x} 118 ${x + 28} 150`} fill="none" stroke={index % 2 ? palette[1] : palette[0]} strokeWidth="10" strokeLinecap="round" /></g>)}</g>}
     {type === "limits" && <g><circle cx="172" cy="86" r="24" fill={palette[0]} /><circle cx="255" cy="86" r="24" fill={palette[1]} /><path d="M212 58 V154" stroke={palette[0]} strokeWidth="8" strokeLinecap="round" strokeDasharray="4 14" /><path d="M132 154 H292" stroke={palette[1]} strokeWidth="10" strokeLinecap="round" /></g>}
   </svg>;
+}
+
+function KeyVerse({ content }: { content: WorldContent }) {
+  return <section className="rounded-2xl bg-[#143d2c] p-5 text-white sm:p-7" aria-labelledby="key-verse">
+    <p id="key-verse" className="text-sm font-black uppercase tracking-[.14em] text-[#e6c861]">Versículo para guardar</p>
+    <blockquote className="mt-3 text-xl font-black leading-8">“{content.keyVerse.text}”</blockquote>
+    <p className="mt-2 text-sm text-[#d7eadf]">{content.keyVerse.reference} ({content.keyVerse.translation})</p>
+    <p className="mt-4 rounded-xl bg-white/10 p-4 text-sm leading-6"><strong className="text-[#e6c861]">Missão Bíblia aberta:</strong> {content.keyVerse.mission}</p>
+  </section>;
+}
+
+// Private and optional by doctrine: nothing is sent, stored or scored.
+function Prayer({ content }: { content: WorldContent }) {
+  return <section className="card p-5 sm:p-7" aria-labelledby="prayer-title">
+    <p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Momento de oração · opcional</p>
+    <h2 id="prayer-title" className="mt-1 text-xl font-black">Converse com Deus</h2>
+    <p className="mt-3 leading-7 italic">{content.prayer}</p>
+    <p className="mt-3 text-sm text-[#526158]">Use estas palavras ou as suas. É particular: nada é enviado e não vale pontos.</p>
+  </section>;
 }
 
 // "storage" only fires in other tabs; this event keeps the current tab in sync.
@@ -88,17 +80,17 @@ export function WorldEditorialPreview({ content }: { content: WorldContent }) {
       </div>
       <p className="mt-4 text-sm">{content.sourceNote}</p>
     </section>
+    <KeyVerse content={content} />
     {content.cards.map((card) => {
-      const guide = cardGuides[card.id] ?? { scene: card.paragraphs[0], idea: content.centralIdea, checkpoint: "Marque esta etapa quando concluir a leitura com atenção.", visual: "known" as const };
       return <section key={card.id} className="card overflow-hidden" aria-labelledby={`preview-${card.id}`}>
         <div className="grid gap-5 p-5 sm:grid-cols-[.9fr_1.1fr] sm:p-7">
-          <StageIllustration type={guide.visual} title={content.media.alt} />
+          <StageIllustration type={card.visual} title={content.media.alt} />
           <div>
             <p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Microetapa</p>
             <h2 id={`preview-${card.id}`} className="mt-1 text-xl font-black">{card.title}</h2>
             <p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p>
-            <div className="mt-5 rounded-xl bg-[#fff8dd] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Na vida real</p><p className="mt-2 font-bold leading-7">{guide.scene}</p></div>
-            <div className="mt-4 rounded-xl bg-[#edf7f1] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Ideia-chave</p><p className="mt-2 leading-7">{guide.idea}</p></div>
+            <div className="mt-5 rounded-xl bg-[#fff8dd] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Na vida real</p><p className="mt-2 font-bold leading-7">{card.scene}</p></div>
+            <div className="mt-4 rounded-xl bg-[#edf7f1] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Ideia-chave</p><p className="mt-2 leading-7">{card.idea}</p></div>
           </div>
         </div>
         <div className="border-t border-[#e7ece8] p-5 sm:p-7">
@@ -106,7 +98,7 @@ export function WorldEditorialPreview({ content }: { content: WorldContent }) {
             <summary className="cursor-pointer font-black">Ler explicação completa</summary>
             <div className="mt-3 grid gap-4">{card.paragraphs.map((paragraph, index) => <p key={index} className="max-w-3xl leading-8">{paragraph}</p>)}</div>
           </details>
-          <p className="mt-4 rounded-xl bg-[#f5f7f3] p-4 text-sm font-semibold text-[#405048]">{guide.checkpoint}</p>
+          <p className="mt-4 rounded-xl bg-[#f5f7f3] p-4 text-sm font-semibold text-[#405048]">Pergunta que libera a próxima etapa: {card.checkpoint.prompt}</p>
         </div>
       </section>;
     })}
@@ -122,6 +114,8 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
   const [result, setResult] = useState<LearningResult | null>(enrollment.last_quiz ?? null);
   const [exerciseAnswer, setExerciseAnswer] = useState<number | null>(null);
   const [exerciseFeedback, setExerciseFeedback] = useState("");
+  const [checkpoints, setCheckpoints] = useState<Record<string, number>>({});
+  const [gateFeedback, setGateFeedback] = useState<Record<string, string>>({});
   const [answers, setAnswers] = useState<Record<string, number>>(enrollment.quiz_draft);
   const key = `sal-learning:${userId}:${enrollment.id}:v${content.version}`;
   const stored = useSyncExternalStore(subscribe, () => readDraft(key), () => null);
@@ -237,22 +231,22 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
           <span className="mr-2">{step.done ? "✓" : index + 1}</span>{step.label}
         </li>)}
       </ol>
-      <p className="px-5 pb-5 text-sm text-[#526158]">Conclua o conjunto de leituras para receber {content.rules.xp.reading} XP. Seu percurso é privado. Pontos representam atividades educacionais, nunca sua fé.</p>
+      <p className="px-5 pb-5 text-sm text-[#526158]">Conclua as {content.cards.length} leituras para receber {content.rules.xp.reading} XP. Seu percurso é privado. Pontos representam atividades educacionais, nunca sua fé.</p>
     </section>
-    <div className="sticky top-0 z-10 rounded-xl border border-[#dfe6df] bg-white p-3 text-sm shadow-sm" role={failed ? "alert" : "status"} aria-live="polite">{readOnly ? "Esta versão foi arquivada. Você pode revisar o conteúdo, mas novas atividades não são registradas." : busy ? "Salvando…" : message || "Avance no seu ritmo. Marque cada leitura depois de realizá-la."}</div>
+    <div className="sticky top-0 z-10 rounded-xl border border-[#dfe6df] bg-white p-3 text-sm shadow-sm" role={failed ? "alert" : "status"} aria-live="polite">{readOnly ? "Esta versão foi arquivada. Você pode revisar o conteúdo, mas novas atividades não são registradas." : busy ? "Salvando…" : message || "Avance no seu ritmo. Cada leitura termina com uma pergunta rápida que libera a próxima etapa."}</div>
     <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7"><p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Cena de abertura</p><p className="mt-2 text-2xl font-black">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Tempo</p><p className="mt-1 font-black">{content.estimatedMinutes}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Conquista</p><p className="mt-1 font-black">{content.achievement}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Meta</p><p className="mt-1 font-black">Acolher com respeito</p></div></div><p className="mt-4 text-sm">{content.sourceNote}</p></section>
+    <KeyVerse content={content} />
     {content.cards.map((card) => {
-      const guide = cardGuides[card.id] ?? { scene: card.paragraphs[0], idea: content.centralIdea, checkpoint: "Marque esta etapa quando concluir a leitura com atenção.", visual: "known" as const };
       return <section key={card.id} ref={(node) => { cardRefs.current[card.id] = node; }} className="card scroll-mt-20 overflow-hidden" aria-labelledby={card.id}>
       <div className="grid gap-5 p-5 sm:grid-cols-[.9fr_1.1fr] sm:p-7">
-        <StageIllustration type={guide.visual} title={content.media.alt} />
+        <StageIllustration type={card.visual} title={content.media.alt} />
         <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Microetapa</p><h2 id={card.id} className="mt-1 text-xl font-black">{card.title}</h2><p className="mt-2 text-sm font-semibold text-[#176b49]">{card.reference}</p></div>
         <span className={`rounded-full px-3 py-1 text-xs font-bold ${enrollment.readings.includes(card.id) ? "bg-[#edf7f1] text-[#176b49]" : "bg-[#f5f7f3] text-[#526158]"}`}>{enrollment.readings.includes(card.id) ? "Concluída" : "Leitura pendente"}</span>
       </div>
-      <div className="mt-5 rounded-xl bg-[#fff8dd] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Na vida real</p><p className="mt-2 font-bold leading-7">{guide.scene}</p></div>
-      <div className="mt-4 rounded-xl bg-[#edf7f1] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Ideia-chave</p><p className="mt-2 leading-7">{guide.idea}</p></div>
+      <div className="mt-5 rounded-xl bg-[#fff8dd] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Na vida real</p><p className="mt-2 font-bold leading-7">{card.scene}</p></div>
+      <div className="mt-4 rounded-xl bg-[#edf7f1] p-4"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Ideia-chave</p><p className="mt-2 leading-7">{card.idea}</p></div>
         </div>
       </div>
       <div className="border-t border-[#e7ece8] p-5 sm:p-7">
@@ -262,8 +256,11 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
           {card.paragraphs.map((paragraph, index) => <p key={index} className="max-w-3xl leading-8">{paragraph}</p>)}
         </div>
       </details>
-      <p className="mt-4 rounded-xl bg-[#f5f7f3] p-4 text-sm font-semibold text-[#405048]">{guide.checkpoint}</p>
-      <button className="button-primary mt-5" disabled={pending || enrollment.readings.includes(card.id)} onClick={() => send({ command: "reading", target: enrollment.id, reading: card.id })}>{enrollment.readings.includes(card.id) ? "Leitura concluída" : "Concluí esta leitura"}</button>
+      {enrollment.readings.includes(card.id) ? <p className="mt-5 rounded-xl bg-[#edf7f1] p-4 text-sm font-bold text-[#176b49]">✓ Leitura concluída</p> : <div className="mt-5 rounded-xl border border-[#e6c861] bg-[#fffdf5] p-4">
+        <fieldset disabled={pending} className="grid gap-2"><legend className="mb-3 font-bold"><span className="mr-2 text-xs font-black uppercase tracking-[.14em] text-[#ad791e]">Portão</span>{card.checkpoint.prompt}</legend>{card.checkpoint.options.map((option, value) => <label key={option} className="flex min-h-11 items-start gap-3 rounded-xl border border-[#dfe6df] bg-white p-3"><input className="mt-1" type="radio" name={`checkpoint-${card.id}`} checked={checkpoints[card.id] === value} onChange={() => setCheckpoints({ ...checkpoints, [card.id]: value })} />{option}</label>)}</fieldset>
+        <button className="button-primary mt-4" disabled={pending || checkpoints[card.id] === undefined} onClick={() => send({ command: "reading", target: enrollment.id, reading: card.id, answer: checkpoints[card.id] }, (value) => { if (value.correct === false) { setMessage("Resposta ainda não confere. Releia e tente de novo."); setGateFeedback({ ...gateFeedback, [card.id]: `Quase! Releia o texto acima. ${value.explanation}` }); } })}>Responder e concluir leitura</button>
+        {gateFeedback[card.id] && <p role="status" className="mt-3 leading-7">{gateFeedback[card.id]}</p>}
+      </div>}
       </div>
     </section>;
     })}
@@ -292,8 +289,9 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
       </form>
       {result?.feedback && <div className="mt-5 rounded-xl bg-[#edf7f1] p-4" role="status"><h3 className="font-bold">{result.passed ? "Etapa concluída!" : "Você pode revisar e tentar de novo."} {result.correctCount}/{result.total} acertos.</h3><ol className="mt-3 grid gap-3">{result.feedback.map((item, index) => <li key={item.id}><strong>{index + 1}. {item.correct ? "Isso mesmo." : "Vamos revisar."}</strong> {item.explanation}</li>)}</ol></div>}
     </section>
-    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Revisão do mundo · +{content.rules.xp.summary} XP</p><h2 className="mt-1 text-xl font-black">Leve esta ideia com você</h2><p className="mt-3 leading-7">{content.closing}</p><button className="button-primary mt-4" disabled={pending || !enrollment.quiz_passed || enrollment.summary_done} onClick={() => send({ command: "summary", target: enrollment.id })}>{enrollment.summary_done ? "Resumo concluído" : "Concluí a revisão deste mundo"}</button></section>
-    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Prática supervisionada · +{content.rules.xp.practice} XP</p><h2 className="mt-1 text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p><button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button>{practiceExtra}</section>
-    {enrollment.completed_at && <section ref={achievementRef} className="scroll-mt-20 rounded-2xl bg-[#143d2c] p-7 text-white" role="status"><p className="text-sm font-bold text-[#e6c861]">CONQUISTA DESBLOQUEADA</p><h2 className="mt-2 text-2xl font-black">{content.achievement}</h2><p className="mt-3">Você concluiu este mundo. Pode voltar para revisar quando quiser.</p><Link className="button-secondary mt-5" href="/trilhas/fundamentos">Ver próximos mundos</Link></section>}
+    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Revisão do mundo · +{content.rules.xp.summary} XP</p><h2 className="mt-1 text-xl font-black">Leve esta ideia com você</h2><p className="mt-3 leading-7">{content.closing}</p><blockquote className="mt-4 rounded-xl border-l-4 border-[#e6c861] bg-[#fffdf5] p-4"><p className="font-bold leading-7">“{content.keyVerse.text}”</p><p className="mt-1 text-sm text-[#526158]">{content.keyVerse.reference} ({content.keyVerse.translation}). Você já consegue dizer de cor?</p></blockquote><button className="button-primary mt-4" disabled={pending || !enrollment.quiz_passed || enrollment.summary_done} onClick={() => send({ command: "summary", target: enrollment.id })}>{enrollment.summary_done ? "Resumo concluído" : "Concluí a revisão deste mundo"}</button></section>
+    <Prayer content={content} />
+    <section className="card p-5 sm:p-7"><p className="text-xs font-black uppercase tracking-[.14em] text-[#176b49]">Prática supervisionada · +{content.rules.xp.practice} XP</p><h2 className="mt-1 text-xl font-black">Um gesto de acolhimento</h2><p className="mt-3 leading-7">{content.practice}</p><p className="mt-3 font-bold">{practiceLabels[enrollment.practice_state]}</p>{enrollment.practice_state === "pending" && <p className="mt-2 rounded-xl bg-[#fff8dd] p-3 text-sm leading-6">Sua prática está com a liderança. Enquanto isso, guarde o versículo {content.keyVerse.reference} e espie no mapa os próximos mundos da temporada.</p>}<button className="button-primary mt-4" disabled={pending || !enrollment.summary_done || ["pending", "approved"].includes(enrollment.practice_state)} onClick={() => send({ command: "request_practice", target: enrollment.id })}>Pedir validação à liderança</button>{practiceExtra}</section>
+    {enrollment.completed_at && <section ref={achievementRef} className="scroll-mt-20 rounded-2xl bg-[#143d2c] p-7 text-white" role="status"><div className="flex flex-wrap items-center gap-5"><svg className="h-24 w-24 shrink-0 motion-safe:animate-[pulse_1.6s_ease-in-out_2]" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="44" fill="#e6c861" /><circle cx="48" cy="48" r="34" fill="#176b49" /><path d="M32 49 L44 61 L66 37" fill="none" stroke="#fff8dd" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" /></svg><div><p className="text-sm font-bold text-[#e6c861]">CONQUISTA DESBLOQUEADA</p><h2 className="mt-2 text-2xl font-black">{content.achievement}</h2><p className="mt-1 text-sm text-[#d7eadf]">{enrollment.xp} XP neste mundo</p></div></div><p className="mt-4">Você concluiu este mundo. Cristo te recebeu, e agora você sabe como receber os outros. Pode voltar para revisar quando quiser.</p><Link className="button-secondary mt-5" href="/trilhas/fundamentos">Ver próximos mundos</Link></section>}
   </div>;
 }

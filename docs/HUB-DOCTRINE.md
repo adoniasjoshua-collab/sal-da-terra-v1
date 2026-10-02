@@ -15,7 +15,8 @@ Billy Graham pode inspirar materiais de evangelismo, discipulado e serviço. Der
 `draft → in_review → approved → published → archived`
 
 - o autor registra objetivo, texto, referências bíblicas, mídia e fontes;
-- um revisor diferente do autor verifica doutrina e adequação etária;
+- um revisor verifica doutrina e adequação etária (nesta fase o administrador
+  pode revisar o próprio conteúdo; um líder autor precisa de outro revisor);
 - o administrador publica somente uma versão aprovada;
 - alterações em conteúdo publicado criam nova versão e exigem nova aprovação;
 - publicação, reprovação e arquivamento entram na auditoria.
@@ -44,8 +45,8 @@ Billy Graham pode inspirar materiais de evangelismo, discipulado e serviço. Der
 ## Aprovações necessárias para o Módulo 1
 
 - responsável ministerial: Adonias Pereira da Silva — aprovação funcional registrada em 07/09/2026;
-- autor/editor: a definir;
-- revisor doutrinário: pastor ou pessoa formalmente autorizada;
+- autor/editor e revisor: administrador do ministério (decisão de 02/10/2026;
+  um líder autor continua precisando de outro revisor);
 - revisão de proteção e linguagem para adolescentes: a definir;
 - tradução bíblica licenciada: a definir antes de publicar textos integrais.
 

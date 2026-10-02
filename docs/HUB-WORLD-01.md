@@ -14,8 +14,13 @@ aplicação de migrações remotas ou homologação pastoral presumida.
 - `/conhecimento/gestao`: responsáveis editoriais, aprovação/publicação,
   inscrições, acompanhamento, equivalências e histórico de validações.
 
-Quatro leituras originais, exercício contextual e quatro questões com feedback.
-Referências bíblicas sem reprodução de tradução integral. Ilustração SVG original,
+Versão 2 (revisão pedagógica e de game design de 02/10/2026): versículo-chave
+Romanos 15:7 (ARC) com missão “Bíblia aberta”, quatro leituras curtas guiadas pelo
+personagem Lucas (Salmo 139, Marcos 10, 1 Coríntios 12 com o Espírito Santo que
+une o corpo e distribui os dons, Efésios 4:29), uma pergunta-portão por leitura
+corrigida no servidor, exercício de dilema, cinco questões com alternativas
+plausíveis e oração opcional e particular (sem envio nem pontos). Referências
+bíblicas sem reprodução de tradução integral; só o versículo-chave é citado. Ilustração SVG original,
 slots versionados de mídia; nenhum vídeo é necessário para concluir.
 
 ## Sequência de liberação
@@ -25,8 +30,11 @@ slots versionados de mídia; nenhum vídeo é necessário para concluir.
 2. Após revisão e autorização de implantação, aplicar somente as migrações novas
    ao ambiente correto. Não executar o seed de demonstração em produção.
 3. Em Conhecimento → Gestão, o administrador designa autor/editor e revisor
-   adulto autorizado, com vínculos ativos diferentes.
-4. O autor lê a prévia integral e envia para revisão. O revisor verifica conteúdo,
+   adulto autorizado, com vínculos ativos. Nesta fase o administrador pode ser
+   autor e revisor ao mesmo tempo; se o autor for um líder, o revisor é outra pessoa.
+4. O autor lê a prévia integral (e a simulação do aluno) e envia para revisão.
+   A prévia com gabaritos e a simulação ficam restritas ao administrador e aos
+   responsáveis designados da versão; os demais líderes só acompanham na Gestão. O revisor verifica conteúdo,
    gabaritos, prática e regras e aprova ou devolve com justificativa editorial.
    Se o revisor ficar indisponível antes da publicação, o administrador pode
    retornar a versão "Em revisão" ou "Aprovada" para rascunho, com motivo
@@ -39,14 +47,17 @@ slots versionados de mídia; nenhum vídeo é necessário para concluir.
 7. A liderança valida a prática solicitada ou combina uma alternativa educacional.
    Registrar apenas justificativa mínima, sem nomes de terceiros ou nota pastoral.
 
-Se não houver dois adultos autorizados disponíveis, o conteúdo permanece em
-rascunho; não inventar um revisor ou reutilizar a identidade do autor.
+Se o autor for um líder e não houver outro adulto autorizado para revisar, o
+conteúdo permanece em rascunho; não inventar um revisor. Somente o administrador
+pode revisar o próprio conteúdo (decisão do piloto, 2026-10-02).
 
 ## Regras implementadas
 
-A versão 1 exige leituras, exercício correto, quiz com pelo menos 70% sem
-arredondamento (3 de 4 nesta versão), resumo explícito e prática aprovada. XP:
-20 + 30 + 40 + 50 + 80 = 220, creditados uma vez por inscrição/evento.
+A versão 2 exige as quatro leituras (cada uma liberada por resposta correta à
+pergunta-portão; resposta errada devolve explicação sem progresso), exercício
+correto, quiz com pelo menos 70% sem arredondamento (4 de 5 nesta versão), resumo
+explícito e prática aprovada. XP: leituras 40 + exercício 30 + quiz 60 + resumo 10
++ prática 80 = 220, creditados uma vez por inscrição/evento.
 O banco corrige respostas e verifica pré-requisitos; frontend não envia nota
 confiável. Tentativa posterior insuficiente não remove uma aprovação já obtida.
 Máximo de 12 novas tentativas de quiz por minuto; a mesma solicitação repetida
@@ -56,11 +67,12 @@ Conclusão persiste `completed_at`; essa evidência e o rótulo da versão conce
 “Comecei Minha Jornada”. Não há certificado por mundo, cálculo de certificado da
 temporada ou alteração de frequência EBD/Radar Pastoral neste incremento.
 
-Inscrição vincula-se à publicação/versionamento. A API inicial atende mundo 1,
-versão 1; novos mundos/versões exigem extensão explícita, mantendo matrículas
-anteriores. Editar o JSON após aplicar a migração não muda o banco: criar uma nova
+Inscrição vincula-se à publicação/versionamento. As RPCs servem a versão mais
+recente do mundo 1 (hoje a 2). Implantar uma versão nova inicia uma nova
+publicação em rascunho: arquive a versão publicada antes de implantar outra.
+Novos mundos exigem extensão explícita, mantendo matrículas anteriores. Editar o JSON após aplicar a migração não muda o banco: criar uma nova
 versão/migração e fluxo de aprovação, nunca alterar um snapshot já publicado.
-Os testes verificam igualdade entre o JSON fonte e o snapshot SQL inicial.
+Os testes verificam igualdade entre cada JSON fonte e o seu snapshot SQL.
 
 ## Rascunhos e privacidade
 

@@ -33,11 +33,18 @@ export function simulateCommand(content: WorldContent, simulation: Simulation, c
 
   switch (command.command) {
     case "reading": {
-      if (!content.cards.some((card) => card.id === command.reading)) return fail(simulation, "learning_invalid_input");
+      const card = content.cards.find((item) => item.id === command.reading);
+      if (!card) return fail(simulation, "learning_invalid_input");
+      let gate: LearningResult | undefined;
+      if (card.checkpoint && !current.readings.includes(card.id)) {
+        if (!validOption(command.answer, card.checkpoint.options)) return fail(simulation, "learning_invalid_input");
+        gate = { correct: command.answer === card.checkpoint.correct, explanation: card.checkpoint.explanation };
+        if (!gate.correct) return { simulation, result: gate };
+      }
       const readings = current.readings.includes(command.reading) ? current.readings : [...current.readings, command.reading];
       const next = { ...current, readings };
       const all = content.cards.every((card) => readings.includes(card.id));
-      return { simulation: finish(content, next, simulation.earned, all ? "reading" : undefined) };
+      return { simulation: finish(content, next, simulation.earned, all ? "reading" : undefined), result: gate };
     }
     case "exercise": {
       if (!readingsDone) return fail(simulation, "learning_prerequisite");
