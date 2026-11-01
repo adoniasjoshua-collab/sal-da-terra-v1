@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { registerCompletedHeadcountEvent } from "./actions";
 import { EVENT_TYPE_LABELS, EVENT_TYPE_OPTIONS, type EventType } from "@/services/events";
@@ -15,7 +16,7 @@ export function QuickEventForm({ today }: { today: string }) {
   return (
     <form action={action} className="card grid gap-5 p-5 sm:grid-cols-2 sm:p-7">
       <input type="hidden" name="attendance_mode" value="headcount_only" />
-      <div className="rounded-xl border border-[#d7e6dc] bg-[#edf7f1] p-4 text-sm leading-6 text-[#365747] sm:col-span-2">Use este formulário para um evento que já aconteceu. Ele registra apenas quantidades, sem nomes, e conclui tudo em uma única etapa.</div>
+      <div className="rounded-xl border border-[#d7e6dc] bg-[#edf7f1] p-4 text-sm leading-6 text-[#365747] sm:col-span-2">Use este formulário para um evento que já aconteceu. Ele registra apenas quantidades, sem nomes, e conclui tudo em uma única etapa. A EBD não aparece aqui porque exige chamada por nome: <Link className="font-bold underline" href="/eventos/novo">cadastre a aula da EBD</Link> e depois faça a chamada.</div>
       <div>
         <label className="label" htmlFor="quick-type">Tipo de evento</label>
         <select className="input" id="quick-type" name="type" value={type} onChange={(change) => {
