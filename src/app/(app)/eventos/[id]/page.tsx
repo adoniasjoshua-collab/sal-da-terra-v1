@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/page-heading";
+import { SuccessNotice } from "@/components/success-notice";
 import { saveAttendance } from "@/features/events/actions";
 import { HeadcountForm } from "@/features/events/headcount-form";
 import { requireStaff } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { formatDate, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { EVENT_TYPE_LABELS, type EventType } from "@/services/events";
 
-type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ salvo?: string; editado?: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ salvo?: string; editado?: string; criado?: string }> };
 
 export default async function AttendancePage({ params, searchParams }: Props) {
   const actor = await requireStaff();
@@ -16,6 +17,7 @@ export default async function AttendancePage({ params, searchParams }: Props) {
   const query = await searchParams;
   const saved = query.salvo === "1";
   const edited = query.editado === "1";
+  const created = query.criado === "1";
   const supabase = await createClient();
   const { data: event, error: eventError } = await supabase
     .from("events")
@@ -28,6 +30,7 @@ export default async function AttendancePage({ params, searchParams }: Props) {
   if (event.status === "cancelled") return <>
     <PageHeading eyebrow="Evento cancelado" title={event.title} description="Os registros de participação foram preservados. Reabra o evento para editar a chamada ou a contagem."
       action={<Link className="button-primary" href={`/eventos/${id}/editar`}>Editar evento e status</Link>} />
+    {edited && <SuccessNotice>Evento atualizado com sucesso.</SuccessNotice>}
     <Link className="button-secondary" href="/eventos">Voltar aos eventos</Link>
   </>;
 
@@ -42,7 +45,8 @@ export default async function AttendancePage({ params, searchParams }: Props) {
     return (
       <>
         <PageHeading eyebrow="Contagem de participantes" title={event.title} description={`${EVENT_TYPE_LABELS[event.type as EventType]} · ${formatDate(event.event_date)}`} action={<Link className="button-secondary" href={`/eventos/${id}/editar`}>Editar evento</Link>} />
-        {(saved || edited) && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 font-bold text-emerald-700">{edited ? "Evento atualizado com sucesso." : "Evento e contagem registrados com sucesso."}</p>}
+        {created && <SuccessNotice>Evento criado com sucesso. Agora registre a contagem de participantes.</SuccessNotice>}
+        {(saved || edited) && <SuccessNotice>{edited ? "Evento atualizado com sucesso." : "Evento e contagem registrados com sucesso."}</SuccessNotice>}
         <p className="mb-5 rounded-xl bg-[#edf7f1] p-4 text-sm leading-6 text-[#365747]">Este evento usa contagem coletiva. Nenhum adolescente será identificado e o resultado não afeta a frequência EBD nem o Radar Pastoral.</p>
         <HeadcountForm eventId={id} existing={existing} />
       </>
@@ -73,9 +77,10 @@ export default async function AttendancePage({ params, searchParams }: Props) {
   return (
     <>
       <PageHeading eyebrow={fullRoster ? "Chamada" : "Participação identificada"} title={event.title} description={`${EVENT_TYPE_LABELS[event.type as EventType]} · ${formatDate(event.event_date)}`} action={<Link className="button-secondary" href={`/eventos/${id}/editar`}>Editar evento</Link>} />
-      {edited && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 font-bold text-emerald-700">Evento atualizado com sucesso.</p>}
+      {created && <SuccessNotice>Evento criado com sucesso. Agora {fullRoster ? "faça a chamada" : "marque quem participou"} e salve.</SuccessNotice>}
+      {edited && <SuccessNotice>Evento atualizado com sucesso.</SuccessNotice>}
       {!fullRoster && <p className="mb-5 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">Este evento é opcional. “Não participou” não representa falta e não afeta a frequência EBD nem o Radar Pastoral.</p>}
-      {saved && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 font-bold text-emerald-700">Participação salva com sucesso.</p>}
+      {saved && <SuccessNotice>Participação salva com sucesso.</SuccessNotice>}
       {!students?.length ? (
         <section className="card p-10 text-center"><h2 className="font-bold">Nenhum adolescente ativo</h2><p className="mt-2 text-sm text-[#647268]">Cadastre adolescentes antes de registrar a participação.</p></section>
       ) : (

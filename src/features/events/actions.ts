@@ -41,7 +41,7 @@ export async function createEvent(_: EventState, formData: FormData): Promise<Ev
 
   if (error) return { error: "Não foi possível criar o evento." };
   revalidateMinistry();
-  redirect(`/eventos/${data.id}`);
+  redirect(`/eventos/${data.id}?criado=1`);
 }
 
 export async function updateEvent(id: string, _: EventState, formData: FormData): Promise<EventState> {
