@@ -91,39 +91,42 @@ export default async function DashboardPage() {
     .sort((a, b) => a.birth_date.localeCompare(b.birth_date));
   const transitionDue = transitions.filter((student) => student.lifecycle === "transition_due").length;
 
+  const activeCount = students.filter((student) => student.status === "active").length;
+  const visitorCount = students.filter((student) => student.status === "visitor").length;
+  const followupsLabel = followupsResult.error ? "acompanhamentos indisponíveis" : `${followupsResult.count ?? 0} acompanhamentos em aberto`;
   const cards = [
-    { label: "Adolescentes", value: students.length, detail: "Cadastros não arquivados" },
-    { label: "Ativos", value: students.filter((student) => student.status === "active").length, detail: `${students.filter((student) => student.status === "visitor").length} visitantes` },
+    { label: "Ativos", value: activeCount, detail: `${students.length} cadastrados · ${visitorCount} visitantes` },
     { label: "Última EBD", value: formatRate(last?.operationalRate ?? null), detail: last ? `${last.present} presentes de ${lastConsidered} considerados` : "Sem EBD concluída" },
     { label: "Média · 4 EBDs", value: formatRate(recentRate), detail: formatDelta(delta) },
-    { label: "Precisam de atenção", value: attentionTotal, detail: `${radarCounts.priority} em prioridade` },
-    { label: "Acompanhamentos", value: followupsResult.error ? "—" : (followupsResult.count ?? 0), detail: followupsResult.error ? "Indicador indisponível" : "Ações em aberto" },
-    { label: "Transição para jovens", value: transitions.length, detail: transitionDue ? `${transitionDue} já completaram ${ADOLESCENT_MAX_AGE + 1} anos` : "Adolescentes no último ano" },
+    { label: "Precisam de atenção", value: attentionTotal, detail: `${radarCounts.priority} em prioridade · ${followupsLabel}`, href: "/adolescentes?filtro=attention" },
+  ];
+  const eventCards = [
+    { label: "Eventos realizados", value: eventDashboard.completed.length, detail: "Concluídos nos últimos 90 dias" },
+    { label: "Participações", value: eventDashboard.participationTotal, detail: `${eventDashboard.identifiedUnique} pessoas identificadas · ${eventDashboard.estimatedCount} contagens estimadas` },
+    { label: "Registros pendentes", value: eventDashboard.pending.length, detail: `Eventos passados não concluídos · ${eventDashboard.upcoming.length} nos próximos 30 dias` },
   ];
 
   return (
     <>
       <PageHeading eyebrow="Painel do líder" title="Visão do ministério" description="Indicadores observáveis para acompanhar participação e organizar o cuidado." action={<div className="flex flex-wrap gap-2"><Link href="/eventos/novo" className="button-secondary">Programar evento</Link><Link href="/eventos/registrar" className="button-primary">Registrar evento de hoje</Link></div>} />
       <LearningAlert ministryId={actor.ministryId} />
-      <p className="mb-6 rounded-xl border border-[#d7e6dc] bg-[#edf7f1] p-4 text-sm text-[#365747]">Indicadores servem para apoiar o cuidado pastoral e não representam uma avaliação da fé ou espiritualidade do adolescente.</p>
+      {eventDashboard.pending.length > 0 && <p role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900"><span>{eventDashboard.pending.length === 1 ? "1 evento passado aguarda registro de participação." : `${eventDashboard.pending.length} eventos passados aguardam registro de participação.`}</span><Link href={`/eventos/${eventDashboard.pending[0].id}`} className="button-secondary">Registrar agora</Link></p>}
 
-      <section aria-label="Indicadores principais" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => <article className="card p-5" key={card.label}><p className="text-sm font-semibold text-[#647268]">{card.label}</p><p className="mt-2 text-3xl font-black tabular-nums">{card.value}</p><p className="mt-2 text-xs text-[#647268]">{card.detail}</p></article>)}
+      <section aria-label="Indicadores principais" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => {
+          const body = <><p className="text-sm font-semibold text-[#647268]">{card.label}</p><p className="mt-2 text-3xl font-black tabular-nums">{card.value}</p><p className="mt-2 text-xs text-[#647268]">{card.detail}</p></>;
+          return card.href ? <Link className="card block p-5 transition hover:border-[#176b49]" href={card.href} key={card.label}>{body}</Link> : <article className="card p-5" key={card.label}>{body}</article>;
+        })}
       </section>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <section className="card p-5 sm:p-6" aria-labelledby="birthdays-title">
-          <div className="flex items-start justify-between gap-3"><div><h2 id="birthdays-title" className="text-xl font-black">🎂 Aniversariantes</h2><p className="mt-1 text-sm text-[#647268]">Apoio para organizar um reconhecimento com antecedência.</p></div><span className="badge bg-pink-50 text-pink-800">{birthdays.thisMonth.length} neste mês</span></div>
-          {birthdays.thisMonth.length === 0 && birthdays.upcoming.length === 0 ? <p className="py-8 text-center text-sm text-[#647268]">Nenhum aniversário neste mês ou nos próximos 30 dias.</p> : <div className="mt-4 space-y-5">
-            {birthdays.thisMonth.length > 0 && <div><h3 className="text-xs font-black uppercase tracking-[.12em] text-[#647268]">Neste mês</h3><div className="mt-2 divide-y divide-[#e7ece8]">{birthdays.thisMonth.map((student) => <BirthdayRow key={student.id} student={student} today={today} />)}</div></div>}
-            {birthdays.upcoming.length > 0 && <div><h3 className="text-xs font-black uppercase tracking-[.12em] text-[#647268]">Próximos 30 dias</h3><div className="mt-2 divide-y divide-[#e7ece8]">{birthdays.upcoming.map((student) => <BirthdayRow key={student.id} student={student} today={today} />)}</div></div>}
-          </div>}
-          <Link href="/eventos/novo" className="button-secondary mt-5 w-full sm:w-auto">Programar confraternização</Link>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,.6fr)]">
+        <section className="card p-5 sm:p-6" aria-labelledby="attention-title">
+          <div className="mb-5 flex items-center justify-between gap-3"><div><h2 id="attention-title" className="text-xl font-black">Fila de cuidado</h2><p className="mt-1 text-sm text-[#647268]">Quem contatar primeiro, por ausências consecutivas na EBD.</p></div><Link href="/adolescentes?filtro=attention" className="text-sm font-bold text-[#176b49]">Ver todos</Link></div>
+          {attention.length === 0 ? <p className="py-8 text-center text-[#647268]">Nenhum alerta de ausência consecutiva.</p> : (
+            <div className="divide-y divide-[#e7ece8]">{attention.slice(0, 6).map((student) => <article className="flex flex-wrap items-center justify-between gap-3 py-4" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-sm text-[#647268]">{student.metrics.consecutiveAbsences} ausências consecutivas · Última presença: {formatDate(student.metrics.lastPresence)}</p></div><StatusBadge status={student.radar} /></article>)}</div>
+          )}
         </section>
-        <section className="card p-5 sm:p-6" aria-labelledby="transition-title">
-          <div className="flex items-start justify-between gap-3"><div><h2 id="transition-title" className="text-xl font-black">🌱 Transição para jovens</h2><p className="mt-1 text-sm text-[#647268]">Organização do cuidado; nenhuma transferência é automática.</p></div><Link href="/adolescentes?filtro=transition" className="text-sm font-bold text-[#176b49]">Ver todos</Link></div>
-          {transitions.length === 0 ? <p className="py-8 text-center text-sm text-[#647268]">Nenhuma transição prevista neste momento.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{transitions.slice(0, 6).map((student) => <article className="flex items-center justify-between gap-3 py-3" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-xs text-[#647268]">{student.lifecycle === "transition_due" ? `${ADOLESCENT_MAX_AGE + 1} anos ou mais · revisão pendente` : `${ADOLESCENT_MAX_AGE} anos · último ano no grupo`}</p></div><span className={`badge ${student.lifecycle === "transition_due" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{student.lifecycle === "transition_due" ? "Revisar" : "Em transição"}</span></article>)}</div>}
-        </section>
+        <section className="card p-5 sm:p-6" aria-labelledby="event-agenda-title"><h2 id="event-agenda-title" className="text-xl font-black">Agenda operacional</h2><p className="mt-1 text-sm text-[#647268]">Registros atrasados primeiro, depois os próximos 30 dias.</p>{eventAgenda.length === 0 ? <p className="py-10 text-center text-sm text-[#647268]">Nenhuma pendência ou evento nos próximos 30 dias.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{eventAgenda.map((event) => <article className="py-4" key={event.id}><div className="flex items-start justify-between gap-3"><div><Link className="font-bold hover:text-[#176b49]" href={`/eventos/${event.id}`}>{event.title}</Link><p className="mt-1 text-xs text-[#647268]">{EVENT_TYPE_LABELS[event.type]} · {formatDate(event.event_date)}</p></div><span className={`badge ${event.operationalStatus === "Registro pendente" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{event.operationalStatus}</span></div></article>)}</div>}</section>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,.55fr)]">
@@ -137,38 +140,40 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(300px,.6fr)_minmax(0,1.4fr)]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <section className="card p-5 sm:p-6" aria-labelledby="radar-title">
           <h2 id="radar-title" className="text-xl font-black">Radar Pastoral</h2>
           <p className="mt-1 text-sm text-[#647268]">Distribuição por necessidade operacional de cuidado.</p>
           <RadarDistribution counts={radarCounts} />
         </section>
-        <section className="card p-5 sm:p-6" aria-labelledby="attention-title">
-          <div className="mb-5 flex items-center justify-between gap-3"><h2 id="attention-title" className="text-xl font-black">Fila de cuidado</h2><Link href="/adolescentes?filtro=attention" className="text-sm font-bold text-[#176b49]">Ver todos</Link></div>
-          {attention.length === 0 ? <p className="py-8 text-center text-[#647268]">Nenhum alerta de ausência consecutiva.</p> : (
-            <div className="divide-y divide-[#e7ece8]">{attention.slice(0, 6).map((student) => <article className="flex flex-wrap items-center justify-between gap-3 py-4" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-sm text-[#647268]">{student.metrics.consecutiveAbsences} ausências consecutivas · Última presença: {formatDate(student.metrics.lastPresence)}</p></div><StatusBadge status={student.radar} /></article>)}</div>
-          )}
+        <section className="card p-5 sm:p-6" aria-labelledby="birthdays-title">
+          <div className="flex items-start justify-between gap-3"><div><h2 id="birthdays-title" className="text-xl font-black">🎂 Aniversariantes</h2><p className="mt-1 text-sm text-[#647268]">Para organizar um reconhecimento com antecedência.</p></div><span className="badge bg-pink-50 text-pink-800">{birthdays.thisMonth.length} neste mês</span></div>
+          {birthdays.thisMonth.length === 0 && birthdays.upcoming.length === 0 ? <p className="mt-4 text-sm text-[#647268]">Nenhum aniversário neste mês ou nos próximos 30 dias.</p> : <>
+            <div className="mt-4 space-y-5">
+              {birthdays.thisMonth.length > 0 && <div><h3 className="text-xs font-black uppercase tracking-[.12em] text-[#647268]">Neste mês</h3><div className="mt-2 divide-y divide-[#e7ece8]">{birthdays.thisMonth.map((student) => <BirthdayRow key={student.id} student={student} today={today} />)}</div></div>}
+              {birthdays.upcoming.length > 0 && <div><h3 className="text-xs font-black uppercase tracking-[.12em] text-[#647268]">Próximos 30 dias</h3><div className="mt-2 divide-y divide-[#e7ece8]">{birthdays.upcoming.map((student) => <BirthdayRow key={student.id} student={student} today={today} />)}</div></div>}
+            </div>
+            <Link href="/eventos/novo" className="button-secondary mt-5 w-full sm:w-auto">Programar confraternização</Link>
+          </>}
+        </section>
+        <section className="card p-5 sm:p-6" aria-labelledby="transition-title">
+          <div className="flex items-start justify-between gap-3"><div><h2 id="transition-title" className="text-xl font-black">🌱 Transição para jovens</h2><p className="mt-1 text-sm text-[#647268]">Organização do cuidado; nenhuma transferência é automática.</p></div><Link href="/adolescentes?filtro=transition" className="text-sm font-bold text-[#176b49]">Ver todos</Link></div>
+          {transitions.length === 0 ? <p className="mt-4 text-sm text-[#647268]">Nenhuma transição prevista neste momento.</p> : <><p className="mt-3 text-sm font-semibold">{transitions.length} no último ano{transitionDue ? ` · ${transitionDue} já completaram ${ADOLESCENT_MAX_AGE + 1} anos` : ""}</p><div className="mt-2 divide-y divide-[#e7ece8]">{transitions.slice(0, 6).map((student) => <article className="flex items-center justify-between gap-3 py-3" key={student.id}><div><Link className="font-bold hover:text-[#176b49]" href={`/adolescentes/${student.id}`}>{student.preferred_name || student.full_name}</Link><p className="mt-1 text-xs text-[#647268]">{student.lifecycle === "transition_due" ? `${ADOLESCENT_MAX_AGE + 1} anos ou mais · revisão pendente` : `${ADOLESCENT_MAX_AGE} anos · último ano no grupo`}</p></div><span className={`badge ${student.lifecycle === "transition_due" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{student.lifecycle === "transition_due" ? "Revisar" : "Em transição"}</span></article>)}</div></>}
         </section>
       </div>
 
       <section className="mt-10" aria-labelledby="events-overview-title">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="mb-1 text-xs font-black uppercase tracking-[.16em] text-[#3f7cac]">Outros eventos</p><h2 id="events-overview-title" className="text-2xl font-black">Eventos e participação</h2><p className="mt-1 text-sm text-[#647268]">Volume dos últimos 90 dias, separado da frequência EBD.</p></div><Link href="/eventos" className="button-secondary">Gerenciar eventos</Link></div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Eventos realizados</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.completed.length}</p><p className="mt-2 text-xs text-[#647268]">Concluídos nos últimos 90 dias</p></article>
-          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Participações</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.participationTotal}</p><p className="mt-2 text-xs text-[#647268]">Soma das presenças e contagens</p></article>
-          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Pessoas identificadas</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.identifiedUnique}</p><p className="mt-2 text-xs text-[#647268]">Únicas, somente em eventos por nome</p></article>
-          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Próximos 30 dias</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.upcoming.length}</p><p className="mt-2 text-xs text-[#647268]">Planejados ou abertos</p></article>
-          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Registros pendentes</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.pending.length}</p><p className="mt-2 text-xs text-[#647268]">Eventos passados ainda não concluídos</p></article>
-          <article className="card p-5"><p className="text-sm font-semibold text-[#647268]">Contagens estimadas</p><p className="mt-2 text-3xl font-black tabular-nums">{eventDashboard.estimatedCount}</p><p className="mt-2 text-xs text-[#647268]">Sinalizadas com transparência</p></article>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {eventCards.map((card) => <article className="card p-5" key={card.label}><p className="text-sm font-semibold text-[#647268]">{card.label}</p><p className="mt-2 text-3xl font-black tabular-nums">{card.value}</p><p className="mt-2 text-xs text-[#647268]">{card.detail}</p></article>)}
         </div>
-
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,.75fr)]">
-          <section className="card p-5 sm:p-6" aria-labelledby="event-category-title"><h3 id="event-category-title" className="text-xl font-black">Participação por categoria</h3><p className="mt-1 text-sm text-[#647268]">Participações, não pessoas únicas · últimos 90 dias</p><EventParticipationChart categories={eventDashboard.categories} /></section>
-          <section className="card p-5 sm:p-6" aria-labelledby="event-agenda-title"><h3 id="event-agenda-title" className="text-xl font-black">Agenda operacional</h3><p className="mt-1 text-sm text-[#647268]">Prioriza registros atrasados e próximos eventos.</p>{eventAgenda.length === 0 ? <p className="py-10 text-center text-sm text-[#647268]">Nenhuma pendência ou evento nos próximos 30 dias.</p> : <div className="mt-4 divide-y divide-[#e7ece8]">{eventAgenda.map((event) => <article className="py-4" key={event.id}><div className="flex items-start justify-between gap-3"><div><Link className="font-bold hover:text-[#176b49]" href={`/eventos/${event.id}`}>{event.title}</Link><p className="mt-1 text-xs text-[#647268]">{EVENT_TYPE_LABELS[event.type]} · {formatDate(event.event_date)}</p></div><span className={`badge ${event.operationalStatus === "Registro pendente" ? "bg-amber-50 text-amber-800" : "bg-blue-50 text-blue-800"}`}>{event.operationalStatus}</span></div></article>)}</div>}</section>
-        </div>
+        <section className="card mt-6 p-5 sm:p-6" aria-labelledby="event-category-title"><h3 id="event-category-title" className="text-xl font-black">Participação por categoria</h3><p className="mt-1 text-sm text-[#647268]">Participações, não pessoas únicas · últimos 90 dias</p><EventParticipationChart categories={eventDashboard.categories} /></section>
       </section>
 
-      <p className="mt-5 text-xs leading-5 text-[#647268]">Comparecimento operacional: presentes ÷ (presentes + ausentes). Justificativas e visitantes são exibidos separadamente e não reduzem esse percentual.</p>
+      <footer className="mt-6 space-y-2 border-t border-[#e7ece8] pt-4 text-xs leading-5 text-[#647268]">
+        <p>Indicadores servem para apoiar o cuidado pastoral e não representam uma avaliação da fé ou espiritualidade do adolescente.</p>
+        <p>Comparecimento operacional: presentes ÷ (presentes + ausentes). Justificativas e visitantes são exibidos separadamente e não reduzem esse percentual.</p>
+      </footer>
     </>
   );
 }
