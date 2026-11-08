@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { learningProgress, practiceLabels, type Enrollment, type LearningCommand, type LearningResult, type WorldContent } from "@/services/learning";
 import { runLearningCommand } from "./actions";
+import { WorldVideo } from "./world-video";
 
 const stepStyles = {
   done: "border-[#176b49] bg-[#edf7f1] text-[#143d2c]",
@@ -80,6 +81,7 @@ export function WorldEditorialPreview({ content }: { content: WorldContent }) {
       </div>
       <p className="mt-4 text-sm">{content.sourceNote}</p>
     </section>
+    <WorldVideo content={content} />
     <KeyVerse content={content} />
     {content.cards.map((card) => {
       return <section key={card.id} className="card overflow-hidden" aria-labelledby={`preview-${card.id}`}>
@@ -236,6 +238,7 @@ export function WorldPlayer({ content, enrollment, userId, readOnly = false, run
     </section>
     <div className="sticky top-0 z-10 rounded-xl border border-[#dfe6df] bg-white p-3 text-sm shadow-sm" role={failed ? "alert" : "status"} aria-live="polite">{readOnly ? "Esta versão foi arquivada. Você pode revisar o conteúdo, mas novas atividades não são registradas." : busy ? "Salvando…" : message || "Avance no seu ritmo. Cada leitura termina com uma pergunta rápida que libera a próxima etapa."}</div>
     <section className="rounded-2xl border border-[#dfe6df] bg-[#fffdf5] p-5 sm:p-7"><p className="text-sm font-black uppercase tracking-[.14em] text-[#ad791e]">Cena de abertura</p><p className="mt-2 text-2xl font-black">{content.hook}</p><p className="mt-3 leading-7">{content.objective}</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Tempo</p><p className="mt-1 font-black">{content.estimatedMinutes}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Conquista</p><p className="mt-1 font-black">{content.achievement}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs font-bold text-[#526158]">Meta</p><p className="mt-1 font-black">Acolher com respeito</p></div></div><p className="mt-4 text-sm">{content.sourceNote}</p></section>
+    <WorldVideo content={content} />
     <KeyVerse content={content} />
     {content.cards.map((card) => {
       return <section key={card.id} ref={(node) => { cardRefs.current[card.id] = node; }} className="card scroll-mt-20 overflow-hidden" aria-labelledby={card.id}>

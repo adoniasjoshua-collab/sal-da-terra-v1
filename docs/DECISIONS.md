@@ -80,3 +80,15 @@ prefetch URLs; the token is verified on explicit confirmation. Students use a
 shorter password rule (8+, letters and number); staff keep the strong rule.
 Admins rehearse the flow with fictitious `is_test` records excluded from
 pastoral indicators.
+
+## ADR-011 — Supplementary video outside the versioned content (2026-11-08)
+
+The administrator-reviewer approved a YouTube video for the already published
+World 1. A new content version would return the world to draft and strand
+enrollments tied to the current publication, so this is a deliberate exception
+to "published changes create a new version": the video is registered in
+`src/services/learning-media.ts`, keyed by world and version, and the versioned
+JSON stays untouched. It is optional, grants no XP, gates nothing, and the
+readings remain the textual alternative. Embeds use a validated identifier on
+`youtube-nocookie.com` and load only after the learner presses play. Changes
+that affect readings, questions or rules still require a new version.
