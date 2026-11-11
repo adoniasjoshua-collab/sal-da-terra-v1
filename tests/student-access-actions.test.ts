@@ -22,8 +22,9 @@ vi.mock("@/lib/supabase/server", () => ({
   },
 }));
 vi.mock("@/services/student-access", () => import("../src/services/student-access"));
+vi.mock("@/services/student-quick-access", () => import("../src/services/student-quick-access"));
 
-import { createStudentAccess } from "../src/features/student-access/actions";
+import { createQuickAccess, createStudentAccess } from "../src/features/student-access/actions";
 
 beforeEach(() => vi.resetAllMocks());
 
@@ -98,4 +99,49 @@ it("returns a usable invitation only after authorized provisioning and preserves
   expect(result?.message).toContain("https://portal.example/login");
   expect(result?.whatsapp).toBeNull();
   expect(mocks.deleteUser).not.toHaveBeenCalled();
+});
+
+function quickForm(username = "ana.souza") {
+  const form = new FormData();
+  form.set("student_id", studentId);
+  form.set("username", username);
+  return form;
+}
+const activeStudent = { id: studentId, full_name: "Ana Souza", preferred_name: null, guardian_phone: "(11) 98888-7777", auth_user_id: null, is_active: true, status: "active" };
+
+it("tries the next username when one is taken and returns the code once", async () => {
+  mocks.requireAuth.mockResolvedValue({ role: "admin", ministryId: "ministry" });
+  mocks.maybeSingle.mockResolvedValue({ data: activeStudent });
+  mocks.createUser
+    .mockResolvedValueOnce({ data: { user: null }, error: { status: 422, message: "already registered" } })
+    .mockResolvedValueOnce({ data: { user: { id: "new-identity" } }, error: null });
+  mocks.rpc.mockResolvedValue({ data: "2026-11-18T22:30:00.000Z", error: null });
+
+  const result = await createQuickAccess(undefined, quickForm());
+
+  expect(mocks.createUser).toHaveBeenLastCalledWith({ email: "ana.souza2@alunos.saldaterra.invalid", email_confirm: true });
+  expect(result?.username).toBe("ana.souza2");
+  expect(result?.code).toMatch(/^[a-z]+-\d{4}-[a-z]+$/);
+  expect(result?.message).toContain(result!.code!);
+  expect(result?.whatsapp).toBe("5511988887777");
+  expect(mocks.rpc).toHaveBeenCalledWith("provision_student_quick_access", expect.objectContaining({ target_profile: "new-identity", target_username: "ana.souza2", code: result?.code }));
+});
+
+it("removes the new identity when linking the quick access fails", async () => {
+  mocks.requireAuth.mockResolvedValue({ role: "admin", ministryId: "ministry" });
+  mocks.maybeSingle.mockResolvedValue({ data: activeStudent });
+  mocks.createUser.mockResolvedValue({ data: { user: { id: "new-identity" } }, error: null });
+  mocks.rpc.mockResolvedValue({ data: null, error: { message: "student_access_denied" } });
+  const result = await createQuickAccess(undefined, quickForm());
+  expect(result?.error).toContain("administradores");
+  expect(result?.code).toBeUndefined();
+  expect(mocks.deleteUser).toHaveBeenCalledWith("new-identity");
+});
+
+it("validates the username and the role before creating any identity", async () => {
+  mocks.requireAuth.mockResolvedValue({ role: "admin", ministryId: "ministry" });
+  expect((await createQuickAccess(undefined, quickForm("Ana Souza")))?.error).toContain("letras sem acento");
+  mocks.requireAuth.mockResolvedValue({ role: "leader", ministryId: "ministry" });
+  expect((await createQuickAccess(undefined, quickForm()))?.error).toContain("administradores");
+  expect(mocks.createUser).not.toHaveBeenCalled();
 });

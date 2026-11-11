@@ -7,16 +7,20 @@ import { portalOrigin } from "@/lib/portal-origin";
 import { createAdminAuthClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { accessError, accessLink, createAccessSchema, inviteMessage, reissueAccessSchema, whatsappNumber } from "@/services/student-access";
+import { codeMessage, generateAccessCode, quickAccessEmail, quickAccessError, quickAccessSchema, reissueCodeSchema, usernameCandidate } from "@/services/student-quick-access";
 
-export type AccessState = { error?: string; link?: string; message?: string; whatsapp?: string | null } | undefined;
+export type AccessState = {
+  error?: string; link?: string; message?: string; whatsapp?: string | null;
+  // Quick access: shown once to the administrator, never stored in plain text.
+  username?: string; code?: string; expiresAt?: string;
+} | undefined;
 
 const missingKey = "Configuração pendente: defina SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para gerar convites.";
 
 type StudentContact = { preferred_name: string | null; full_name: string; guardian_phone: string | null };
 async function linkResult(student: StudentContact, tokenHash: string, type: "invite" | "recovery"): Promise<AccessState> {
   const link = accessLink(await portalOrigin(), tokenHash, type);
-  const name = student.preferred_name || student.full_name.split(" ")[0];
-  return { link, message: inviteMessage(name, link), whatsapp: whatsappNumber(student.guardian_phone) };
+  return { link, message: inviteMessage(studentName(student), link), whatsapp: whatsappNumber(student.guardian_phone) };
 }
 
 export async function createStudentAccess(_: AccessState, formData: FormData): Promise<AccessState> {
@@ -98,6 +102,93 @@ export async function reissueStudentAccess(_: AccessState, formData: FormData): 
   revalidatePath(`/adolescentes/${student.id}`);
   revalidatePath(`/adolescentes/${student.id}/editar`);
   return linkResult(student, generated.properties.hashed_token, type);
+}
+
+function studentName(student: StudentContact) {
+  return student.preferred_name || student.full_name.split(" ")[0];
+}
+
+async function codeResult(student: StudentContact, username: string, code: string, expiresAt: string): Promise<AccessState> {
+  return { username, code, expiresAt, message: codeMessage(studentName(student), await portalOrigin(), username, code, expiresAt), whatsapp: whatsappNumber(student.guardian_phone) };
+}
+
+function refreshAccessScreens(studentId: string) {
+  revalidatePath(`/adolescentes/${studentId}`);
+  revalidatePath(`/adolescentes/${studentId}/editar`);
+  revalidatePath("/administracao");
+  revalidatePath("/conhecimento/gestao");
+}
+
+const MAX_USERNAME_ATTEMPTS = 20;
+
+// Creates an account without e-mail: username + temporary 7-day code (ADR-012).
+export async function createQuickAccess(_: AccessState, formData: FormData): Promise<AccessState> {
+  const actor = await requireAuth();
+  if (actor.role !== "admin") return { error: quickAccessError("student_access_denied") };
+  const parsed = quickAccessSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os dados." };
+  const auth = createAdminAuthClient();
+  if (!auth) return { error: missingKey };
+
+  const supabase = await createClient();
+  const { data: student, error: studentError } = await supabase.from("students")
+    .select("id,full_name,preferred_name,guardian_phone,auth_user_id,is_active,status")
+    .eq("id", parsed.data.student_id).eq("ministry_id", actor.ministryId).maybeSingle();
+  if (studentError) return { error: "Não foi possível consultar o cadastro. Atualize a página e tente novamente." };
+  if (!student) return { error: "Cadastro não encontrado neste ministério." };
+  if (!student.is_active || student.status === "archived") return { error: quickAccessError("student_access_inactive") };
+  if (student.auth_user_id) {
+    refreshAccessScreens(student.id);
+    return { error: quickAccessError("student_access_exists") };
+  }
+
+  // The internal address is unique in Auth, so a taken username fails here and
+  // the next candidate (joao.silva2, joao.silva3 …) is tried. Never repurposed.
+  let username = "";
+  let userId = "";
+  for (let attempt = 1; attempt <= MAX_USERNAME_ATTEMPTS && !userId; attempt++) {
+    const candidate = usernameCandidate(parsed.data.username, attempt);
+    const created = await auth.createUser({ email: quickAccessEmail(candidate), email_confirm: true });
+    if (created.data?.user) { username = candidate; userId = created.data.user.id; break; }
+    const taken = created.error?.status === 422 || /already|exists|registered/i.test(created.error?.message ?? "");
+    if (!taken) return { error: "Não foi possível criar a conta de acesso." };
+  }
+  if (!userId) return { error: quickAccessError("student_username_taken") };
+
+  const code = generateAccessCode();
+  const { data: expiresAt, error } = await supabase.rpc("provision_student_quick_access", {
+    target_student: student.id, target_profile: userId, target_username: username, code,
+  });
+  if (error || !expiresAt) {
+    await auth.deleteUser(userId);
+    if (error?.message.includes("student_access_exists")) refreshAccessScreens(student.id);
+    return { error: quickAccessError(error?.message ?? "") };
+  }
+  refreshAccessScreens(student.id);
+  return codeResult(student, username, code, expiresAt as string);
+}
+
+// New 7-day code for a quick-access student (forgotten password or expired code).
+export async function reissueAccessCode(_: AccessState, formData: FormData): Promise<AccessState> {
+  const actor = await requireAuth();
+  if (actor.role !== "admin") return { error: quickAccessError("student_access_denied") };
+  const parsed = reissueCodeSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Cadastro inválido." };
+
+  const supabase = await createClient();
+  const { data: student } = await supabase.from("students")
+    .select("id,full_name,preferred_name,guardian_phone")
+    .eq("id", parsed.data.student_id).eq("ministry_id", actor.ministryId).maybeSingle();
+  if (!student) return { error: "Cadastro não encontrado neste ministério." };
+  const { data: access } = await supabase.from("student_quick_access").select("username").eq("student_id", student.id).maybeSingle();
+  if (!access) return { error: quickAccessError("student_access_missing") };
+
+  const code = generateAccessCode();
+  // The RPC re-checks admin scope and active access, writes the code and audits it.
+  const { data: expiresAt, error } = await supabase.rpc("issue_student_access_code", { target_student: student.id, code });
+  if (error || !expiresAt) return { error: quickAccessError(error?.message ?? "") };
+  refreshAccessScreens(student.id);
+  return codeResult(student, access.username, code, expiresAt as string);
 }
 
 export async function createTestStudent() {

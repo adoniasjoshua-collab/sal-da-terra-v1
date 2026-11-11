@@ -8,6 +8,7 @@ vi.mock("@/lib/supabase/server", () => ({ createClient: async () => {
   mocks.eq.mockReturnValue(query);
   return { from: () => query };
 } }));
+vi.mock("@/services/student-quick-access", () => import("../src/services/student-quick-access"));
 import { getStudentAccess } from "../src/features/student-access/data";
 
 beforeEach(() => vi.resetAllMocks());

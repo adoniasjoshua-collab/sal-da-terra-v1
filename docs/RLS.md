@@ -8,6 +8,14 @@ are `security definer` with empty `search_path`, executable only by
 ministry. Provisioning accepts only an Auth identity with no profile, membership
 or student link. `is_test` cannot be written by API roles.
 
+`student_quick_access` has RLS with admin-only select and column grants that
+exclude `code_hash`; there are no write grants. `provision_student_quick_access`
+and `issue_student_access_code` repeat the admin and active-access checks.
+`complete_student_access_code` acts only on the caller's row and requires the
+given password to be the current one and different from the code.
+`expire_student_access_codes` takes no input and is executable by `anon` so the
+login can run it before checking credentials; it only invalidates expired codes.
+
 `provision_staff_access` (new identity → `leader` only) and
 `issue_staff_access_link` (active leaders only, never admins or the caller) follow
 the same pattern and are audited.

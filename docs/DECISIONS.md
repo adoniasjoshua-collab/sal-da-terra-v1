@@ -92,3 +92,18 @@ JSON stays untouched. It is optional, grants no XP, gates nothing, and the
 readings remain the textual alternative. Embeds use a validated identifier on
 `youtube-nocookie.com` and load only after the learner presses play. Changes
 that affect readings, questions or rules still require a new version.
+
+## ADR-012 — Quick student access without e-mail (2026-11-11)
+
+Requiring an e-mail per adolescent and a short-lived one-time link blocked
+access in practice. A predictable default such as "first name + 123" was
+rejected: any classmate could open another minor's account. Admins now generate
+a username (`primeironome.sobrenome`) and a random temporary code
+(word-4 digits-word, ~26 bits, CSPRNG) shown once and shared by WhatsApp. The
+Auth identity uses an internal `@alunos.saldaterra.invalid` address that never
+receives mail. The code is valid for 7 days and is replaced by a personal
+password at the first sign-in; the database refuses to end that phase unless the
+current password differs from the code. Expired codes are overwritten in Auth
+with a random password (pg_cron and before each portal sign-in), so they cannot
+be used through the API either. Login failures use one generic message. E-mail
+invitations (ADR-010) remain available.

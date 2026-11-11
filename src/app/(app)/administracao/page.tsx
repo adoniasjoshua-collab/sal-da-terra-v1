@@ -82,7 +82,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         {testStudentsResult.error ? <p role="alert" className="mt-4 text-sm text-red-700">Não foi possível carregar os alunos de teste. Atualize a página antes de criar outro.</p> : <>
           <div className="mt-4 grid gap-3">{testStudentsResult.data?.map((student, index) => <article className="rounded-xl border border-[#dfe6df] p-4" key={student.id}>
             <p className="font-bold">{student.full_name} · {index + 1}</p>
-            <p className="mt-1 text-sm">{!student.is_active || student.status === "archived" ? "Cadastro inativo — reative para testar" : student.auth_user_id ? "Conta vinculada — gere um novo link na ficha" : "Falta criar o acesso com um e-mail de teste"}</p>
+            <p className="mt-1 text-sm">{!student.is_active || student.status === "archived" ? "Cadastro inativo — reative para testar" : student.auth_user_id ? "Conta vinculada — gere um novo código ou link na ficha" : "Falta gerar o acesso rápido na ficha"}</p>
             <Link className="button-secondary mt-3" href={`/adolescentes/${student.id}/editar#acesso`}>Abrir teste, convite e inscrição</Link>
           </article>)}</div>
           <form action={createTestStudent} className="mt-4"><button className="button-secondary" disabled={(testStudentsResult.data?.filter((student) => student.is_active).length ?? 0) >= 3}>Criar aluno de teste</button></form>

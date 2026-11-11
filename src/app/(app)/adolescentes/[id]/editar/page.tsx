@@ -6,6 +6,7 @@ import { StudentLifecycleForm } from "@/features/students/student-lifecycle-form
 import { getStudentAccess } from "@/features/student-access/data";
 import { StudentLearningAccess } from "@/features/student-access/student-learning-access";
 import { StudentAccessPanel } from "@/features/student-access/student-access-panel";
+import { suggestUsername } from "@/services/student-quick-access";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,7 +27,7 @@ export default async function EditStudentPage({ params, searchParams }: { params
     {salvo === "1" && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 text-emerald-800">Cadastro e status atualizados.</p>}
     <StudentForm key={student.updated_at} student={student} />
     <StudentLifecycleForm id={id} archived={student.status === "archived"} />
-    {access && <StudentAccessPanel studentId={id} isTest={student.is_test} {...access} />}
+    {access && <StudentAccessPanel studentId={id} isTest={student.is_test} suggestedUsername={suggestUsername(student.full_name)} {...access} />}
     {access && <StudentLearningAccess studentId={id} ministryId={actor.ministryId} isTest={student.is_test} accessReady={access.status === "pending" || access.status === "active"} />}
   </>;
 }

@@ -10,6 +10,7 @@ export default function RecoverPasswordPage() {
           <p className="text-xs font-black uppercase tracking-[.16em] text-[#176b49]">Acesso seguro</p>
           <h1 className="mt-2 text-3xl font-black">Recuperar senha</h1>
           <p className="mt-3 mb-7 text-sm leading-6 text-[#647268]">Solicite o link no aparelho e navegador em que você pretende concluir a recuperação.</p>
+          <p className="-mt-4 mb-7 rounded-xl bg-[#f0f8f3] p-3 text-sm leading-6 text-[#176b49]">Entra com usuário (sem e-mail)? Peça à liderança um novo código de acesso.</p>
           <RecoveryForm />
           <Link href="/login" className="mt-6 block text-center text-sm font-bold text-[#176b49] hover:underline">Voltar para entrar</Link>
         </section>

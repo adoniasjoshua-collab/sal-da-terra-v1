@@ -9,6 +9,7 @@ import { getStudentAccess } from "@/features/student-access/data";
 import { StudentLearningAccess } from "@/features/student-access/student-learning-access";
 import { StudentLearningProgress } from "@/features/learning/student-learning-progress";
 import { StudentAccessPanel } from "@/features/student-access/student-access-panel";
+import { suggestUsername } from "@/services/student-quick-access";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -197,7 +198,7 @@ export default async function StudentProfilePage({ params }: Props) {
       </section>
 
       <StudentLearningProgress studentId={id} ministryId={actor.ministryId} />
-      {access && <StudentAccessPanel studentId={id} isTest={student.is_test} {...access} />}
+      {access && <StudentAccessPanel studentId={id} isTest={student.is_test} suggestedUsername={suggestUsername(student.full_name)} {...access} />}
     {access && <StudentLearningAccess studentId={id} ministryId={actor.ministryId} isTest={student.is_test} accessReady={access.status === "pending" || access.status === "active"} />}
     </>
   );

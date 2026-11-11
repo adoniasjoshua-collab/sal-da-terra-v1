@@ -71,7 +71,15 @@ Administrators can also manage student invitations directly at the bottom of
 **Editar cadastro e status**, using the same **Acesso do aluno ao portal** panel
 as the profile. Leaders cannot view this panel or issue invitations.
 
-Student access: Admin → adolescent profile → **Acesso do aluno ao portal** → e-mail
+Quick student access (default, ADR-012): Admin → adolescent profile → **Acesso do
+aluno ao portal** → username suggested as `primeironome.sobrenome` (editable;
+taken names get `2`, `3` …) → **Gerar acesso rápido** → username and a random
+code (`pedra-4827-sol`) shown once with copy / WhatsApp. The student signs in at
+`/login` with username + code and is sent to `/definir-senha` until a personal
+password replaces the code. Codes last 7 days; expired codes stop working in
+Auth. **Gerar novo código** handles forgotten passwords and expired codes.
+
+Student access by e-mail (**Usar e-mail em vez disso**): Admin → adolescent profile → **Acesso do aluno ao portal** → e-mail
 (adolescent or guardian) → server creates a new Auth identity, links profile,
 `student` membership and `students.auth_user_id` → personal link shown once with
 copy / WhatsApp (guardian phone or contact picker). The link opens `/convite`,

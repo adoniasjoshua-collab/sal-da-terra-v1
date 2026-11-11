@@ -5,7 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 export type AppRole = "student" | "leader" | "admin";
 export type AuthContext = { userId: string; ministryId: string; ministryName: string; role: AppRole; name: string };
 
-export async function requireAuth(): Promise<AuthContext> {
+// Students holding a temporary access code must replace it before using the
+// portal; only the password-setting action opts out of that redirect.
+export async function requireAuth(options: { allowTemporaryCode?: boolean } = {}): Promise<AuthContext> {
   const supabase = await createClient();
   const { data: claimsData, error } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
@@ -13,6 +15,10 @@ export async function requireAuth(): Promise<AuthContext> {
   const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
   const { data: membership } = await supabase.from("ministry_members").select("ministry_id, role, ministries(name)").eq("profile_id", userId).eq("is_active", true).limit(1).single();
   if (!membership) redirect("/acesso-negado");
+  if (membership.role === "student" && !options.allowTemporaryCode) {
+    const { data: codeState } = await supabase.rpc("my_access_code_state");
+    if (codeState === "active" || codeState === "expired") redirect("/definir-senha");
+  }
   const ministry = membership.ministries as unknown as { name: string } | null;
   return { userId, ministryId: membership.ministry_id, ministryName: ministry?.name ?? "Ministério", role: membership.role as AppRole, name: profile?.full_name ?? "Usuário" };
 }

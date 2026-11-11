@@ -8,6 +8,15 @@ changing it. `provision_student_access` links a new Auth identity (profile,
 `student` membership, `auth_user_id`) and `issue_student_access_link` authorizes
 link reissue; both are admin-only and audited.
 
+`student_quick_access` (ADR-012) holds the username of accounts without e-mail,
+the temporary code's expiry/revocation and the hash written for it (`code_hash`,
+never granted to API roles). `provision_student_quick_access` and
+`issue_student_access_code` write a 7-day code as the Auth password (admin-only,
+audited as `issue_student_access_code`); `expire_student_access_codes` replaces
+expired codes with an unknown random password (pg_cron every 15 min where
+available, and before every portal sign-in); `my_access_code_state` and
+`complete_student_access_code` drive the mandatory first password.
+
 ## Learning increment — world one
 
 `learning_versions` stores immutable versioned educational content and answer keys.

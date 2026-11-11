@@ -26,10 +26,25 @@ Abrir um convite com uma sessão de liderança não consome o token nem substitu
 a sessão. A página orienta a abrir a janela separada. O convite é pessoal,
 de uso único; links expirados devem ser gerados novamente.
 
-## Convites reais
+## Acesso rápido (sem e-mail), recomendado
 
-Use a ficha do adolescente real, com e-mail autorizado do adolescente ou
-responsável. Cada conta de aluno precisa de e-mail próprio no sistema; não
+1. Na ficha do adolescente, em **Acesso do aluno ao portal**, confira o usuário
+   sugerido (`primeironome.sobrenome`) e toque em **Gerar acesso rápido**.
+2. Toque em **WhatsApp do responsável** ou **Copiar mensagem**. A mensagem traz
+   o endereço `/login`, o usuário e o código temporário (ex.: `pedra-4827-sol`).
+   O código só aparece nessa hora; se perder, gere outro.
+3. O adolescente entra com usuário e código e cria a própria senha. Depois,
+   entra sempre com usuário e senha.
+4. O código vale 7 dias. Se vencer sem uso, ou se o aluno esquecer a senha, use
+   **Gerar novo código** na ficha: o código anterior deixa de valer na hora.
+
+Para testar, use um aluno de teste e entre numa janela anônima com o usuário e
+o código gerados.
+
+## Convites por e-mail
+
+Use **Usar e-mail em vez disso** na ficha, com e-mail autorizado do adolescente
+ou responsável. Cada conta de aluno precisa de e-mail próprio no sistema; não
 reutilize uma conta administrativa nem a mesma conta para dois cadastros.
 Confirme a autorização dos responsáveis conforme a política do ministério,
 crie o acesso e autorize a inscrição no primeiro módulo na mesma ficha.
@@ -51,7 +66,8 @@ identidade Auth simulada, publica com revisão de outra pessoa, inscreve o aluno
 percorre o primeiro mundo até a validação adulta. Isso não substitui a aceitação
 de um convite real no Supabase nem a conferência da implantação pública.
 
-Esta revisão de fluxo não exige nova migração. A implantação precisa das
+O acesso rápido exige a migração `20261111120000_student_quick_access.sql`
+(tabela, RPCs e agendamento pg_cron quando disponível). A implantação precisa das
 migrações de aprendizagem e acesso já existentes e da configuração Auth no
 servidor. Não execute o seed fictício no ambiente de produção.
 
