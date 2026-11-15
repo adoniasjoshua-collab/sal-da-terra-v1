@@ -1,4 +1,6 @@
 /* ── Revista Gamificada ──────────────────────────────────────────────────── */
+/* Native emoji first; the Noto fallback fills glyphs older systems lack. */
+.rv-player, .rv-trilha-pagina { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Apple Color Emoji", "Segoe UI Emoji", var(--font-emoji), sans-serif; }
 .rv-fonte-pergaminho { font-family: var(--font-pergaminho), "Cormorant Garamond", Georgia, "Times New Roman", serif; }
 
 /* Player: full viewport, above the app shell, readable from 5 m. */

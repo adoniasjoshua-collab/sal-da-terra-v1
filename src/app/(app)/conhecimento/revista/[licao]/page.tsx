@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RevistaSemAcesso } from "@/features/revista/access-denied";
 import { carregarLicoes, verificarAcessoRevista } from "@/features/revista/data";
-import { fontePergaminho } from "@/features/revista/fonts";
+import { fontesRevista } from "@/features/revista/fonts";
 import { RevistaPlayer } from "@/features/revista/player";
 import { formatarData, licaoAnterior, numeroMissao, podeAbrir, semRoteiroDoProfessor, statusDaLicao } from "@/services/revista";
 
@@ -31,5 +31,5 @@ export default async function LicaoPage({ params }: { params: Promise<{ licao: s
   // The teacher's script never leaves the server for students.
   const dados = acesso.podeConduzir ? licao : semRoteiroDoProfessor(licao);
   const anterior = acesso.podeConduzir ? licaoAnterior(licoes, licao) : null;
-  return <div className={fontePergaminho.variable}><RevistaPlayer licao={dados} podeConduzir={acesso.podeConduzir} anterior={anterior && { numero: anterior.numero, titulo: anterior.titulo }} /></div>;
+  return <div className={fontesRevista}><RevistaPlayer licao={dados} podeConduzir={acesso.podeConduzir} anterior={anterior && { numero: anterior.numero, titulo: anterior.titulo }} /></div>;
 }
