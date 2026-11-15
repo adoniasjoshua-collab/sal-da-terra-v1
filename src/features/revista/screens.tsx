@@ -2,9 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 import {
-  formatarDataLonga, numeroMissao, ordemEmbaralhada, responderPergunta, resultadoQuiz, timeDaVez, times,
-  type Licao, type RespostaQuiz, type Tela,
+  formatarDataLonga, numeroMissao, ordemEmbaralhada, responderPergunta, resultadoQuiz, timeDaVez, times, vencedorDoDia,
+  type Licao, type Placar, type RespostaQuiz, type Tela, type Time,
 } from "@/services/revista";
+import { Confete, Cronometro, Sorteio } from "./efeitos";
+import { tocar } from "./sons";
 
 type TelaDe<T extends Tela["tipo"]> = Extract<Tela, { tipo: T }>;
 
@@ -32,7 +34,7 @@ function Revelar({ rotulo = "Revelar", children }: { rotulo?: string; children: 
   const [aberto, setAberto] = useState(false);
   return aberto
     ? <div className="rv-surgir" role="status">{children}</div>
-    : <button type="button" className="rv-botao rv-botao-destaque" onClick={() => setAberto(true)}>{rotulo}</button>;
+    : <button type="button" className="rv-botao rv-botao-destaque" onClick={() => { tocar("revelar"); setAberto(true); }}>{rotulo}</button>;
 }
 
 function Capa({ licao }: { licao: Licao }) {
@@ -68,7 +70,7 @@ function Memoria({ tela }: { tela: TelaDe<"memoria"> }) {
         {revelado && <p className="rv-texto rv-surgir text-[#f5d77a]" role="status">{objeto.resposta}</p>}
       </div>
       <div className="flex flex-wrap justify-center gap-3">
-        {!revelado && <button type="button" className="rv-botao rv-botao-destaque" onClick={() => setRevelado(true)}>Quem usa isso?</button>}
+        {!revelado && <button type="button" className="rv-botao rv-botao-destaque" onClick={() => { tocar("revelar"); setRevelado(true); }}>Quem usa isso?</button>}
         {revelado && <button type="button" className="rv-botao" onClick={() => { setPasso(passo + 1); setRevelado(false); }}>
           {passo + 1 < tela.objetos.length ? "Próximo objeto →" : "Desafio de memória 🧠"}
         </button>}
@@ -82,7 +84,7 @@ function Memoria({ tela }: { tela: TelaDe<"memoria"> }) {
         <span className="rv-texto">{p.pergunta}</span>
         {respostas.has(i)
           ? <strong className="rv-texto rv-surgir text-[#f5d77a]">{p.resposta}</strong>
-          : <button type="button" className="rv-botao" onClick={() => setRespostas(new Set(respostas).add(i))}>Revelar</button>}
+          : <button type="button" className="rv-botao" onClick={() => { tocar("revelar"); setRespostas(new Set(respostas).add(i)); }}>Revelar</button>}
       </li>)}
     </ol>
     {tela.fechamento && respostas.size === tela.perguntas.length && <p className="rv-destaque rv-surgir">{tela.fechamento}</p>}
@@ -159,7 +161,7 @@ function PowerUps({ tela }: { tela: TelaDe<"power-ups"> }) {
       {tela.itens.map((item, i) => {
         const ativo = ativos.has(i);
         return <button key={item.titulo} type="button" aria-pressed={ativo} className={`rv-cartao rv-powerup text-left ${ativo ? "rv-powerup-ativo" : ""}`}
-          onClick={() => setAtivos(new Set(ativos).add(i))}>
+          onClick={() => { if (!ativo) tocar("revelar"); setAtivos(new Set(ativos).add(i)); }}>
           <span className="rv-subtitulo">{ativo ? "⚡" : "🔒"} {item.titulo}</span>
           {ativo ? <span className="rv-texto-menor rv-surgir mt-2 block">{item.texto}{item.referencia && <em className="mt-1 block opacity-90">{item.referencia}</em>}</span>
             : <span className="rv-texto-menor mt-2 block opacity-80">Toque para desbloquear</span>}
@@ -170,7 +172,7 @@ function PowerUps({ tela }: { tela: TelaDe<"power-ups"> }) {
   </div>;
 }
 
-function Arena({ tela }: { tela: TelaDe<"arena"> }) {
+function Arena({ tela, podeConduzir }: { tela: TelaDe<"arena">; podeConduzir: boolean }) {
   const [vistas, setVistas] = useState(0);
   return <div className="mx-auto grid max-w-5xl gap-[clamp(1rem,3vh,2rem)]">
     <Titulo eyebrow="🏟️ Arena">{tela.titulo}</Titulo>
@@ -180,19 +182,22 @@ function Arena({ tela }: { tela: TelaDe<"arena"> }) {
       </li>)}
     </ol>
     {vistas < tela.perguntas.length
-      ? <button type="button" className="rv-botao rv-botao-destaque justify-self-center" onClick={() => setVistas(vistas + 1)}>
+      ? <button type="button" className="rv-botao rv-botao-destaque justify-self-center" onClick={() => { tocar("revelar"); setVistas(vistas + 1); }}>
         {vistas === 0 ? "Revelar 1ª pergunta" : `Próxima pergunta (${vistas + 1}/${tela.perguntas.length})`}
       </button>
       : <p className="rv-texto-menor text-center opacity-90">Todas as perguntas foram reveladas.</p>}
+    {podeConduzir && vistas > 0 && <Cronometro key={vistas} />}
   </div>;
 }
 
 export type QuizProps = {
   tela: TelaDe<"quiz">; semente: string; podeConduzir: boolean;
   respostas: (RespostaQuiz | null)[]; aoResponder: (indice: number, resposta: RespostaQuiz) => void; aoRefazer: () => void;
+  /** Team drawn to start this quiz; undefined until a draw happens (Sal starts by default). */
+  inicio?: Time; aoSortear: (time: Time) => void;
 };
 
-function Quiz({ tela, semente, podeConduzir, respostas, aoResponder, aoRefazer }: QuizProps) {
+function Quiz({ tela, semente, podeConduzir, respostas, aoResponder, aoRefazer, inicio, aoSortear }: QuizProps) {
   const [feedbackDe, setFeedbackDe] = useState<number | null>(null);
   const respondidas = respostas.filter(Boolean).length;
   const indice = feedbackDe ?? respondidas;
@@ -202,6 +207,7 @@ function Quiz({ tela, semente, podeConduzir, respostas, aoResponder, aoRefazer }
     const r = resultadoQuiz(respostas);
     const vencedor = r.sal.pontos === r.luz.pontos ? null : r.sal.pontos > r.luz.pontos ? "sal" : "luz";
     return <div className="mx-auto grid max-w-4xl gap-[clamp(1rem,3vh,2rem)] text-center">
+      {podeConduzir && vencedor && <Confete />}
       <Titulo eyebrow="🏁 Resultado">{tela.titulo}</Titulo>
       {podeConduzir ? <>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -222,18 +228,25 @@ function Quiz({ tela, semente, podeConduzir, respostas, aoResponder, aoRefazer }
   const pergunta = tela.perguntas[indice];
   const resposta = respostas[indice] ?? null;
   const ordem = ordemEmbaralhada(pergunta.opcoes.length, `${semente}:${indice}`);
-  const vez = timeDaVez(indice);
+  const vez = timeDaVez(indice, inicio);
   return <div className="mx-auto grid max-w-5xl gap-[clamp(1rem,3vh,2rem)]">
     <header className="flex flex-wrap items-center justify-between gap-3">
       <p className="rv-eyebrow">{tela.titulo} · {indice + 1}/{total}{pergunta.bonus ? ` · Bônus +${pergunta.pontos}` : ""}</p>
-      {podeConduzir && <p className={`rv-vez rv-vez-${vez}`}>Vez do time {times[vez].emoji} {times[vez].nome}</p>}
+      {podeConduzir && <div className="flex flex-wrap items-center gap-2">
+        {indice === 0 && !resposta && !inicio && <Sorteio aoSortear={aoSortear} />}
+        <p key={vez} className={`rv-vez rv-vez-${vez} rv-surgir`}>Vez do time {times[vez].emoji} {times[vez].nome}</p>
+      </div>}
     </header>
     <h2 className="rv-titulo">{pergunta.enunciado}</h2>
     <div className="grid gap-3 md:grid-cols-2">
       {ordem.map((opcao, pos) => {
         const estado = !resposta ? "" : opcao === 0 ? "rv-opcao-certa" : opcao === resposta.escolha ? "rv-opcao-errada" : "opacity-60";
         return <button key={opcao} type="button" disabled={Boolean(resposta)} className={`rv-opcao ${estado}`}
-          onClick={() => { aoResponder(indice, responderPergunta(pergunta, indice, opcao)); setFeedbackDe(indice); }}>
+          onClick={() => {
+            const r = responderPergunta(pergunta, indice, opcao, inicio);
+            tocar(r.correta ? "acerto" : "erro");
+            aoResponder(indice, r); setFeedbackDe(indice);
+          }}>
           <span className="rv-opcao-letra" aria-hidden="true">{"ABCDEF"[pos]}</span>
           <span>{pergunta.opcoes[opcao]}</span>
           {resposta && opcao === 0 && <span className="ml-auto" aria-label="alternativa correta">✓</span>}
@@ -241,13 +254,15 @@ function Quiz({ tela, semente, podeConduzir, respostas, aoResponder, aoRefazer }
         </button>;
       })}
     </div>
+    {podeConduzir && !resposta && <Cronometro key={indice} />}
+    {resposta?.correta && <Confete key={`confete-${indice}`} />}
     {resposta && <div className="grid justify-items-center gap-3 text-center" role="status">
       <p className="rv-destaque rv-surgir">
         {resposta.correta
           ? (podeConduzir ? `Acertou! +${resposta.pontos} para o time ${times[resposta.time].emoji} ${times[resposta.time].nome}` : "Acertou! 🎉")
           : `Não foi dessa vez. A resposta certa é: ${pergunta.opcoes[0]}`}
       </p>
-      <button type="button" className="rv-botao rv-botao-destaque" onClick={() => setFeedbackDe(null)}>
+      <button type="button" className="rv-botao rv-botao-destaque" onClick={() => { if (indice + 1 >= total) tocar("vitoria"); setFeedbackDe(null); }}>
         {indice + 1 < total ? "Próxima pergunta →" : "Ver resultado 🏁"}
       </button>
     </div>}
@@ -268,16 +283,36 @@ function Missao({ tela }: { tela: TelaDe<"missao"> }) {
   </div>;
 }
 
-function Encerramento({ tela, licao }: { tela: TelaDe<"encerramento">; licao: Licao }) {
+export type PlacarFinal = { podeConduzir: boolean; aula: Placar; trimestre: Placar };
+
+function TimeDoDia({ aula, trimestre }: { aula: Placar; trimestre: Placar }) {
+  const [aberto, setAberto] = useState(false);
+  if (!aberto) return <button type="button" className="rv-botao rv-botao-destaque justify-self-center" onClick={() => { tocar("vitoria"); setAberto(true); }}>🏆 Revelar o time do dia</button>;
+  const vencedor = vencedorDoDia(aula);
+  return <section className="rv-cartao rv-cartao-atual rv-surgir grid gap-3" role="status" aria-label="Time do dia">
+    <Confete />
+    <p className="rv-titulo">{vencedor ? `${times[vencedor].emoji} Time ${times[vencedor].nome} venceu a missão!` : "🧂💡 Empate! Os dois times venceram."}</p>
+    <div className="grid grid-cols-2 gap-3">
+      {(["sal", "luz"] as const).map((t) => <div key={t} className={`rounded-2xl p-3 rv-vez-${t}`}>
+        <p className="font-black">{times[t].emoji} {times[t].nome}</p>
+        <p className="rv-numero leading-none">{aula[t]}</p>
+        <p className="text-sm font-bold">Trimestre: {trimestre[t]}</p>
+      </div>)}
+    </div>
+  </section>;
+}
+
+function Encerramento({ tela, licao, final }: { tela: TelaDe<"encerramento">; licao: Licao; final: PlacarFinal }) {
   return <div className="mx-auto grid max-w-5xl gap-[clamp(1rem,3vh,2rem)] text-center">
     <p className="rv-eyebrow">Verdade aplicada</p>
     {licao.verdadeAplicada && <h2 className="rv-titulo-capa">{licao.verdadeAplicada}</h2>}
     <p className="rv-cartao rv-texto">🙏 {tela.oracao}</p>
+    {final.podeConduzir && <TimeDoDia aula={final.aula} trimestre={final.trimestre} />}
     <p className="rv-teaser">🔒 {tela.teaser}</p>
   </div>;
 }
 
-export function TelaRevista({ tela, licao, quiz }: { tela: Tela; licao: Licao; quiz: Omit<QuizProps, "tela"> }) {
+export function TelaRevista({ tela, licao, quiz, final }: { tela: Tela; licao: Licao; quiz: Omit<QuizProps, "tela">; final: PlacarFinal }) {
   switch (tela.tipo) {
     case "capa": return <Capa licao={licao} />;
     case "gancho": return <Gancho tela={tela} />;
@@ -287,9 +322,9 @@ export function TelaRevista({ tela, licao, quiz }: { tela: Tela; licao: Licao; q
     case "comparacao": return <Comparacao tela={tela} />;
     case "raio-x": return <RaioX tela={tela} />;
     case "power-ups": return <PowerUps tela={tela} />;
-    case "arena": return <Arena tela={tela} />;
+    case "arena": return <Arena tela={tela} podeConduzir={quiz.podeConduzir} />;
     case "quiz": return <Quiz tela={tela} {...quiz} />;
     case "missao": return <Missao tela={tela} />;
-    case "encerramento": return <Encerramento tela={tela} licao={licao} />;
+    case "encerramento": return <Encerramento tela={tela} licao={licao} final={final} />;
   }
 }

@@ -43,8 +43,15 @@ export function RevistaGuiaLider() {
         <li>Forme os times Sal e Luz na chegada.</li>
         <li>Avance com a seta →, a barra de espaço, os botões grandes ou deslizando o dedo. Para voltar, use ← ou Shift + espaço.</li>
         <li>Marque pontos no placar do topo: <strong>+</strong> e <strong>−</strong> somam ou tiram 10. No quiz, os acertos entram sozinhos.</li>
-        <li>Termine no encerramento: oração e o “teaser” da próxima missão.</li>
+        <li>Termine no encerramento: oração, <strong>🏆 Revelar o time do dia</strong> (placar da aula e do trimestre, com fanfarra) e o “teaser” da próxima missão.</li>
       </ol>
+      <SubTitle>Clima de jogo</SubTitle>
+      <ul className="list-disc space-y-2 pl-5">
+        <li><strong>Sons 🔊/🔇:</strong> acerto, erro suave, revelação, ponto e vitória, em volume baixo. O botão no topo liga e desliga, e o notebook lembra a escolha.</li>
+        <li><strong>Cronômetro ⏱️:</strong> no quiz e na arena, toque em “Iniciar”. Os últimos 5 segundos fazem tique. Escolha 10 a 60 segundos ou “Sem cronômetro”.</li>
+        <li><strong>Sorteio 🎲:</strong> antes da 1ª pergunta do quiz, “Sortear quem começa” gira entre Sal e Luz. A vez alterna a partir do time sorteado. Sem sorteio, o Sal começa.</li>
+        <li><strong>Confete e placar animado:</strong> aparecem nos acertos e na vitória. Quem configurou o aparelho para reduzir movimento não vê animações.</li>
+      </ul>
       <p>Se a aula for interrompida, abra a lição de novo no mesmo notebook: ela volta na tela em que parou, com o placar salvo.</p>
 
       <SubTitle>Modo Professor 🎓</SubTitle>
@@ -64,7 +71,7 @@ export function RevistaGuiaLider() {
         ["Atividades da aula (memória, arena, leitura)", "+10 a cada toque", "Professor, no placar do topo"],
         ["Resgate de quem faltou", `+${pontos} por aluno, até +${limitePorTime} por time`, "Professor, no Modo Professor"],
       ]} />
-      <p>No quiz a vez alterna: 1ª pergunta do Sal, 2ª da Luz, 3ª do Sal… Cada pergunta pontua uma vez só; <strong>Refazer o quiz</strong> tira os pontos dele e recomeça. O placar nunca fica negativo. O <strong>Placar do trimestre</strong>, na página da trilha, soma as aulas daquele notebook.</p>
+      <p>No quiz a vez alterna: 1ª pergunta do time que começa (Sal, ou o sorteado), 2ª do outro, e assim por diante. Cada pergunta pontua uma vez só; <strong>Refazer o quiz</strong> tira os pontos dele e recomeça. O placar nunca fica negativo. O <strong>Placar do trimestre</strong>, na página da trilha, soma as aulas daquele notebook.</p>
       <Example>
         <ol className="list-decimal space-y-1 pl-5">
           <li>Jogo da memória: Sal acerta dois objetos, Luz um. O professor toca +10 duas vezes no Sal e uma na Luz → Sal 20 × Luz 10.</li>

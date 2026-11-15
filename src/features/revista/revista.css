@@ -118,6 +118,19 @@ a.rv-trilha-cartao:hover { transform: translateY(-2px); box-shadow: 0 8px 22px r
 @keyframes rv-entrar { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes rv-encher { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .rv-surgir { animation: rv-entrar .45s ease both; }
+/* Game feel: confetti, score pop, countdown and team draw. */
+.rv-confete { pointer-events: none; position: fixed; inset: 0; z-index: 60; overflow: hidden; }
+.rv-confete span { position: absolute; top: -1rem; width: .6rem; height: 1rem; border-radius: .15rem; opacity: 0; animation: rv-cair 1.3s ease-in both; }
+@keyframes rv-cair { 0% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: 0 85vh; rotate: 540deg; } }
+.rv-pulo { display: inline-block; animation: rv-pulo .35s ease both; }
+@keyframes rv-pulo { 0% { transform: scale(1); } 45% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.rv-cronometro { min-width: 5ch; border-radius: 999px; border: 2px solid var(--rv-acento); padding: .2rem 1rem; text-align: center; font-size: clamp(1.5rem, 1rem + 2vw, 3rem); font-weight: 900; font-variant-numeric: tabular-nums; }
+.rv-cronometro-fim { background: #b91c1c; border-color: #fecaca; animation: rv-pulo .5s ease infinite; }
+.rv-select { min-height: 2.75rem; border-radius: .75rem; border: 1px solid rgb(255 255 255 / .3); background: rgb(0 0 0 / .3); padding: .3rem .6rem; color: #fff; font-weight: 700; }
+.rv-select option { color: #17231d; }
+.rv-sorteio { font-size: clamp(1.1rem, .9rem + 1vw, 1.8rem); }
+
 @media (prefers-reduced-motion: reduce) {
+  .rv-confete { display: none; }
   .rv-player, .rv-player *, .rv-trilha-cartao { animation: none !important; transition: none !important; }
 }

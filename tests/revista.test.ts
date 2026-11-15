@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  ajustarPlacar, aplicarResgate, cenariosDasTelas, licaoAnterior, licaoParaResgate, lerPlacares, lerProgresso, licaoSchema, missaoEmDestaque, ordemEmbaralhada,
+  ajustarPlacar, aplicarResgate, lerCronometro, vencedorDoDia, cenariosDasTelas, licaoAnterior, licaoParaResgate, lerPlacares, lerProgresso, licaoSchema, missaoEmDestaque, ordemEmbaralhada,
   indicadoresRevista, responderPergunta, resultadoQuiz, semRoteiroDoProfessor, somarPlacares, statusDaLicao, timeDaVez,
 } from "../src/services/revista";
 
@@ -77,7 +77,8 @@ describe("status da trilha", () => {
 
 describe("quiz e placar por times", () => {
   it("alterna a vez Sal, Luz, Sal…", () => {
-    expect([0, 1, 2, 3].map(timeDaVez)).toEqual(["sal", "luz", "sal", "luz"]);
+    expect([0, 1, 2, 3].map((i) => timeDaVez(i))).toEqual(["sal", "luz", "sal", "luz"]);
+    expect([0, 1, 2, 3].map((i) => timeDaVez(i, "luz"))).toEqual(["luz", "sal", "luz", "sal"]);
   });
   it("acerto vale os pontos da pergunta para o time da vez; erro vale zero", () => {
     expect(responderPergunta({ pontos: 10 }, 0, 0)).toEqual({ escolha: 0, correta: true, time: "sal", pontos: 10 });
@@ -170,5 +171,27 @@ describe("resgate de quem faltou", () => {
     expect(licaoParaResgate(licoes, new Date("2026-11-22T09:00:00-03:00"))?.numero).toBe(7);
     expect(licaoParaResgate(licoes, new Date("2026-11-23T09:00:00-03:00"))?.numero).toBe(8);
     expect(licaoParaResgate(licoes.slice(0, 1), new Date("2026-11-23T09:00:00-03:00"))).toBeNull();
+  });
+});
+
+describe("clima de jogo na sala", () => {
+  it("o sorteio muda quem pontua em cada pergunta", () => {
+    expect(responderPergunta({ pontos: 10 }, 0, 0, "luz")).toMatchObject({ time: "luz", pontos: 10 });
+    expect(responderPergunta({ pontos: 10 }, 1, 0, "luz")).toMatchObject({ time: "sal", pontos: 10 });
+  });
+  it("guarda o time sorteado sem invalidar progresso antigo", () => {
+    expect(lerProgresso(JSON.stringify({ tela: 1, quiz: {}, inicio: { 13: "luz" } })).inicio).toEqual({ 13: "luz" });
+    expect(lerProgresso(JSON.stringify({ tela: 1, quiz: {}, inicio: { 13: "azul" } }))).toEqual({ tela: 0, quiz: {} });
+  });
+  it("aponta o time do dia ou empate", () => {
+    expect(vencedorDoDia({ sal: 50, luz: 40 })).toBe("sal");
+    expect(vencedorDoDia({ sal: 0, luz: 10 })).toBe("luz");
+    expect(vencedorDoDia({ sal: 30, luz: 30 })).toBeNull();
+  });
+  it("lê a duração do cronômetro com padrão de 20 s", () => {
+    expect(lerCronometro(null)).toBe(20);
+    expect(lerCronometro("30")).toBe(30);
+    expect(lerCronometro("0")).toBe(0);
+    expect(lerCronometro("999")).toBe(20);
   });
 });

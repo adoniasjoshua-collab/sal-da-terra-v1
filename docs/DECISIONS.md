@@ -158,3 +158,14 @@ This keeps ADR-013: no student data and no fixed teams are stored; only team
 totals live on the projector device. It does not change attendance, the radar
 or `summarizeEbd`. An online, server-graded proof remains a later option and
 would first require keeping the quiz answer key off students' devices.
+
+## ADR-016 — Classroom game feel for the Revista (2026-11-15)
+
+The projected class gains sounds, a countdown, a team draw and a closing
+"team of the day". Sounds are synthesized with the Web Audio API (no audio
+files or licensing), quiet by default and mutable, remembered per device. The
+countdown is teacher-only and optional (10–60 s or off). The draw picks which
+team starts a quiz; turns alternate from it and the choice is stored with that
+class's progress, locked once an answer exists. Confetti and the score pop are
+CSS and disappear under prefers-reduced-motion. Everything stays on the
+projector device: no student data, no individual scores, no new tables.

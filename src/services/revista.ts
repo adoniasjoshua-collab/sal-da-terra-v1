@@ -188,15 +188,17 @@ export function somarPlacares(placares: Placar[]): Placar {
   return placares.reduce((total, p) => ({ sal: total.sal + p.sal, luz: total.luz + p.luz }), placarVazio);
 }
 
-/** Turns alternate Sal → Luz → Sal… by question index. */
-export const timeDaVez = (indicePergunta: number): Time => (indicePergunta % 2 === 0 ? "sal" : "luz");
+export const outroTime = (time: Time): Time => (time === "sal" ? "luz" : "sal");
+
+/** Turns alternate by question index, starting with `inicio` (Sal unless a draw chose Luz). */
+export const timeDaVez = (indicePergunta: number, inicio: Time = "sal"): Time => (indicePergunta % 2 === 0 ? inicio : outroTime(inicio));
 
 export type RespostaQuiz = { escolha: number; correta: boolean; time: Time; pontos: number };
 
 /** Scores one answer: a hit gives the question's points to the team whose turn it is; a miss gives nothing. */
-export function responderPergunta(pergunta: { pontos: number }, indicePergunta: number, escolha: number): RespostaQuiz {
+export function responderPergunta(pergunta: { pontos: number }, indicePergunta: number, escolha: number, inicio: Time = "sal"): RespostaQuiz {
   const correta = escolha === 0;
-  return { escolha, correta, time: timeDaVez(indicePergunta), pontos: correta ? pergunta.pontos : 0 };
+  return { escolha, correta, time: timeDaVez(indicePergunta, inicio), pontos: correta ? pergunta.pontos : 0 };
 }
 
 export function resultadoQuiz(respostas: (RespostaQuiz | null | undefined)[]) {
@@ -224,6 +226,8 @@ const placaresSchema = z.record(z.string().regex(/^\d+$/), placarSchema);
 const progressoSchema = z.object({
   tela: z.number().int().min(0),
   quiz: z.record(z.string(), z.array(z.object({ escolha: z.number().int().min(0), correta: z.boolean(), time: z.enum(["sal", "luz"]), pontos: z.number().int().min(0) }).nullable())).default({}),
+  /** Team drawn to start each quiz screen (by screen index). Optional so older saves stay valid. */
+  inicio: z.record(z.string(), z.enum(["sal", "luz"])).optional(),
   /** Rescue points granted in this class, per team (see RESGATE). Optional so older saves stay valid. */
   resgate: placarSchema.optional(),
 });
@@ -266,4 +270,19 @@ export function licaoParaResgate<T extends Pick<Licao, "numero" | "data" | "plac
   const hoje = dataLocal(agora);
   const limite = new Date(Date.parse(`${hoje}T00:00:00Z`) - RESGATE.janelaDias * 86_400_000).toISOString().slice(0, 10);
   return licoes.filter((l) => !l.placeholder && l.data < hoje && l.data >= limite).sort((a, b) => b.data.localeCompare(a.data))[0] ?? null;
+}
+
+// ── Classroom game feel (projector only) ─────────────────────────────────────
+/** Team of the day for the closing screen; null on a tie (both teams win). */
+export function vencedorDoDia(placar: Placar): Time | null {
+  return placar.sal === placar.luz ? null : placar.sal > placar.luz ? "sal" : "luz";
+}
+
+/** Countdown lengths offered to the teacher, in seconds; 0 turns it off. */
+export const CRONOMETRO_OPCOES = [0, 10, 20, 30, 45, 60] as const;
+export const CRONOMETRO_PADRAO = 20;
+export function lerCronometro(raw: string | null): number {
+  if (raw === null) return CRONOMETRO_PADRAO;
+  const valor = Number(raw);
+  return (CRONOMETRO_OPCOES as readonly number[]).includes(valor) ? valor : CRONOMETRO_PADRAO;
 }

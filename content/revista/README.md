@@ -35,6 +35,7 @@ Para criar uma lição além da 13, crie `licao-14.json` com o mesmo formato. O 
 - Para projetar, use o botão de tela cheia. Navegue com as setas, a barra de espaço, os botões grandes ou o swipe.
 - O placar Sal × Luz e o progresso ficam salvos **no navegador do aparelho que projeta**. Use sempre o mesmo notebook.
 - O Modo Professor (tempo, fala e técnica de cada tela) só aparece para líderes.
+- Sons de jogo (🔊/🔇 no topo, volume baixo), cronômetro no quiz e na arena, sorteio de quem começa o quiz e "Revelar o time do dia" no encerramento. Os sons são gerados pelo navegador: não há arquivos de áudio.
 - Para alunos, o roteiro do professor nunca é enviado.
 
 ## Resgate de quem faltou

@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ajustarPlacar, aplicarResgate, cenariosDasTelas, chavePlacar, chaveProgresso, lerPlacares, lerProgresso, numeroMissao, placarVazio, RESGATE, rotuloDaTela, times,
+  ajustarPlacar, aplicarResgate, cenariosDasTelas, somarPlacares, chavePlacar, chaveProgresso, lerPlacares, lerProgresso, numeroMissao, placarVazio, RESGATE, rotuloDaTela, times,
   type Licao, type Placar, type RespostaQuiz, type Time,
 } from "@/services/revista";
+import { BotaoSom } from "./efeitos";
 import { TelaRevista } from "./screens";
+import { tocar } from "./sons";
 import { gravar, ler, useArmazenado } from "./storage";
 
 const PASSO_PLACAR = 10;
@@ -92,13 +94,27 @@ export function RevistaPlayer({ licao, podeConduzir, anterior = null }: { licao:
   function refazerQuiz() {
     const lista = progresso.quiz[String(indice)] ?? [];
     if (podeConduzir) salvarPlacar((p) => lista.reduce((acc, r) => (r?.correta ? ajustarPlacar(acc, r.time, -r.pontos) : acc), p));
-    salvarProgresso((p) => { const quiz = { ...p.quiz }; delete quiz[String(indice)]; return { ...p, quiz }; });
+    salvarProgresso((p) => {
+      const quiz = { ...p.quiz }; delete quiz[String(indice)];
+      const inicio = { ...p.inicio }; delete inicio[String(indice)];
+      return { ...p, quiz, inicio };
+    });
+  }
+
+  function sortearInicio(time: Time) {
+    salvarProgresso((p) => ((p.quiz[String(indice)] ?? []).some(Boolean) ? p : { ...p, inicio: { ...p.inicio, [String(indice)]: time } }));
+  }
+
+  function darPontos(time: Time, delta: number) {
+    if (delta > 0) tocar("ponto");
+    salvarPlacar((p) => ajustarPlacar(p, time, delta));
   }
 
   function resgatar(time: Time, sentido: 1 | -1) {
     const todos = lerPlacares(ler(chavePlacar));
     const resultado = aplicarResgate(lerProgresso(ler(chave)), todos[licao.numero] ?? placarVazio, time, sentido);
     if (!resultado) return;
+    if (sentido > 0) tocar("ponto");
     gravar(chave, JSON.stringify(resultado.progresso));
     gravar(chavePlacar, JSON.stringify({ ...todos, [licao.numero]: resultado.placar }));
   }
@@ -120,14 +136,15 @@ export function RevistaPlayer({ licao, podeConduzir, anterior = null }: { licao:
       </div>
       {podeConduzir && <div className="flex items-center gap-1 sm:gap-2" aria-label="Placar da aula">
         {(["sal", "luz"] as Time[]).map((t) => <div key={t} className={`rv-placar rv-vez-${t}`}>
-          <button type="button" className="rv-placar-botao" onClick={() => salvarPlacar((p) => ajustarPlacar(p, t, -PASSO_PLACAR))} aria-label={`Tirar ${PASSO_PLACAR} pontos do time ${times[t].nome}`}>−</button>
-          <span className="min-w-[3.5ch] text-center font-black tabular-nums" aria-live="polite"><span aria-hidden="true">{times[t].emoji} </span><span className="sr-only">{times[t].nome}: </span>{placar[t]}</span>
-          <button type="button" className="rv-placar-botao" onClick={() => salvarPlacar((p) => ajustarPlacar(p, t, PASSO_PLACAR))} aria-label={`Dar ${PASSO_PLACAR} pontos ao time ${times[t].nome}`}>+</button>
+          <button type="button" className="rv-placar-botao" onClick={() => darPontos(t, -PASSO_PLACAR)} aria-label={`Tirar ${PASSO_PLACAR} pontos do time ${times[t].nome}`}>−</button>
+          <span key={placar[t]} className="rv-pulo min-w-[3.5ch] text-center font-black tabular-nums" aria-live="polite"><span aria-hidden="true">{times[t].emoji} </span><span className="sr-only">{times[t].nome}: </span>{placar[t]}</span>
+          <button type="button" className="rv-placar-botao" onClick={() => darPontos(t, PASSO_PLACAR)} aria-label={`Dar ${PASSO_PLACAR} pontos ao time ${times[t].nome}`}>+</button>
         </div>)}
       </div>}
       {podeConduzir && <button type="button" className="rv-botao-topo" aria-pressed={professorAberto} aria-controls="rv-professor" onClick={() => setProfessorAberto(!professorAberto)}>
         🎓 <span className="hidden md:inline">Modo Professor</span>
       </button>}
+      <BotaoSom />
       <button type="button" className="rv-botao-topo" onClick={alternarTelaCheia} aria-pressed={telaCheia} aria-label={telaCheia ? "Sair da tela cheia" : "Tela cheia"}>⛶</button>
     </header>
 
@@ -143,7 +160,8 @@ export function RevistaPlayer({ licao, podeConduzir, anterior = null }: { licao:
         <TelaRevista tela={tela} licao={licao} quiz={{
           semente: `licao-${licao.numero}:tela-${indice}`, podeConduzir,
           respostas: progresso.quiz[String(indice)] ?? [], aoResponder: responder, aoRefazer: refazerQuiz,
-        }} />
+          inicio: progresso.inicio?.[String(indice)], aoSortear: sortearInicio,
+        }} final={{ podeConduzir, aula: placar, trimestre: somarPlacares(Object.values(placares)) }} />
       </div>
     </main>
 
