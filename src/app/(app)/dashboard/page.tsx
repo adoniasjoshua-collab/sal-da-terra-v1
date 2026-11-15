@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
 import { EbdTrendChart, EventParticipationChart, LastEbdDonut, RadarDistribution } from "@/features/dashboard/dashboard-charts";
+import { LeaderActionsCard } from "@/features/dashboard/leader-actions-card";
 import { LearningAlert } from "@/features/learning/learning-alert";
 import { carregarLicoes } from "@/features/revista/data";
 import { RevistaEbdIndicadores } from "@/features/revista/ebd-indicators";
@@ -12,6 +13,7 @@ import { calculateAttendanceMetrics, type AttendanceStatus } from "@/services/at
 import { combinedOperationalRate, rateDelta, summarizeEbd, type DashboardAttendance } from "@/services/dashboard-metrics";
 import { buildEventDashboard, type EventDashboardHeadcount } from "@/services/event-dashboard";
 import { EVENT_TYPE_LABELS } from "@/services/events";
+import { buildLeaderActions } from "@/services/leader-actions";
 import { getRadarStatus, type RadarStatus } from "@/services/pastoral-radar";
 import { ADOLESCENT_MAX_AGE, buildBirthdayOverview, getStudentLifecycle } from "@/services/student-lifecycle";
 import type { AttendanceMode, EventStatus, EventType } from "@/types/database";
@@ -34,10 +36,15 @@ export default async function DashboardPage() {
   const actor = await requireStaff();
   const supabase = await createClient();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
-  const [studentsResult, eventsResult, followupsResult, licoes] = await Promise.all([
+  const contactWindow = new Date(`${today}T00:00:00-03:00`);
+  contactWindow.setUTCDate(contactWindow.getUTCDate() - 90);
+  const contactSince = contactWindow.toISOString();
+  const [studentsResult, eventsResult, followupsResult, contactsResult, licoes] = await Promise.all([
     supabase.from("students").select("id,full_name,preferred_name,birth_date,status,is_active").eq("ministry_id", actor.ministryId).eq("is_test", false).neq("status", "archived"),
     supabase.from("events").select("id,event_date,title,type,status,attendance_mode").eq("ministry_id", actor.ministryId).order("event_date", { ascending: false }),
     supabase.from("pastoral_followups").select("id", { count: "exact", head: true }).eq("ministry_id", actor.ministryId).eq("status", "open"),
+    // Only dates feed the weekly actions; follow-up content is never read here.
+    supabase.from("pastoral_followups").select("student_id,occurred_at").eq("ministry_id", actor.ministryId).neq("status", "cancelled").gte("occurred_at", contactSince).order("occurred_at", { ascending: false }),
     // The magazine block is optional context: a content problem never takes the dashboard down.
     carregarLicoes().catch(() => []),
   ]);
@@ -69,13 +76,12 @@ export default async function DashboardPage() {
   const delta = rateDelta(recentRate, previousRate);
 
   const enriched = students.map((student) => {
-    const metrics = calculateAttendanceMetrics(
-      attendance
-        .filter((row) => row.student_id === student.id && ebdEventIds.has(row.event_id))
-        .map((row) => ({ eventDate: eventDates.get(row.event_id)!, status: row.attendance_status as AttendanceStatus })),
-    );
+    const ebdRecords = attendance
+      .filter((row) => row.student_id === student.id && ebdEventIds.has(row.event_id))
+      .map((row) => ({ eventDate: eventDates.get(row.event_id)!, status: row.attendance_status as AttendanceStatus }));
+    const metrics = calculateAttendanceMetrics(ebdRecords);
     const participates = student.is_active && student.status !== "inactive";
-    return { ...student, metrics, radar: getRadarStatus(metrics.consecutiveAbsences, participates), lifecycle: getStudentLifecycle(student.birth_date, today) };
+    return { ...student, ebdRecords, metrics, radar: getRadarStatus(metrics.consecutiveAbsences, participates), lifecycle: getStudentLifecycle(student.birth_date, today) };
   });
 
   const radarCounts: Record<RadarStatus, number> = { active: 0, attention: 0, follow_up: 0, priority: 0, inactive: 0 };
@@ -96,6 +102,28 @@ export default async function DashboardPage() {
     .filter((student) => student.is_active && ["transitioning", "transition_due"].includes(student.lifecycle))
     .sort((a, b) => a.birth_date.localeCompare(b.birth_date));
   const transitionDue = transitions.filter((student) => student.lifecycle === "transition_due").length;
+
+  const toLocalDate = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" });
+  const lastContacts = new Map<string, string>();
+  // A failed lookup only means suggestions may repeat; it must not hide the dashboard.
+  for (const row of (contactsResult.error ? [] : contactsResult.data ?? []) as { student_id: string; occurred_at: string }[]) {
+    if (!lastContacts.has(row.student_id)) lastContacts.set(row.student_id, toLocalDate.format(new Date(row.occurred_at)));
+  }
+  const leaderActions = buildLeaderActions({
+    today,
+    summaries,
+    // Unlike the agenda, a forgotten EBD roll call counts here too.
+    pendingEvents: allEvents.filter((event) => ["planned", "open"].includes(event.status) && event.event_date < today),
+    students: enriched.map((student) => ({
+      id: student.id,
+      name: student.preferred_name || student.full_name,
+      status: student.status,
+      radar: student.radar,
+      consecutiveAbsences: student.metrics.consecutiveAbsences,
+      records: student.ebdRecords,
+      lastContact: lastContacts.get(student.id) ?? null,
+    })),
+  });
 
   const activeCount = students.filter((student) => student.status === "active").length;
   const visitorCount = students.filter((student) => student.status === "visitor").length;
@@ -124,6 +152,8 @@ export default async function DashboardPage() {
           return card.href ? <Link className="card block p-5 transition hover:border-[#176b49]" href={card.href} key={card.label}>{body}</Link> : <article className="card p-5" key={card.label}>{body}</article>;
         })}
       </section>
+
+      <LeaderActionsCard items={leaderActions.items} total={leaderActions.total} />
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,.6fr)]">
         <section className="card p-5 sm:p-6" aria-labelledby="attention-title">

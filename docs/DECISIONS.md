@@ -130,3 +130,18 @@ for those Sundays), and an EBD roll call shows that day's lesson. This is
 context only: `summarizeEbd` stays the single attendance formula and the
 pastoral radar is unchanged. Team scores are not shown there because they
 are device-local.
+
+## ADR-014 — Rule-based weekly actions for leaders (2026-11-15)
+
+The dashboard card "Ações da semana" turns existing indicators into suggested
+actions without AI or external automation. Pure rules in
+`src/services/leader-actions.ts` (thresholds in `LEADER_ACTION_RULES`, texts in
+`LEADER_ACTION_CATALOG`) cover the three radar levels, pending roll calls
+(including EBDs), a drop of 15+ p.p. of the last EBD against the previous four
+(only with 5+ considered records), recurring registered visitors and students
+who returned after a streak. Radar suggestions are hidden for 7 days after any
+non-cancelled follow-up; only follow-up dates are read, never their content.
+There is no new table: recording a follow-up is the way to close an action.
+No ranking of leaders or students, nothing shown to students, and the catalog
+texts are pastoral copy subject to leadership review. The radar and
+`summarizeEbd` remain the single sources of their rules.

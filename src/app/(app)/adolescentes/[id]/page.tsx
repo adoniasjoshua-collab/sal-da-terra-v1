@@ -164,7 +164,7 @@ export default async function StudentProfilePage({ params }: Props) {
         )}
       </section>
 
-      <section className="card mt-7 p-5 sm:p-6">
+      <section id="acompanhamentos" className="card mt-7 scroll-mt-6 p-5 sm:p-6">
         <h2 className="text-xl font-black">Acompanhamentos pastorais</h2>
         <div className="mt-5"><FollowupForm studentId={id} /></div>
         {followups?.length ? (
