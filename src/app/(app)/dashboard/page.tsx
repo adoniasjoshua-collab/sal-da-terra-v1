@@ -3,6 +3,8 @@ import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
 import { EbdTrendChart, EventParticipationChart, LastEbdDonut, RadarDistribution } from "@/features/dashboard/dashboard-charts";
 import { LearningAlert } from "@/features/learning/learning-alert";
+import { carregarLicoes } from "@/features/revista/data";
+import { RevistaEbdIndicadores } from "@/features/revista/ebd-indicators";
 import { requireStaff } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -32,10 +34,12 @@ export default async function DashboardPage() {
   const actor = await requireStaff();
   const supabase = await createClient();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
-  const [studentsResult, eventsResult, followupsResult] = await Promise.all([
+  const [studentsResult, eventsResult, followupsResult, licoes] = await Promise.all([
     supabase.from("students").select("id,full_name,preferred_name,birth_date,status,is_active").eq("ministry_id", actor.ministryId).eq("is_test", false).neq("status", "archived"),
     supabase.from("events").select("id,event_date,title,type,status,attendance_mode").eq("ministry_id", actor.ministryId).order("event_date", { ascending: false }),
     supabase.from("pastoral_followups").select("id", { count: "exact", head: true }).eq("ministry_id", actor.ministryId).eq("status", "open"),
+    // The magazine block is optional context: a content problem never takes the dashboard down.
+    carregarLicoes().catch(() => []),
   ]);
 
   if (studentsResult.error || eventsResult.error) throw new Error("Não foi possível carregar os indicadores do ministério.");
@@ -57,6 +61,8 @@ export default async function DashboardPage() {
   const eventDates = new Map(events.map((event) => [event.id, event.event_date]));
   const ebdEventIds = new Set(events.map((event) => event.id));
   const summaries = events.slice(0, 12).map((event) => summarizeEbd(event, attendance));
+  const lessonDates = new Set(licoes.map((licao) => licao.data));
+  const lessonEbds = events.filter((event) => lessonDates.has(event.event_date)).map((event) => summarizeEbd(event, attendance));
   const last = summaries[0];
   const recentRate = combinedOperationalRate(summaries.slice(0, 4));
   const previousRate = combinedOperationalRate(summaries.slice(4, 8));
@@ -139,6 +145,8 @@ export default async function DashboardPage() {
           <LastEbdDonut summary={last} />
         </section>
       </div>
+
+      <RevistaEbdIndicadores licoes={licoes} ebds={lessonEbds} agora={new Date()} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <section className="card p-5 sm:p-6" aria-labelledby="radar-title">

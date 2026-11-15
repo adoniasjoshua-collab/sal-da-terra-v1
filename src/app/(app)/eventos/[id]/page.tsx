@@ -4,6 +4,8 @@ import { PageHeading } from "@/components/page-heading";
 import { SuccessNotice } from "@/components/success-notice";
 import { saveAttendance } from "@/features/events/actions";
 import { HeadcountForm } from "@/features/events/headcount-form";
+import { carregarLicoes } from "@/features/revista/data";
+import { LicaoDoDomingo } from "@/features/revista/ebd-indicators";
 import { requireStaff } from "@/lib/auth";
 import { formatDate, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -68,6 +70,7 @@ export default async function AttendancePage({ params, searchParams }: Props) {
   const students = [...(activeStudents ?? []), ...(historicalStudents ?? [])]
     .sort((a, b) => a.full_name.localeCompare(b.full_name, "pt-BR"));
   const current = new Map((existing ?? []).map((row) => [row.student_id, row.attendance_status]));
+  const licaoDoDia = event.type === "EBD" ? (await carregarLicoes().catch(() => [])).find((licao) => licao.data === event.event_date) : undefined;
   const action = saveAttendance.bind(null, id);
   const fullRoster = event.attendance_mode === "full_roster";
   const options = fullRoster
@@ -81,6 +84,7 @@ export default async function AttendancePage({ params, searchParams }: Props) {
       {edited && <SuccessNotice>Evento atualizado com sucesso.</SuccessNotice>}
       {!fullRoster && <p className="mb-5 rounded-xl bg-[#edf7f1] p-4 text-sm text-[#365747]">Este evento é opcional. “Não participou” não representa falta e não afeta a frequência EBD nem o Radar Pastoral.</p>}
       {saved && <SuccessNotice>Participação salva com sucesso.</SuccessNotice>}
+      <LicaoDoDomingo licao={licaoDoDia} />
       {!students?.length ? (
         <section className="card p-10 text-center"><h2 className="font-bold">Nenhum adolescente ativo</h2><p className="mt-2 text-sm text-[#647268]">Cadastre adolescentes antes de registrar a participação.</p></section>
       ) : (

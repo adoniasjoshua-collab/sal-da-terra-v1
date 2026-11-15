@@ -123,3 +123,10 @@ enrollment. The teacher's script (`professor`) is stripped on the server for
 students. Scores are per team (Sal/Luz), never individual, and live only in the
 projector device's localStorage; the self-assessment (raio-x) is never stored.
 No student data is collected. Licensed magazine content stays behind login.
+
+EBD indicators: the dashboard links each lesson to the completed EBD recorded
+on the same Sunday (lessons ministered, attendance rate and average present
+for those Sundays), and an EBD roll call shows that day's lesson. This is
+context only: `summarizeEbd` stays the single attendance formula and the
+pastoral radar is unchanged. Team scores are not shown there because they
+are device-local.

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { combinedOperationalRate, type EbdSummary } from "./dashboard-metrics";
 
 // Revista Gamificada — domain rules for the classroom lesson player.
 // Lessons live in content/revista/licoes/*.json and are validated here; the UI
@@ -145,6 +146,32 @@ export function rotuloDaTela(tela: Tela): string {
 /** Students never receive the teacher's script. */
 export function semRoteiroDoProfessor(licao: Licao): Licao {
   return { ...licao, telas: licao.telas.map((tela) => ({ ...tela, professor: undefined })) };
+}
+
+// ── EBD indicators ───────────────────────────────────────────────────────────
+// A lesson is linked to the completed EBD recorded on the same Sunday. EBD
+// attendance stays the only input for frequency; this only puts it in context.
+export type SituacaoLicaoEbd = "ministrada" | "aguardando-registro" | "sem-registro" | "prevista";
+export const situacaoLabels: Record<SituacaoLicaoEbd, string> = {
+  ministrada: "EBD registrada", "aguardando-registro": "Registrar chamada hoje", "sem-registro": "Sem EBD registrada", prevista: "Prevista",
+};
+
+export function indicadoresRevista(licoes: Pick<Licao, "numero" | "titulo" | "data" | "liberarEm" | "placeholder">[], ebds: EbdSummary[], agora: Date) {
+  const hoje = dataLocal(agora);
+  const linhas = licoes.map((licao) => {
+    const ebd = ebds.find((e) => e.date === licao.data) ?? null;
+    const situacao: SituacaoLicaoEbd = ebd ? "ministrada" : licao.data === hoje ? "aguardando-registro" : licao.data < hoje ? "sem-registro" : "prevista";
+    return { numero: licao.numero, titulo: licao.placeholder ? "Em breve" : licao.titulo, data: licao.data, status: statusDaLicao(licao, agora), situacao, ebd };
+  });
+  const comEbd = linhas.flatMap((l) => (l.ebd ? [l.ebd] : []));
+  return {
+    linhas,
+    total: linhas.length,
+    ministradas: comEbd.length,
+    semRegistro: linhas.filter((l) => l.situacao === "sem-registro").length,
+    comparecimento: combinedOperationalRate(comEbd),
+    mediaPresentes: comEbd.length ? Math.round(comEbd.reduce((s, e) => s + e.present, 0) / comEbd.length) : null,
+  };
 }
 
 // ── Teams (never individual ranking) ─────────────────────────────────────────

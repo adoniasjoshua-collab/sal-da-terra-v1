@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   ajustarPlacar, cenariosDasTelas, lerPlacares, lerProgresso, licaoSchema, missaoEmDestaque, ordemEmbaralhada,
-  responderPergunta, resultadoQuiz, semRoteiroDoProfessor, somarPlacares, statusDaLicao, timeDaVez,
+  indicadoresRevista, responderPergunta, resultadoQuiz, semRoteiroDoProfessor, somarPlacares, statusDaLicao, timeDaVez,
 } from "../src/services/revista";
 
 const pasta = path.join(process.cwd(), "content", "revista", "licoes");
@@ -115,5 +115,25 @@ describe("conteúdo para alunos", () => {
   });
   it("cenário sem valor herda o anterior", () => {
     expect(cenariosDasTelas([{ cenario: undefined }, { cenario: "tesouro" }, { cenario: undefined }])).toEqual(["noite", "tesouro", "tesouro"]);
+  });
+});
+
+describe("indicadores da EBD por lição", () => {
+  const licoes = [
+    { numero: 7, titulo: "A", data: "2026-11-15", liberarEm: "2026-11-09T08:00:00-03:00", placeholder: false },
+    { numero: 8, titulo: "Em breve", data: "2026-11-22", liberarEm: "2026-11-16T08:00:00-03:00", placeholder: true },
+    { numero: 9, titulo: "Em breve", data: "2026-11-29", liberarEm: "2026-11-23T08:00:00-03:00", placeholder: true },
+  ];
+  const ebd = (date: string, present: number, absent: number) => ({ id: date, date, title: "EBD", present, absent, justified: 0, visitor: 0, operationalRate: Math.round((present / (present + absent)) * 100) });
+
+  it("no domingo sem chamada, pede o registro e não inventa frequência", () => {
+    const r = indicadoresRevista(licoes, [], new Date("2026-11-15T10:00:00-03:00"));
+    expect(r.linhas.map((l) => l.situacao)).toEqual(["aguardando-registro", "prevista", "prevista"]);
+    expect(r).toMatchObject({ total: 3, ministradas: 0, semRegistro: 0, comparecimento: null, mediaPresentes: null });
+  });
+  it("liga cada lição à EBD do mesmo domingo e soma o comparecimento", () => {
+    const r = indicadoresRevista(licoes, [ebd("2026-11-15", 6, 2), ebd("2026-11-29", 3, 5), ebd("2026-11-08", 9, 0)], new Date("2026-11-30T10:00:00-03:00"));
+    expect(r.linhas.map((l) => l.situacao)).toEqual(["ministrada", "sem-registro", "ministrada"]);
+    expect(r).toMatchObject({ ministradas: 2, semRegistro: 1, comparecimento: 56, mediaPresentes: 5 });
   });
 });
