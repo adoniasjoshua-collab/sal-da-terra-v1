@@ -27,7 +27,7 @@ export function RevistaTrilha({ licoes, agora, podeConduzir }: { licoes: Licao[]
           <h2 id="missao-dia" className="mt-2 text-3xl font-black">A próxima missão ainda não foi liberada</h2>
         </>}
       </section>
-      {podeConduzir ? <PlacarTrimestre /> : <section className="rv-placar-trimestre"><h2 className="text-xs font-black uppercase tracking-[.16em] text-[#f5d77a]">Times Sal 🧂 e Luz 💡</h2><p className="mt-3 text-sm leading-6 text-white/90">Na sala, a turma joga em dois times (Mt 5.13-14). Aqui você pode estudar as missões liberadas antes do domingo.</p></section>}
+      {podeConduzir ? <div className="grid content-start gap-3"><PlacarTrimestre /><Link className="button-secondary" href="/ajuda#revista">📘 Como conduzir a aula</Link></div> : <section className="rv-placar-trimestre"><h2 className="text-xs font-black uppercase tracking-[.16em] text-[#f5d77a]">Times Sal 🧂 e Luz 💡</h2><p className="mt-3 text-sm leading-6 text-white/90">Na sala, a turma joga em dois times (Mt 5.13-14). Aqui você pode estudar as missões liberadas antes do domingo.</p><Link className="mt-3 inline-block text-sm font-bold text-[#f5d77a] underline" href="/ajuda#revista">Como funciona a Revista e o resgate</Link></section>}
     </div>
 
     {resgate && <section className="card mt-6 border-amber-200 bg-amber-50 p-5" aria-labelledby="resgate-titulo">

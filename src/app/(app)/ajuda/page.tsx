@@ -1,7 +1,11 @@
 import { ADOLESCENT_MIN_AGE, ADOLESCENT_MAX_AGE } from "@/services/student-lifecycle";
 import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
+import { Example, GuideSection, Icon } from "@/features/help/guide-parts";
+import { RevistaGuiaAluno, RevistaGuiaLider, revistaTopicsAluno, revistaTopicsLider } from "@/features/help/revista-guide";
 import { requireAuth, type AppRole } from "@/lib/auth";
+import { LEADER_ACTION_RULES } from "@/services/leader-actions";
+import { RADAR_THRESHOLDS } from "@/services/pastoral-radar";
 
 const roleContent: Record<AppRole, { label: string; summary: string; startHref: string; startLabel: string }> = {
   student: {
@@ -24,7 +28,7 @@ const roleContent: Record<AppRole, { label: string; summary: string; startHref: 
   },
 };
 
-const topics = [
+const baseTopics = [
   ["🧭", "Primeiros passos", "#primeiros-passos"],
   ["🔐", "Níveis de acesso", "#acessos"],
   ["👥", "Adolescentes", "#adolescentes"],
@@ -38,34 +42,13 @@ const topics = [
   ["🆘", "Dúvidas comuns", "#duvidas"],
 ] as const;
 
-function Icon({ children }: { children: string }) {
-  return <span aria-hidden="true" className="text-2xl">{children}</span>;
-}
-
-function GuideSection({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className="card scroll-mt-6 p-5 sm:p-7" aria-labelledby={`${id}-title`}>
-      <div className="flex items-center gap-3">
-        <Icon>{icon}</Icon>
-        <h2 id={`${id}-title`} className="text-xl font-black sm:text-2xl">{title}</h2>
-      </div>
-      <div className="mt-5 space-y-4 text-sm leading-6 text-[#405048] sm:text-base">{children}</div>
-    </section>
-  );
-}
-
-function Example({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-[#cfe3d7] bg-[#f0f8f3] p-4">
-      <p className="mb-1 text-xs font-black uppercase tracking-[.12em] text-[#176b49]">Exemplo</p>
-      {children}
-    </div>
-  );
-}
-
 export default async function HelpPage() {
   const actor = await requireAuth();
   const currentRole = roleContent[actor.role];
+  const isStudent = actor.role === "student";
+  // The Revista guide sits right after the indicators topic.
+  const at = baseTopics.findIndex(([, , href]) => href === "#indicadores") + 1;
+  const topics = [...baseTopics.slice(0, at), ...(isStudent ? revistaTopicsAluno : revistaTopicsLider), ...baseTopics.slice(at)];
 
   return (
     <>
@@ -154,10 +137,13 @@ export default async function HelpPage() {
             <li><strong>Radar Pastoral:</strong> organiza a fila de cuidado com uma regra transparente.</li>
             <li><strong>Outros eventos:</strong> mostram volume de participação sem misturar o resultado com a frequência da EBD.</li>
             <li><strong>Aniversariantes:</strong> mostra aniversários do mês e dos próximos 30 dias para ajudar a preparar um reconhecimento.</li>
+            <li><strong>Ações da semana:</strong> sugere o próximo passo de cuidado a partir da presença na EBD: mensagem com {RADAR_THRESHOLDS.attention} faltas seguidas, ligação com {RADAR_THRESHOLDS.followUp}, visita com {RADAR_THRESHOLDS.priority} ou mais, chamadas pendentes, queda de {LEADER_ACTION_RULES.attendanceDropPoints} pontos na presença, visitantes frequentes e quem voltou. Registrar um acompanhamento no perfil tira o adolescente da lista por {LEADER_ACTION_RULES.recentContactDays} dias.</li>
             <li><strong>Transição para jovens:</strong> a faixa do ministério é de {ADOLESCENT_MIN_AGE} a {ADOLESCENT_MAX_AGE} anos. O alerta sinaliza quem tem {ADOLESCENT_MAX_AGE} anos ou já completou {ADOLESCENT_MAX_AGE + 1}, sem transferir ou arquivar automaticamente.</li>
           </ul>
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950"><strong>Essencial:</strong> nenhum gráfico representa nível de fé, santidade ou espiritualidade.</p>
         </GuideSection>
+
+        {isStudent ? <RevistaGuiaAluno /> : <RevistaGuiaLider />}
 
         <GuideSection id="protecao" icon="🗃️" title="Por que arquivar ou desativar em vez de excluir?">
           <p>A exclusão definitiva poderia quebrar ou apagar informações importantes. Por isso, o portal preserva o histórico:</p>
