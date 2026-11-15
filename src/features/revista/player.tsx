@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ajustarPlacar, cenariosDasTelas, chavePlacar, chaveProgresso, lerPlacares, lerProgresso, numeroMissao, placarVazio, rotuloDaTela, times,
+  ajustarPlacar, aplicarResgate, cenariosDasTelas, chavePlacar, chaveProgresso, lerPlacares, lerProgresso, numeroMissao, placarVazio, RESGATE, rotuloDaTela, times,
   type Licao, type Placar, type RespostaQuiz, type Time,
 } from "@/services/revista";
 import { TelaRevista } from "./screens";
@@ -15,7 +15,9 @@ function alvoInterativo(alvo: EventTarget | null) {
   return alvo instanceof HTMLElement && Boolean(alvo.closest("input, textarea, select, [contenteditable='true']"));
 }
 
-export function RevistaPlayer({ licao, podeConduzir }: { licao: Licao; podeConduzir: boolean }) {
+type LicaoAnterior = { numero: number; titulo: string } | null;
+
+export function RevistaPlayer({ licao, podeConduzir, anterior = null }: { licao: Licao; podeConduzir: boolean; anterior?: LicaoAnterior }) {
   const raiz = useRef<HTMLDivElement>(null);
   const toque = useRef<{ x: number; y: number } | null>(null);
   const [professorAberto, setProfessorAberto] = useState(false);
@@ -93,6 +95,14 @@ export function RevistaPlayer({ licao, podeConduzir }: { licao: Licao; podeCondu
     salvarProgresso((p) => { const quiz = { ...p.quiz }; delete quiz[String(indice)]; return { ...p, quiz }; });
   }
 
+  function resgatar(time: Time, sentido: 1 | -1) {
+    const todos = lerPlacares(ler(chavePlacar));
+    const resultado = aplicarResgate(lerProgresso(ler(chave)), todos[licao.numero] ?? placarVazio, time, sentido);
+    if (!resultado) return;
+    gravar(chave, JSON.stringify(resultado.progresso));
+    gravar(chavePlacar, JSON.stringify({ ...todos, [licao.numero]: resultado.placar }));
+  }
+
   function zerarAula() {
     if (!window.confirm("Zerar o placar e o progresso desta aula neste aparelho?")) return;
     salvarPlacar(() => placarVazio);
@@ -164,7 +174,31 @@ export function RevistaPlayer({ licao, podeConduzir }: { licao: Licao; podeCondu
           </li>)}
         </ol>
       </details>
+      <PainelResgate anterior={anterior} resgate={progresso.resgate ?? placarVazio} aoResgatar={resgatar} />
       <button type="button" className="mt-4 text-sm font-bold text-[#a1291a] underline" onClick={zerarAula}>Zerar placar e progresso desta aula</button>
     </aside>}
   </div>;
+}
+
+function PainelResgate({ anterior, resgate, aoResgatar }: { anterior: LicaoAnterior; resgate: Placar; aoResgatar: (time: Time, sentido: 1 | -1) => void }) {
+  return <section className="mt-4 rounded-xl border border-[#e6d3a3] bg-[#fdf3dc] p-3 text-sm" aria-labelledby="rv-resgate-titulo">
+    <h3 id="rv-resgate-titulo" className="font-black">🛟 Resgate{anterior ? ` da Lição ${anterior.numero}` : ""}</h3>
+    <p className="mt-1 leading-6">
+      {anterior ? <>Quem faltou em “{anterior.titulo}” e estudou em casa responde 2 ou 3 perguntas suas, ao vivo. </> : <>Quem faltou na aula anterior e estudou em casa responde 2 ou 3 perguntas suas, ao vivo. </>}
+      Se responder, o time em que está hoje ganha +{RESGATE.pontos}. Não diga à turma quem faltou.
+    </p>
+    <div className="mt-2 grid grid-cols-2 gap-2">
+      {(["sal", "luz"] as Time[]).map((t) => {
+        const cheio = resgate[t] >= RESGATE.limitePorTime;
+        return <div key={t} className={`rounded-lg p-2 text-center rv-vez-${t}`}>
+          <p className="font-black" aria-live="polite">{times[t].emoji} {times[t].nome}: {resgate[t]}/{RESGATE.limitePorTime}</p>
+          <div className="mt-1 flex justify-center gap-1">
+            <button type="button" className="rv-placar-botao" disabled={resgate[t] === 0} onClick={() => aoResgatar(t, -1)} aria-label={`Desfazer um resgate do time ${times[t].nome}`}>−</button>
+            <button type="button" className="rv-placar-botao" disabled={cheio} onClick={() => aoResgatar(t, 1)} aria-label={`Resgate: dar ${RESGATE.pontos} pontos ao time ${times[t].nome}`}>+{RESGATE.pontos}</button>
+          </div>
+          {cheio && <p className="mt-1 text-xs">Limite desta aula</p>}
+        </div>;
+      })}
+    </div>
+  </section>;
 }

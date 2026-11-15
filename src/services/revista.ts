@@ -224,6 +224,8 @@ const placaresSchema = z.record(z.string().regex(/^\d+$/), placarSchema);
 const progressoSchema = z.object({
   tela: z.number().int().min(0),
   quiz: z.record(z.string(), z.array(z.object({ escolha: z.number().int().min(0), correta: z.boolean(), time: z.enum(["sal", "luz"]), pontos: z.number().int().min(0) }).nullable())).default({}),
+  /** Rescue points granted in this class, per team (see RESGATE). Optional so older saves stay valid. */
+  resgate: placarSchema.optional(),
 });
 export type Placares = z.infer<typeof placaresSchema>;
 export type Progresso = z.infer<typeof progressoSchema>;
@@ -234,3 +236,34 @@ function lerJson<T>(raw: string | null, schema: z.ZodType<T>, fallback: T): T {
 }
 export const lerPlacares = (raw: string | null): Placares => lerJson(raw, placaresSchema, {});
 export const lerProgresso = (raw: string | null): Progresso => lerJson(raw, progressoSchema, { tela: 0, quiz: {} });
+
+// ── Rescue (resgate) ─────────────────────────────────────────────────────────
+// A student who missed a class studies it at home and, on the Sunday they come
+// back, answers the teacher's questions in person. A pass gives points to the
+// team they play for that day. Nothing about the student is stored: only the
+// team totals on the projector device. Below a question's worth and capped so
+// the class in person always counts more and absences are never rewarded.
+export const RESGATE = Object.freeze({ pontos: 10, limitePorTime: 30, janelaDias: 7 });
+
+/** Applies (+1) or undoes (-1) one rescue for a team; returns null when the cap or zero blocks it. */
+export function aplicarResgate(progresso: Progresso, placar: Placar, time: Time, sentido: 1 | -1) {
+  const atual = progresso.resgate ?? placarVazio;
+  const proximo = atual[time] + sentido * RESGATE.pontos;
+  if (proximo < 0 || proximo > RESGATE.limitePorTime) return null;
+  return {
+    progresso: { ...progresso, resgate: { ...atual, [time]: proximo } },
+    placar: ajustarPlacar(placar, time, sentido * RESGATE.pontos),
+  };
+}
+
+/** The lesson taught before this one (by Sunday date), if it had content. */
+export function licaoAnterior<T extends Pick<Licao, "numero" | "data" | "placeholder">>(licoes: T[], atual: Pick<Licao, "data">): T | null {
+  return licoes.filter((l) => !l.placeholder && l.data < atual.data).sort((a, b) => b.data.localeCompare(a.data))[0] ?? null;
+}
+
+/** Latest lesson whose Sunday passed within the rescue window: what a student who missed it can still recover. */
+export function licaoParaResgate<T extends Pick<Licao, "numero" | "data" | "placeholder">>(licoes: T[], agora: Date): T | null {
+  const hoje = dataLocal(agora);
+  const limite = new Date(Date.parse(`${hoje}T00:00:00Z`) - RESGATE.janelaDias * 86_400_000).toISOString().slice(0, 10);
+  return licoes.filter((l) => !l.placeholder && l.data < hoje && l.data >= limite).sort((a, b) => b.data.localeCompare(a.data))[0] ?? null;
+}

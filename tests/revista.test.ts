@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  ajustarPlacar, cenariosDasTelas, lerPlacares, lerProgresso, licaoSchema, missaoEmDestaque, ordemEmbaralhada,
+  ajustarPlacar, aplicarResgate, cenariosDasTelas, licaoAnterior, licaoParaResgate, lerPlacares, lerProgresso, licaoSchema, missaoEmDestaque, ordemEmbaralhada,
   indicadoresRevista, responderPergunta, resultadoQuiz, semRoteiroDoProfessor, somarPlacares, statusDaLicao, timeDaVez,
 } from "../src/services/revista";
 
@@ -135,5 +135,40 @@ describe("indicadores da EBD por lição", () => {
     const r = indicadoresRevista(licoes, [ebd("2026-11-15", 6, 2), ebd("2026-11-29", 3, 5), ebd("2026-11-08", 9, 0)], new Date("2026-11-30T10:00:00-03:00"));
     expect(r.linhas.map((l) => l.situacao)).toEqual(["ministrada", "sem-registro", "ministrada"]);
     expect(r).toMatchObject({ ministradas: 2, semRegistro: 1, comparecimento: 56, mediaPresentes: 5 });
+  });
+});
+
+describe("resgate de quem faltou", () => {
+  const progresso: ReturnType<typeof lerProgresso> = { tela: 0, quiz: {} };
+  it("soma +10 ao time do dia e para no limite de 30 por time", () => {
+    let atual = { progresso, placar: { sal: 50, luz: 0 } };
+    for (let i = 0; i < 3; i += 1) atual = aplicarResgate(atual.progresso, atual.placar, "sal", 1)!;
+    expect(atual.placar).toEqual({ sal: 80, luz: 0 });
+    expect(atual.progresso.resgate).toEqual({ sal: 30, luz: 0 });
+    expect(aplicarResgate(atual.progresso, atual.placar, "sal", 1)).toBeNull();
+    expect(aplicarResgate(atual.progresso, atual.placar, "luz", 1)?.placar).toEqual({ sal: 80, luz: 10 });
+  });
+  it("desfaz só o que foi dado como resgate", () => {
+    expect(aplicarResgate(progresso, { sal: 40, luz: 0 }, "sal", -1)).toBeNull();
+    const dado = aplicarResgate(progresso, { sal: 0, luz: 0 }, "luz", 1)!;
+    expect(aplicarResgate(dado.progresso, dado.placar, "luz", -1)).toEqual({ progresso: { ...progresso, resgate: { sal: 0, luz: 0 } }, placar: { sal: 0, luz: 0 } });
+  });
+  it("guarda o resgate no progresso salvo sem invalidar progresso antigo", () => {
+    expect(lerProgresso(JSON.stringify({ tela: 2, quiz: {}, resgate: { sal: 10, luz: 0 } })).resgate).toEqual({ sal: 10, luz: 0 });
+    expect(lerProgresso(JSON.stringify({ tela: 2, quiz: {} })).resgate).toBeUndefined();
+  });
+  const licoes = [
+    { numero: 7, data: "2026-11-15", placeholder: false }, { numero: 8, data: "2026-11-22", placeholder: false }, { numero: 9, data: "2026-11-29", placeholder: true },
+  ];
+  it("aponta a lição anterior com conteúdo", () => {
+    expect(licaoAnterior(licoes, { data: "2026-11-22" })?.numero).toBe(7);
+    expect(licaoAnterior(licoes, { data: "2026-11-15" })).toBeNull();
+  });
+  it("oferece ao aluno o resgate só nos 7 dias depois do domingo", () => {
+    expect(licaoParaResgate(licoes, new Date("2026-11-15T12:00:00-03:00"))).toBeNull(); // still the class day
+    expect(licaoParaResgate(licoes, new Date("2026-11-16T09:00:00-03:00"))?.numero).toBe(7);
+    expect(licaoParaResgate(licoes, new Date("2026-11-22T09:00:00-03:00"))?.numero).toBe(7);
+    expect(licaoParaResgate(licoes, new Date("2026-11-23T09:00:00-03:00"))?.numero).toBe(8);
+    expect(licaoParaResgate(licoes.slice(0, 1), new Date("2026-11-23T09:00:00-03:00"))).toBeNull();
   });
 });

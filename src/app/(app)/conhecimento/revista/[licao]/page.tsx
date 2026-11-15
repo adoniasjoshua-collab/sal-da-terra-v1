@@ -6,7 +6,7 @@ import { RevistaSemAcesso } from "@/features/revista/access-denied";
 import { carregarLicoes, verificarAcessoRevista } from "@/features/revista/data";
 import { fontePergaminho } from "@/features/revista/fonts";
 import { RevistaPlayer } from "@/features/revista/player";
-import { formatarData, numeroMissao, podeAbrir, semRoteiroDoProfessor, statusDaLicao } from "@/services/revista";
+import { formatarData, licaoAnterior, numeroMissao, podeAbrir, semRoteiroDoProfessor, statusDaLicao } from "@/services/revista";
 
 export const metadata: Metadata = { title: "Aula · Revista Gamificada" };
 
@@ -15,7 +15,8 @@ export default async function LicaoPage({ params }: { params: Promise<{ licao: s
   if (!/^\d{1,3}$/.test(segmento)) notFound();
   const acesso = await verificarAcessoRevista();
   if (!acesso.permitido) return <RevistaSemAcesso motivo={acesso.motivo} />;
-  const licao = (await carregarLicoes()).find((l) => l.numero === Number(segmento));
+  const licoes = await carregarLicoes();
+  const licao = licoes.find((l) => l.numero === Number(segmento));
   if (!licao) notFound();
 
   if (!podeAbrir(statusDaLicao(licao, new Date())) || !licao.telas.length) {
@@ -29,5 +30,6 @@ export default async function LicaoPage({ params }: { params: Promise<{ licao: s
 
   // The teacher's script never leaves the server for students.
   const dados = acesso.podeConduzir ? licao : semRoteiroDoProfessor(licao);
-  return <div className={fontePergaminho.variable}><RevistaPlayer licao={dados} podeConduzir={acesso.podeConduzir} /></div>;
+  const anterior = acesso.podeConduzir ? licaoAnterior(licoes, licao) : null;
+  return <div className={fontePergaminho.variable}><RevistaPlayer licao={dados} podeConduzir={acesso.podeConduzir} anterior={anterior && { numero: anterior.numero, titulo: anterior.titulo }} /></div>;
 }

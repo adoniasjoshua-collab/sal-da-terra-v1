@@ -145,3 +145,16 @@ There is no new table: recording a follow-up is the way to close an action.
 No ranking of leaders or students, nothing shown to students, and the catalog
 texts are pastoral copy subject to leadership review. The radar and
 `summarizeEbd` remain the single sources of their rules.
+
+## ADR-015 — Rescue for students who missed a Revista class (2026-11-15)
+
+A student who missed a lesson (justified or not) may study it at home during
+the 7 days after its Sunday; the trail invites them to do so. Proof is oral and
+in person: on the next Sunday the teacher asks two or three questions and, on a
+pass, grants +10 (`RESGATE`) to the team the student plays for that day, capped
+at +30 per team per class so the class in person always counts more and
+absences are never rewarded. The teacher grants and undoes it in Modo Professor.
+This keeps ADR-013: no student data and no fixed teams are stored; only team
+totals live on the projector device. It does not change attendance, the radar
+or `summarizeEbd`. An online, server-graded proof remains a later option and
+would first require keeping the quiz answer key off students' devices.

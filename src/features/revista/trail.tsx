@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatarData, formatarDataLonga, missaoEmDestaque, numeroMissao, podeAbrir, statusDaLicao, statusLabels, type Licao, type StatusLicao } from "@/services/revista";
+import { formatarData, formatarDataLonga, licaoParaResgate, missaoEmDestaque, RESGATE, numeroMissao, podeAbrir, statusDaLicao, statusLabels, type Licao, type StatusLicao } from "@/services/revista";
 import { PlacarTrimestre } from "./placar-trimestre";
 
 const iconeStatus: Record<StatusLicao, string> = { concluida: "✔", hoje: "★", liberada: "▶", bloqueada: "🔒" };
@@ -7,6 +7,7 @@ const iconeStatus: Record<StatusLicao, string> = { concluida: "✔", hoje: "★"
 export function RevistaTrilha({ licoes, agora, podeConduzir }: { licoes: Licao[]; agora: Date; podeConduzir: boolean }) {
   const comStatus = licoes.map((licao) => ({ licao, status: statusDaLicao(licao, agora) }));
   const destaque = missaoEmDestaque(comStatus);
+  const resgate = podeConduzir ? null : licaoParaResgate(licoes, agora);
 
   return <div className="rv-trilha-pagina">
     <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
@@ -28,6 +29,12 @@ export function RevistaTrilha({ licoes, agora, podeConduzir }: { licoes: Licao[]
       </section>
       {podeConduzir ? <PlacarTrimestre /> : <section className="rv-placar-trimestre"><h2 className="text-xs font-black uppercase tracking-[.16em] text-[#f5d77a]">Times Sal 🧂 e Luz 💡</h2><p className="mt-3 text-sm leading-6 text-white/90">Na sala, a turma joga em dois times (Mt 5.13-14). Aqui você pode estudar as missões liberadas antes do domingo.</p></section>}
     </div>
+
+    {resgate && <section className="card mt-6 border-amber-200 bg-amber-50 p-5" aria-labelledby="resgate-titulo">
+      <h2 id="resgate-titulo" className="text-lg font-black text-amber-950">🛟 Faltou na Lição {resgate.numero}? Faça o resgate!</h2>
+      <p className="mt-2 leading-7 text-amber-950">Estude a missão “{resgate.titulo}” aqui. No próximo domingo, conte ao professor o que aprendeu: se responder às perguntas dele, você leva +{RESGATE.pontos} pontos para o seu time.</p>
+      <Link className="button-secondary mt-3" href={`/conhecimento/revista/${resgate.numero}`}>Estudar a Lição {resgate.numero}</Link>
+    </section>}
 
     <section className="mt-8" aria-labelledby="trilha-titulo">
       <h2 id="trilha-titulo" className="text-xl font-black">Trilha do 4º trimestre</h2>
