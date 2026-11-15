@@ -1,0 +1,295 @@
+{
+  "numero": 7,
+  "titulo": "Preparando-se para o futuro",
+  "data": "2026-11-15",
+  "liberarEm": "2026-11-09T08:00:00-03:00",
+  "textoBiblico": "Pv 1.7; 2.6,11,12; 3.13-15",
+  "textoAureo": {
+    "referencia": "Pv 4.5",
+    "texto": "Adquire a sabedoria, adquire a inteligência, e não te esqueças nem te apartes das palavras da minha boca."
+  },
+  "objetivo": "Entender o propósito da formação escolar para o sucesso profissional.",
+  "verdadeAplicada": "Deus abençoa o conhecimento humano, que deve estar ligado ao conhecimento das Escrituras.",
+  "telas": [
+    {
+      "tipo": "capa",
+      "cenario": "noite",
+      "professor": {
+        "tempo": "2 min",
+        "fala": "Forme os times Sal e Luz na chegada. A Zaíne marca os pontos.",
+        "tecnica": "Pertencimento por times (Mt 5.13-14)"
+      }
+    },
+    {
+      "tipo": "gancho",
+      "cenario": "noite",
+      "pergunta": "Pra que eu vou estudar isso se nunca vou usar?",
+      "revelacao": "Hoje a Bíblia responde. E no final você vai descobrir o que Jesus fez aos 12 anos que deixou os maiores professores do país de boca aberta.",
+      "professor": {
+        "tempo": "3 min",
+        "fala": "Quem já pensou isso? Levanta a mão.",
+        "tecnica": "Laço aberto + sequência do sim"
+      }
+    },
+    {
+      "tipo": "memoria",
+      "cenario": "arena",
+      "titulo": "Quem usa isso?",
+      "objetos": [
+        { "emoji": "🩺", "nome": "Estetoscópio", "resposta": "Médico(a)" },
+        { "emoji": "💉", "nome": "Seringa", "resposta": "Enfermeiro(a)" },
+        { "emoji": "📐", "nome": "Esquadro", "resposta": "Engenheiro(a)" },
+        { "emoji": "📝", "nome": "Prova corrigida", "resposta": "Professor(a)" },
+        { "emoji": "⏰", "nome": "Relógio", "resposta": "Todo profissional pontual" },
+        { "emoji": "💻", "nome": "Computador", "resposta": "Programador(a)" },
+        { "emoji": "📖", "nome": "Livro", "resposta": "Escritor(a) ou bibliotecário(a)" },
+        { "emoji": "✏️", "nome": "Lápis", "resposta": "Designer ou estudante" }
+      ],
+      "perguntas": [
+        { "pergunta": "Qual foi o 1º objeto?", "resposta": "🩺 Estetoscópio" },
+        { "pergunta": "Qual foi o 4º objeto?", "resposta": "📝 Prova corrigida" },
+        { "pergunta": "Qual foi o 7º objeto?", "resposta": "📖 Livro" }
+      ],
+      "fechamento": "Todas essas profissões começaram numa carteira de escola.",
+      "professor": {
+        "tempo": "8 min",
+        "fala": "Mostre um objeto por vez e deixe os times responderem antes de revelar. No final, faça o desafio de memória.",
+        "tecnica": "Curiosidade + participação ativa"
+      }
+    },
+    {
+      "tipo": "pergaminho",
+      "titulo": "Texto bíblico",
+      "leituras": [
+        {
+          "leitor": 1,
+          "versiculos": [
+            { "referencia": "Pv 1.7", "texto": "O temor do SENHOR é o princípio da ciência; os loucos desprezam a sabedoria e a instrução." }
+          ]
+        },
+        {
+          "leitor": 2,
+          "versiculos": [
+            { "referencia": "Pv 2.6", "texto": "Porque o SENHOR dá a sabedoria; da sua boca é que vem o conhecimento e o entendimento." },
+            { "referencia": "Pv 2.11", "texto": "O bom siso te guardará, e a inteligência te conservará;" },
+            { "referencia": "Pv 2.12", "texto": "para te afastar do mau caminho e do homem que diz coisas perversas;" }
+          ]
+        }
+      ],
+      "professor": {
+        "tempo": "5 min (com a tela seguinte)",
+        "fala": "Chame o Leitor 1 e o Leitor 2. Peça que leiam em voz alta, devagar.",
+        "tecnica": "Prova bíblica + protagonismo dos alunos"
+      }
+    },
+    {
+      "tipo": "pergaminho",
+      "titulo": "Texto bíblico",
+      "leituras": [
+        {
+          "leitor": 3,
+          "versiculos": [
+            { "referencia": "Pv 3.13", "texto": "Bem-aventurado o homem que acha sabedoria, e o homem que adquire conhecimento." },
+            { "referencia": "Pv 3.14", "texto": "Porque é melhor a sua mercadoria do que a mercadoria de prata, e a sua renda do que o ouro mais fino." },
+            { "referencia": "Pv 3.15", "texto": "Mais preciosa é do que os rubins, e tudo o que mais podes desejar não se pode comparar a ela." }
+          ]
+        }
+      ],
+      "professor": {
+        "tempo": "incluído na tela anterior",
+        "fala": "Chame o Leitor 3.",
+        "tecnica": "Prova bíblica"
+      }
+    },
+    {
+      "tipo": "fase",
+      "cenario": "tesouro",
+      "numero": 1,
+      "titulo": "Uma aquisição de valor",
+      "gancho": "R$ 1 milhão agora ou sabedoria pra vida toda? Vota aí.",
+      "blocos": [
+        { "titulo": "Estudar é privilégio", "texto": "Muitos adolescentes no Brasil deixam a escola para trabalhar e ajudar em casa. Quem estuda tem motivo para agradecer a Deus e à família." },
+        { "titulo": "Truque de memória", "texto": "Escrever leva estímulos dos dedos ao cérebro. Quando você repete, a memória de longo prazo é ativada. Faça um resumo de tudo que estuda." },
+        { "titulo": "Sem virar a noite", "texto": "Sono e lazer ajudam a estudar bem. O segredo é ter um planejamento diário com rotina de estudo." },
+        { "titulo": "A escola é campo missionário", "texto": "Recusar o que o mundo chama de normal (bebida, drogas e fornicação) já prega." }
+      ],
+      "destaque": "Cabeça preparada na escola e coração cheio da Palavra: as duas coisas andam juntas.",
+      "humor": "Estudar só na véspera é o modo pânico. Não é recomendado pela Bíblia nem pelo seu cérebro.",
+      "professor": {
+        "tempo": "5 min",
+        "fala": "Comece com a votação do gancho: cada time escolhe e justifica em uma frase.",
+        "tecnica": "Contraste"
+      }
+    },
+    {
+      "tipo": "comparacao",
+      "cenario": "templo",
+      "titulo": "Aos 12 anos…",
+      "esquerda": { "rotulo": "Jesus aos 12", "texto": "No Templo, ouvindo e fazendo perguntas aos doutores." },
+      "direita": { "rotulo": "Eu aos 12", "texto": "Perdendo discussão para o corretor do celular." },
+      "professor": {
+        "tempo": "5 min (com as telas 8 e 9)",
+        "fala": "Deixe a turma rir e pergunte: o que Jesus fazia de diferente?",
+        "tecnica": "Contraste + humor"
+      }
+    },
+    {
+      "tipo": "pergaminho",
+      "cenario": "templo",
+      "leituras": [
+        {
+          "leitor": 4,
+          "versiculos": [
+            { "referencia": "Lc 2.46-47", "texto": "E aconteceu que, passados três dias, o acharam no templo, assentado no meio dos doutores, ouvindo-os e interrogando-os. E todos os que o ouviam admiravam a sua inteligência e respostas." }
+          ]
+        }
+      ],
+      "selo": "Laço fechado ✔",
+      "professor": {
+        "tempo": "incluído na tela 7",
+        "fala": "Lembre o gancho do começo: era isto que Jesus fez aos 12 anos.",
+        "tecnica": "Fechamento do laço aberto + prova bíblica"
+      }
+    },
+    {
+      "tipo": "fase",
+      "cenario": "templo",
+      "numero": 2,
+      "titulo": "O Mestre Jesus",
+      "versiculo": { "referencia": "Lc 2.52", "texto": "E crescia Jesus em sabedoria, e em estatura, e em graça para com Deus e os homens." },
+      "barras": [
+        { "rotulo": "Mente", "descricao": "Sabedoria" },
+        { "rotulo": "Corpo", "descricao": "Estatura" },
+        { "rotulo": "Espírito", "descricao": "Graça para com Deus" },
+        { "rotulo": "Relacionamentos", "descricao": "Graça para com os homens" }
+      ],
+      "blocos": [
+        { "titulo": "Paulo estudou", "texto": "Paulo estudou com Gamaliel (At 22.3) e usou o que sabia para anunciar Cristo (At 26.24)." },
+        { "titulo": "A família ensina", "texto": "Deus manda os pais ensinarem os filhos em todo tempo (Dt 6.7)." },
+        { "titulo": "O Mestre continua ensinando", "texto": "Jesus continua formando alunos e se importa com o aprendizado de cada um." }
+      ],
+      "professor": {
+        "tempo": "incluído na tela 7",
+        "fala": "Mostre as 4 barras de XP: Jesus cresceu nas quatro áreas, não só em uma.",
+        "tecnica": "Prova bíblica (exemplos de personagens)"
+      }
+    },
+    {
+      "tipo": "raio-x",
+      "cenario": "templo",
+      "titulo": "Raio-X de Lucas 2.52",
+      "referencia": "Lc 2.52",
+      "areas": [
+        { "rotulo": "Sabedoria", "descricao": "Estudos" },
+        { "rotulo": "Estatura", "descricao": "Corpo e sono" },
+        { "rotulo": "Graça com Deus", "descricao": "Vida com Deus" },
+        { "rotulo": "Graça com as pessoas", "descricao": "Relacionamentos" }
+      ],
+      "professor": {
+        "tempo": "8 min",
+        "fala": "Os alunos fazem no papel. A tela serve só como exemplo, e nada é salvo. Cada um circula a área mais fraca e escreve uma atitude para melhorar.",
+        "tecnica": "Pergunta-espelho (autoavaliação privada)"
+      }
+    },
+    {
+      "tipo": "power-ups",
+      "cenario": "aurora",
+      "titulo": "Dando importância ao que é importante",
+      "itens": [
+        { "titulo": "Perseverança", "texto": "Diante dos obstáculos." },
+        { "titulo": "Confiança", "texto": "Deus me capacita.", "referencia": "Fp 4.13 — \"Posso todas as coisas naquele que me fortalece\"" },
+        { "titulo": "Rotina", "texto": "Estudos alinhados aos seus objetivos." },
+        { "titulo": "Fé", "texto": "Buscar a Deus o tempo todo." }
+      ],
+      "espelho": "Seus pais já fizeram algum sacrifício pra você estudar? Quando foi a última vez que você agradeceu?",
+      "professor": {
+        "tempo": "5 min",
+        "fala": "Desbloqueie um power-up por vez. Termine com a pergunta-espelho, sem pedir que ninguém responda em voz alta.",
+        "tecnica": "Pergunta-espelho"
+      }
+    },
+    {
+      "tipo": "pergaminho",
+      "cenario": "aurora",
+      "titulo": "Projeção de futuro",
+      "leituras": [
+        {
+          "versiculos": [
+            { "referencia": "Cl 3.23", "texto": "E, tudo quanto fizerdes, fazei-o de todo o coração, como ao Senhor e não aos homens." },
+            { "referencia": "Dn 1.17", "texto": "Quanto a estes quatro jovens, Deus lhes deu o conhecimento e a inteligência em todas as letras e sabedoria." }
+          ]
+        }
+      ],
+      "reflexao": "Quando você entrega seu estudo a Cristo, a lição de matemática vira oportunidade de honrar o Criador. Imagine você com 25 anos, exercendo sua profissão com excelência e sendo sal e luz ali. Isso começa nesta semana.",
+      "professor": {
+        "fala": "Leia a reflexão devagar e dê alguns segundos de silêncio.",
+        "tecnica": "Projeção de futuro"
+      }
+    },
+    {
+      "tipo": "arena",
+      "cenario": "arena",
+      "titulo": "Arena de discussão",
+      "perguntas": [
+        "Por que tantos adolescentes não valorizam a escola?",
+        "O que mais atrapalha seus estudos hoje?",
+        "Dá para ser crente e mau aluno ao mesmo tempo? Por quê?",
+        "Como sua postura na escola pode falar de Jesus?",
+        "Que profissão você sonha ter? Como ela pode glorificar a Deus?"
+      ],
+      "professor": {
+        "tempo": "6 min",
+        "fala": "Revele uma pergunta por vez. Ninguém é obrigado a responder.",
+        "tecnica": "Pergunta-espelho + sequência do sim"
+      }
+    },
+    {
+      "tipo": "quiz",
+      "cenario": "arena",
+      "titulo": "Desafio Relâmpago",
+      "perguntas": [
+        { "enunciado": "Pv 1.7: \"O ___ do SENHOR é o princípio da ciência.\"", "opcoes": ["temor", "medo", "louvor", "conselho"] },
+        { "enunciado": "Segundo Pv 3.14, a sabedoria vale mais que:", "opcoes": ["prata e ouro fino", "likes e seguidores", "um carro novo", "férias na praia"] },
+        { "enunciado": "Quem foi o professor de Saulo (Paulo)?", "opcoes": ["Gamaliel", "Pedro", "Nicodemos", "Barnabé"] },
+        { "enunciado": "Com 12 anos, Jesus estava no Templo:", "opcoes": ["ouvindo e perguntando aos doutores", "dormindo", "vendendo pombas", "brincando com os primos"] },
+        { "enunciado": "Lc 2.52: Jesus crescia em sabedoria, estatura e ___.", "opcoes": ["graça", "fama", "riqueza", "força"] },
+        { "enunciado": "Uma boa técnica de estudo segundo a lição:", "opcoes": ["fazer resumo", "estudar só na véspera", "virar a noite", "decorar sem entender"] },
+        { "enunciado": "As três atitudes para não perder o foco (resposta da revista):", "opcoes": ["perseverança, confiança em si mesmo e fé em Deus", "sorte, cola e pressa", "celular, música e sono", "medo, ansiedade e pressa"] },
+        { "enunciado": "Pv 4.5: \"Adquire a ___, adquire a inteligência.\"", "opcoes": ["sabedoria", "riqueza", "fama", "coragem"] },
+        { "enunciado": "A lição diz que o conhecimento humano deve estar ligado:", "opcoes": ["ao conhecimento das Escrituras", "ao dinheiro", "à fama", "às redes sociais"] },
+        { "enunciado": "Bônus: que jovem do Antigo Testamento é exemplo de cristão íntegro e inteligente numa sociedade corrompida?", "opcoes": ["Daniel", "Sansão", "Saul", "Absalão"], "pontos": 20, "bonus": true }
+      ],
+      "professor": {
+        "tempo": "6 min",
+        "fala": "A vez alterna entre Sal e Luz. O time da vez responde; acerto vale +10 e o bônus vale +20.",
+        "tecnica": "Fixação + competição saudável por times"
+      }
+    },
+    {
+      "tipo": "missao",
+      "cenario": "aurora",
+      "titulo": "Missão 20/20",
+      "tarefas": [
+        "Estudar 20 min por dia a matéria mais difícil, orando antes de começar.",
+        "Fazer 1 resumo por dia.",
+        "Agradecer aos pais ou responsáveis pela oportunidade de estudar."
+      ],
+      "recompensa": "Quem trouxer a foto de um resumo no próximo domingo dá +10 ao seu time.",
+      "professor": {
+        "fala": "Explique que a recompensa vale para o time, não para quem trouxe.",
+        "tecnica": "Projeção de futuro + compromisso"
+      }
+    },
+    {
+      "tipo": "encerramento",
+      "cenario": "noite",
+      "oracao": "Oração pelos estudos, provas e sonhos de cada um.",
+      "teaser": "Missão 08 desbloqueia domingo, 22/11.",
+      "professor": {
+        "tempo": "3 min",
+        "fala": "Ore pelos estudos, provas e sonhos da turma. Termine com o teaser da próxima missão.",
+        "tecnica": "Laço aberto"
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "numero": 99,
+  "titulo": "[Título da lição, igual à revista]",
+  "data": "2026-12-31",
+  "liberarEm": "2026-12-25T08:00:00-03:00",
+  "textoBiblico": "[Referências do texto bíblico da revista]",
+  "textoAureo": { "referencia": "[Ref]", "texto": "[Texto áureo na ARC]" },
+  "objetivo": "[Objetivo da lição, conforme a revista]",
+  "verdadeAplicada": "[Verdade aplicada, conforme a revista]",
+  "telas": [
+    { "tipo": "capa", "cenario": "noite", "professor": { "tempo": "2 min", "fala": "[Fala]", "tecnica": "[Técnica]" } },
+    { "tipo": "gancho", "cenario": "noite", "pergunta": "[Pergunta grande]", "revelacao": "[Texto mostrado ao clicar em Revelar]" },
+    {
+      "tipo": "memoria", "cenario": "arena", "titulo": "Quem usa isso?",
+      "objetos": [ { "emoji": "🩺", "nome": "[Objeto]", "resposta": "[Quem usa]" }, { "emoji": "📐", "nome": "[Objeto]", "resposta": "[Quem usa]" } ],
+      "perguntas": [ { "pergunta": "Qual foi o 1º objeto?", "resposta": "[Resposta]" } ],
+      "fechamento": "[Frase de fechamento]"
+    },
+    {
+      "tipo": "pergaminho", "titulo": "Texto bíblico",
+      "leituras": [ { "leitor": 1, "versiculos": [ { "referencia": "[Ref]", "texto": "[Versículo na ARC]" } ] } ],
+      "selo": "[Opcional: ex. Laço fechado ✔]",
+      "reflexao": "[Opcional: projeção de futuro]"
+    },
+    {
+      "tipo": "fase", "cenario": "tesouro", "numero": 1, "titulo": "[Título da fase]", "gancho": "[Opcional]",
+      "versiculo": { "referencia": "[Opcional]", "texto": "[Opcional]" },
+      "barras": [ { "rotulo": "[Opcional: barra de XP]", "descricao": "[Descrição]" } ],
+      "blocos": [ { "titulo": "[Bloco]", "texto": "[Conteúdo da revista]" } ],
+      "destaque": "[Frase de destaque]",
+      "humor": "[Opcional]"
+    },
+    { "tipo": "comparacao", "cenario": "templo", "titulo": "[Opcional]", "esquerda": { "rotulo": "[A]", "texto": "[...]" }, "direita": { "rotulo": "[B]", "texto": "[...]" } },
+    { "tipo": "raio-x", "cenario": "templo", "titulo": "[Título]", "referencia": "[Opcional]", "areas": [ { "rotulo": "[Área]", "descricao": "[Descrição]" } ] },
+    { "tipo": "power-ups", "cenario": "aurora", "titulo": "[Título]", "itens": [ { "titulo": "[Atitude]", "texto": "[...]", "referencia": "[Opcional]" } ], "espelho": "[Opcional: pergunta-espelho]" },
+    { "tipo": "arena", "cenario": "arena", "titulo": "Arena de discussão", "perguntas": [ "[Pergunta 1]", "[Pergunta 2]" ] },
+    {
+      "tipo": "quiz", "cenario": "arena", "titulo": "Desafio Relâmpago",
+      "perguntas": [
+        { "enunciado": "[Pergunta]", "opcoes": [ "[CORRETA sempre primeiro]", "[errada]", "[errada]", "[errada]" ] },
+        { "enunciado": "[Pergunta bônus]", "opcoes": [ "[CORRETA]", "[errada]" ], "pontos": 20, "bonus": true }
+      ]
+    },
+    { "tipo": "missao", "cenario": "aurora", "titulo": "[Nome da missão]", "tarefas": [ "[Tarefa 1]" ], "recompensa": "[Recompensa no próximo domingo, sempre para o time]" },
+    { "tipo": "encerramento", "cenario": "noite", "oracao": "[Motivo de oração]", "teaser": "[Missão XX desbloqueia domingo, DD/MM.]" }
+  ]
+}

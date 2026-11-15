@@ -107,3 +107,19 @@ current password differs from the code. Expired codes are overwritten in Auth
 with a random password (pg_cron and before each portal sign-in), so they cannot
 be used through the API either. Login failures use one generic message. E-mail
 invitations (ADR-010) remain available.
+
+## ADR-013 — Revista Gamificada as file-based classroom content (2026-11-15)
+
+The EBD adolescents' lesson player lives at `/conhecimento/revista`. Each lesson
+is a JSON file in `content/revista/licoes/`, validated by Zod in
+`src/services/revista.ts`; launching a lesson only requires editing data
+(`content/revista/README.md`). Unlike Hub worlds, it has no editorial workflow
+or database: it is projected by a leader in class, and its text comes from the
+printed teacher's edition. Status (`bloqueada`/`liberada`/`hoje`/`concluida`)
+is derived from `liberarEm` and the Sunday date in America/Sao_Paulo.
+
+Access: leaders and admins always; students only with an active learning
+enrollment. The teacher's script (`professor`) is stripped on the server for
+students. Scores are per team (Sal/Luz), never individual, and live only in the
+projector device's localStorage; the self-assessment (raio-x) is never stored.
+No student data is collected. Licensed magazine content stays behind login.
